@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPENDTHRIFT — The Compulsive Shopping Card Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       TODO: Global CSS Variables — Edit brand colors here
+       ============================================================ */
+    :root {
+      --purple:        #534AB7;
+      --purple-dark:   #3C3489;
+      --purple-light:  #EEEDFE;
+      --teal:          #1D9E75;
+      --teal-light:    #E1F5EE;
+      --amber:         #BA7517;
+      --amber-light:   #FAEEDA;
+      --coral:         #993C1D;
+      --coral-light:   #FAECE7;
+      --bg:            #2C2C2A;
+      --bg-card:       #363533;
+      --bg-card-hover: #3f3d3b;
+      --text-primary:  #F1EFE8;
+      --text-mid:      #A09D97;
+      --text-dim:      #5F5E5A;
+      --border:        rgba(255,255,255,0.08);
+      --radius:        12px;
+      --radius-sm:     8px;
+      --transition:    0.22s ease;
+    }
+
+    /* ============================================================
+       TODO: Base Reset & Body
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       TODO: Screen System — Add new screens here
+       ============================================================ */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      animation: fadeIn 0.3s ease;
+    }
+    .screen.active { display: flex; flex-direction: column; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       TODO: Reusable UI Components
+       ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--purple);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--purple-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--purple); color: var(--purple); }
+    .btn-teal { background: var(--teal); color: #fff; }
+    .btn-teal:hover { background: #178a65; transform: translateY(-1px); }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    .btn-lg { padding: 18px 36px; font-size: 17px; }
+    .btn-full { width: 100%; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pill-purple { background: rgba(83,74,183,0.18); color: var(--purple-light); }
+    .pill-teal   { background: rgba(29,158,117,0.18); color: var(--teal); }
+    .pill-coral  { background: rgba(153,60,29,0.18); color: #e07050; }
+    .pill-amber  { background: rgba(186,117,23,0.18); color: var(--amber); }
+    .pill-gray   { background: rgba(255,255,255,0.07); color: var(--text-mid); border: 1px solid var(--border); }
+
+    .card-surface {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    /* ============================================================
+       SCREEN 1: LANDING PAGE
+       TODO: Edit landing copy, logo, and feature pills here
+       ============================================================ */
+    #screen-landing {
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .landing-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-align: center;
+      gap: 32px;
+      padding: 60px 0 40px;
+    }
+
+    .logo-mark {
+      width: 88px;
+      height: 88px;
+      background: var(--purple);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -2px;
+      box-shadow: 0 0 40px rgba(83,74,183,0.4);
+    }
+
+    .landing-title {
+      font-size: clamp(42px, 8vw, 80px);
+      font-weight: 900;
+      letter-spacing: -3px;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .landing-subtitle {
+      font-size: 18px;
+      color: var(--text-mid);
+      font-weight: 500;
+      margin-top: -16px;
+    }
+
+    .landing-tagline {
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 400px;
+      line-height: 1.6;
+      border-left: 3px solid var(--purple);
+      padding-left: 16px;
+      text-align: left;
+    }
+
+    .feature-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .landing-footer {
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       SCREEN 2: ONBOARDING QUIZ
+       TODO: Edit quiz questions and answer options here
+       ============================================================ */
+    #screen-quiz {
+      padding: 32px 24px;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .quiz-header {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .quiz-progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .quiz-progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .quiz-progress-label {
+      font-size: 12px;
+      color: var(--text-mid);
+    }
+
+    .quiz-question {
+      width: 100%;
+      max-width: 600px;
+    }
+    .quiz-question h2 {
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 28px;
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .quiz-option {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .quiz-option:hover {
+      border-color: var(--purple);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+    }
+    .quiz-option.selected {
+      border-color: var(--purple);
+      background: rgba(83,74,183,0.15);
+    }
+    .quiz-option-emoji { font-size: 28px; }
+    .quiz-option-label { font-size: 15px; font-weight: 600; color: #fff; }
+    .quiz-option-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.4; }
+
+    /* ============================================================
+       SCREEN 3: ARCHETYPE REVEAL
+       TODO: Edit archetype descriptions, colors, bonuses here
+       ============================================================ */
+    #screen-archetype {
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      gap: 32px;
+      text-align: center;
+    }
+
+    .archetype-label {
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      font-weight: 600;
+    }
+
+    .archetype-card-reveal {
+      background: var(--bg-card);
+      border: 2px solid var(--purple);
+      border-radius: 20px;
+      padding: 40px 48px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(83,74,183,0.25);
+      animation: revealPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes revealPop {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .archetype-card-reveal .emoji  { font-size: 64px; margin-bottom: 16px; display: block; }
+    .archetype-card-reveal .title  { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .archetype-card-reveal .desc   { font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+
+    .archetype-bonus {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ============================================================
+       SCREEN 4: MAIN GAME SCREEN
+       TODO: Edit HUD layout, card hand, cart zone here
+       ============================================================ */
+    #screen-game {
+      padding: 0;
+    }
+
+    /* HUD */
+    .hud {
+      background: #222220;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hud-brand {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--purple-light);
+    }
+
+    .hud-stats {
+      display: flex;
+      gap: 24px;
+    }
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .hud-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .hud-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .hud-stat-value.teal   { color: var(--teal); }
+    .hud-stat-value.purple { color: var(--purple-light); }
+    .hud-stat-value.coral  { color: #e07050; }
+
+    /* Mood Bar */
+    .mood-bar-wrap {
+      padding: 12px 24px;
+      background: #222220;
+      border-bottom: 1px solid var(--border);
+    }
+    .mood-bar-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .mood-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .mood-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      width: 55%;
+      background: linear-gradient(90deg, #993C1D 0%, #BA7517 50%, #1D9E75 100%);
+      background-size: 200% 100%;
+      transition: background-position 1s ease;
+    }
+
+    /* Game Content */
+    .game-content {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Card Hand */
+    .hand-section h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .card-hand {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    /* TODO: Game Card Component — customize card layout/colors here */
+    .game-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      text-align: center;
+    }
+    .game-card:hover {
+      border-color: var(--purple);
+      transform: translateY(-6px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+    .game-card.in-cart {
+      border-color: var(--teal);
+      background: rgba(29,158,117,0.08);
+    }
+    .game-card.event-card {
+      border-color: var(--coral);
+      background: rgba(153,60,29,0.08);
+    }
+    .game-card-emoji    { font-size: 36px; }
+    .game-card-name     { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3; }
+    .game-card-price    { font-size: 16px; font-weight: 700; color: #e07050; }
+    .game-card-dopamine { font-size: 12px; color: var(--purple-light); font-weight: 600; }
+    .game-card-add      { margin-top: 6px; }
+
+    .game-card .check-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
+      background: var(--teal);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .game-card.in-cart .check-badge { display: flex; }
+
+    /* Cart Zone */
+    .cart-zone {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .cart-zone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cart-zone-header h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .cart-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: 40px;
+      margin-bottom: 16px;
+    }
+    .cart-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(83,74,183,0.15);
+      border: 1px solid rgba(83,74,183,0.3);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 13px;
+      color: var(--purple-light);
+      font-weight: 500;
+    }
+    .cart-pill-remove {
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 16px;
+      line-height: 1;
+      transition: color var(--transition);
+    }
+    .cart-pill-remove:hover { color: #e07050; }
+
+    .cart-empty-hint {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .cart-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .clear-cart-btn {
+      font-size: 13px;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color var(--transition);
+    }
+    .clear-cart-btn:hover { color: #e07050; }
+
+    /* Activity Log */
+    .activity-log {
+      background: #222220;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .activity-log-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .activity-entry {
+      font-size: 12px;
+      color: var(--text-mid);
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      gap: 8px;
+    }
+    .activity-entry:last-child { border-bottom: none; }
+    .activity-time { color: var(--text-dim); min-width: 40px; }
+
+    /* ============================================================
+       SCREEN 5: CHECKOUT MODAL
+       TODO: Edit checkout steps, form fields, confirmation here
+       ============================================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+    .modal-box {
+      background: #2f2e2c;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      padding: 36px;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .modal-step-dot {
+      height: 4px;
+      flex: 1;
+      background: var(--border);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+    .modal-step-dot.active { background: var(--purple); }
+    .modal-step-dot.done   { background: var(--teal); }
+
+    .checkout-step { display: none; }
+    .checkout-step.active { display: block; animation: fadeIn 0.2s ease; }
+
+    .checkout-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .checkout-item-left { display: flex; align-items: center; gap: 10px; }
+    .checkout-item-price { color: #e07050; font-weight: 600; }
+
+    .checkout-total {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px 0 0;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .checkout-dopamine-preview {
+      background: rgba(83,74,183,0.12);
+      border: 1px solid rgba(83,74,183,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--purple-light);
+    }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color var(--transition);
+    }
+    .form-input:focus { outline: none; border-color: var(--purple); }
+
+    .shipping-fun-note {
+      background: rgba(29,158,117,0.1);
+      border: 1px solid rgba(29,158,117,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--teal);
+      margin-bottom: 20px;
+    }
+
+    /* Confirmation */
+    .confirm-checkmark {
+      width: 72px;
+      height: 72px;
+      background: var(--teal);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+      margin: 0 auto 20px;
+      animation: revealPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .confirm-dopamine {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 20px 0;
+    }
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .confirm-row:last-child { border-bottom: none; }
+    .confirm-row .value { font-weight: 700; }
+
+    /* ============================================================
+       SCREEN 6: RESULTS
+       TODO: Edit score tiers, breakdown, share copy here
+       ============================================================ */
+    #screen-results {
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      gap: 28px;
+      text-align: center;
+    }
+
+    .results-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-mid);
+      font-weight: 600;
+    }
+
+    .results-score {
+      font-size: clamp(72px, 15vw, 120px);
+      font-weight: 900;
+      letter-spacing: -6px;
+      line-height: 1;
+      color: #fff;
+      position: relative;
+    }
+    .results-score-label { font-size: 20px; font-weight: 600; color: var(--purple-light); letter-spacing: normal; }
+
+    .results-breakdown {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 32px;
+      max-width: 420px;
+      width: 100%;
+    }
+    .results-breakdown-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); font-weight: 600; margin-bottom: 16px; }
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-row .label { color: var(--text-mid); }
+    .breakdown-row .value { font-weight: 700; }
+    .breakdown-row .value.teal   { color: var(--teal); }
+    .breakdown-row .value.coral  { color: #e07050; }
+    .breakdown-row .value.purple { color: var(--purple-light); }
+    .breakdown-row .value.gold   { color: #e8b84b; }
+
+    .results-stats {
+      display: flex;
+      gap: 32px;
+    }
+    .results-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .results-stat-num { font-size: 24px; font-weight: 800; color: #fff; }
+    .results-stat-lbl { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .results-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    /* ============================================================
+       TODO: Floating screen indicator (breadcrumb)
+       ============================================================ */
+    .screen-indicator {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 99px;
+      backdrop-filter: blur(8px);
+      z-index: 50;
+    }
+    .indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: all 0.3s ease;
+    }
+    .indicator-dot.active {
+      background: var(--purple);
+      width: 18px;
+      border-radius: 3px;
+    }
+
+    /* ============================================================
+       TODO: Dopamine Flash Overlay — edit color/timing here
+       ============================================================ */
+    .dopamine-flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(83,74,183,0.25);
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0;
+    }
+    .dopamine-flash.flash {
+      animation: dopamineFlash 1.6s ease forwards;
+    }
+    @keyframes dopamineFlash {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      70%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ============================================================
+       TODO: Responsive Layout — edit breakpoints here
+       ============================================================ */
+    @media (max-width: 768px) {
+      .card-hand { grid-template-columns: repeat(2, 1fr); }
+      .quiz-options { grid-template-columns: 1fr; }
+      .hud-stats { gap: 12px; }
+      .hud-stat-value { font-size: 15px; }
+      .results-stats { gap: 20px; }
+    }
+    @media (max-width: 480px) {
+      .card-hand { grid-template-columns: repeat(2, 1fr); }
+      .archetype-card-reveal { padding: 28px 20px; }
+      .modal-box { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Dopamine Flash Overlay -->
+<!-- TODO: Trigger this with JS when checkout completes -->
+<div class="dopamine-flash" id="dopamineFlash"></div>
+
+<!-- Screen Indicator -->
+<!-- TODO: Update active dot based on current screen -->
+<div class="screen-indicator" id="screenIndicator">
+  <div class="indicator-dot" data-screen="0"></div>
+  <div class="indicator-dot" data-screen="1"></div>
+  <div class="indicator-dot" data-screen="2"></div>
+  <div class="indicator-dot" data-screen="3"></div>
+  <div class="indicator-dot" data-screen="5"></div>
+</div>
+
+<!-- ============================================================
+     SCREEN 1: LANDING PAGE
+     TODO: Update tagline, logo, and CTA copy for final version
+     ============================================================ -->
+<div class="screen" id="screen-landing">
+  <div class="landing-main">
+    <div class="logo-mark">S</div>
+
+    <div>
+      <div class="landing-title">SPENDTHRIFT</div>
+      <div class="landing-subtitle">The Compulsive Shopping Card Game</div>
+    </div>
+
+    <!-- TODO: Edit tagline copy here -->
+    <div class="landing-tagline">
+      "The thrill of the purchase.<br>None of the financial guilt."
+    </div>
+
+    <!-- TODO: Edit feature pills here -->
+    <div class="feature-pills">
+      <span class="pill pill-purple">Freemium</span>
+      <span class="pill pill-gray">Browser-First</span>
+      <span class="pill pill-teal">No Real Money</span>
+      <span class="pill pill-amber">Brand Ready</span>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="goToScreen('screen-quiz')">
+      Start Shopping →
+    </button>
+  </div>
+
+  <div class="landing-footer">
+    <!-- TODO: Update version, team name, and class for final submission -->
+    Team 7 — Strategy Class &nbsp;·&nbsp; v1.0 Draft &nbsp;·&nbsp; SPENDTHRIFT © 2025
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 2: ONBOARDING QUIZ
+     TODO: Edit questions, answer options, and scoring logic here
+     ============================================================ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <div class="quiz-progress-bar">
+      <div class="quiz-progress-fill" id="quizProgressFill" style="width:20%"></div>
+    </div>
+    <div class="quiz-progress-label">Question <span id="quizQNum">1</span> of 5</div>
+  </div>
+
+  <!-- TODO: Each quiz-question div = one question. Add/remove as needed. -->
+  <div class="quiz-question" id="quizQuestion">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 3: ARCHETYPE REVEAL
+     TODO: Edit archetype names, bonuses, and descriptions here
+     ============================================================ -->
+<div class="screen" id="screen-archetype">
+  <div class="archetype-label">Your Shopper DNA is...</div>
+
+  <!-- TODO: Make this dynamic based on quiz score in final version -->
+  <div class="archetype-card-reveal" id="archetypeCard">
+    <!-- Rendered by JS -->
+  </div>
+
+  <div class="archetype-bonus" id="archetypeBonuses">
+    <!-- Rendered by JS -->
+  </div>
+
+  <button class="btn btn-primary btn-lg" onclick="startGame()">
+    Start Game →
+  </button>
+</div>
+
+<!-- ============================================================
+     SCREEN 4: MAIN GAME SCREEN
+     TODO: Full game engine connects here — HUD, cards, cart
+     ============================================================ -->
+<div class="screen" id="screen-game">
+
+  <!-- HUD Bar -->
+  <!-- TODO: Wire up to game state (Zustand store) in final code -->
+  <div class="hud">
+    <div class="hud-brand">SPENDTHRIFT</div>
+    <div class="hud-stats">
+      <div class="hud-stat">
+        <span class="hud-stat-label">💰 Budget</span>
+        <span class="hud-stat-value teal" id="hudBudget">$500</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-label">⚡ Dopamine</span>
+        <span class="hud-stat-value purple" id="hudDopamine">0</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-label">😬 Regret</span>
+        <span class="hud-stat-value coral" id="hudRegret">0%</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-label">🔄 Round</span>
+        <span class="hud-stat-value" id="hudRound">1/10</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-results')">End Game</button>
+  </div>
+
+  <!-- Mood Bar -->
+  <!-- TODO: Animate this with Framer Motion in final version -->
+  <div class="mood-bar-wrap">
+    <div class="mood-bar-label">Mood Meter</div>
+    <div class="mood-bar-track">
+      <div class="mood-bar-fill" id="moodBar"></div>
+    </div>
+  </div>
+
+  <div class="game-content">
+
+    <!-- Card Hand -->
+    <!-- TODO: Replace with dynamic cards from cards.json deck -->
+    <div class="hand-section">
+      <h3>Your Hand — Round <span id="roundLabel">1</span></h3>
+      <div class="card-hand" id="cardHand">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Cart Zone -->
+    <!-- TODO: Connect to Zustand cart state in final version -->
+    <div class="cart-zone">
+      <div class="cart-zone-header">
+        <h3>My Cart (<span id="cartCount">0</span>/5 items)</h3>
+        <span class="pill pill-purple" id="cartTotalDopamine" style="display:none">+0 dopamine</span>
+      </div>
+      <div class="cart-items" id="cartItems">
+        <span class="cart-empty-hint">No items yet — add cards from your hand above ☝️</span>
+      </div>
+      <div class="cart-actions">
+        <button class="btn btn-primary" id="checkoutBtn" onclick="openCheckout()" disabled>
+          Checkout →
+        </button>
+        <button class="clear-cart-btn" onclick="clearCart()">Clear Cart</button>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <!-- TODO: Replace with real game history from game-engine.ts -->
+    <div class="activity-log">
+      <div class="activity-log-label">Activity Log</div>
+      <div id="activityLog">
+        <div class="activity-entry">
+          <span class="activity-time">0:00</span>
+          <span>Game started — Round 1 dealt 🃏</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 5: CHECKOUT MODAL (overlay on game screen)
+     TODO: Wire up to real checkout flow with Framer Motion
+     ============================================================ -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-box">
+
+    <!-- Step progress dots -->
+    <div class="modal-steps">
+      <div class="modal-step-dot active" id="stepDot0"></div>
+      <div class="modal-step-dot" id="stepDot1"></div>
+      <div class="modal-step-dot" id="stepDot2"></div>
+    </div>
+
+    <!-- Step 1: Cart Review -->
+    <!-- TODO: Populate dynamically from cart state -->
+    <div class="checkout-step active" id="checkoutStep0">
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;">🛒 Your Cart</h2>
+      <div id="checkoutCartItems">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="checkout-total">
+        <span>Total</span>
+        <span id="checkoutTotal" style="color:#e07050">$0</span>
+      </div>
+      <div class="checkout-dopamine-preview" id="checkoutDopaminePreview">
+        ⚡ You'll gain <strong>0 dopamine</strong> from this haul
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:20px" onclick="nextCheckoutStep()">Continue →</button>
+    </div>
+
+    <!-- Step 2: Fake Shipping Form -->
+    <!-- TODO: This is intentionally fake/fun — don't make it real -->
+    <div class="checkout-step" id="checkoutStep1">
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">📦 Where should we ship?</h2>
+      <div class="shipping-fun-note">Don't worry — this is virtual shipping! 📦 No real address needed.</div>
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input class="form-input" type="text" value="Shopaholic" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input class="form-input" type="text" value="123 Shopping Lane" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input class="form-input" type="text" placeholder="Retail City" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="nextCheckoutStep()">Place Order →</button>
+    </div>
+
+    <!-- Step 3: Order Confirmation -->
+    <!-- TODO: Trigger dopamine flash overlay from here -->
+    <div class="checkout-step" id="checkoutStep2">
+      <div style="text-align:center">
+        <div class="confirm-checkmark">✓</div>
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;">Order Placed! 🎉</h2>
+        <p style="font-size:14px;color:var(--text-mid);margin-bottom:20px;">Your virtual haul is on the way</p>
+
+        <div class="confirm-dopamine" id="confirmDetails">
+          <!-- Rendered by JS -->
+        </div>
+
+        <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="completeCheckout()">
+          Next Round →
+        </button>
+      </div>
+    </div>
+
+    <!-- Close button -->
+    <button onclick="closeCheckout()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 6: RESULTS SCREEN
+     TODO: Pull real final score from game-engine.ts
+     ============================================================ -->
+<div class="screen" id="screen-results">
+  <div class="results-label">Game Over — Final Score</div>
+
+  <div class="results-score">
+    <!-- TODO: Animate counter from 0 to final score -->
+    <div id="finalScoreNum" style="animation: revealPop 0.6s cubic-bezier(0.34,1.56,0.64,1)">67</div>
+    <div class="results-score-label">Master Shopper 🛍️</div>
+  </div>
+
+  <!-- Score Breakdown -->
+  <!-- TODO: Calculate from GameState: (Total Dopamine) − (Regret × 0.5) + (Archetype Bonus) -->
+  <div class="results-breakdown">
+    <div class="results-breakdown-title">Score Breakdown</div>
+    <div class="breakdown-row">
+      <span class="label">Total Dopamine</span>
+      <span class="value teal" id="resTotalDopamine">+82</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="label">Regret Penalty</span>
+      <span class="value coral" id="resRegretPenalty">−18</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="label">Archetype Bonus</span>
+      <span class="value purple" id="resArchetypeBonus">+3</span>
+    </div>
+    <div class="breakdown-row" style="font-weight:700">
+      <span class="label" style="color:#fff">Final Score</span>
+      <span class="value gold" id="resFinalScore">67</span>
+    </div>
+  </div>
+
+  <!-- Archetype Badge -->
+  <div id="resultArchetype"></div>
+
+  <!-- Game Stats -->
+  <div class="results-stats">
+    <div class="results-stat">
+      <span class="results-stat-num" id="resRounds">10</span>
+      <span class="results-stat-lbl">Rounds</span>
+    </div>
+    <div class="results-stat">
+      <span class="results-stat-num" id="resSpent">$347</span>
+      <span class="results-stat-lbl">Spent</span>
+    </div>
+    <div class="results-stat">
+      <span class="results-stat-num" id="resItems">14</span>
+      <span class="results-stat-lbl">Items</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <!-- TODO: "Share Score" should generate a shareable image card -->
+  <div class="results-actions">
+    <button class="btn btn-primary btn-lg" onclick="playAgain()">Play Again</button>
+    <button class="btn btn-ghost btn-lg" onclick="shareScore()">Share Score 📤</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT — Game State & Navigation
+     TODO: Replace this logic with Zustand store + game-engine.ts
+     ============================================================ -->
+<script>
+  // ============================================================
+  // TODO: Game State — Replace with Zustand store in final code
+  // ============================================================
+  const state = {
+    currentScreen: 'screen-landing',
+    quizAnswers: [],
+    archetype: null,
+    budget: 500,
+    dopamine: 0,
+    regret: 0,
+    round: 1,
+    cart: [],
+    log: [],
+    checkoutStep: 0,
+  };
+
+  // TODO: Archetypes — Add/edit archetype profiles here
+  const ARCHETYPES = {
+    impulse_king: {
+      emoji: '👑',
+      title: 'The Impulse King',
+      desc: 'Thrives on spontaneous purchases and flash sales. High risk tolerance. You live for the one-click buy.',
+      bonuses: ['⚡ +5 dopamine on quick buys', '🔥 Flash Sales appear 40% more', '🎲 High risk tolerance'],
+      color: '#e07050',
+    },
+    bargain_hawk: {
+      emoji: '🦅',
+      title: 'The Bargain Hawk',
+      desc: 'Never pays full price. Bonus dopamine on discounted items. Price Match power card is your best friend.',
+      bonuses: ['💰 Bonus dopamine on sales', '🏷️ Price Match appears 3x more', '⚠️ −3 dopamine on full-price luxury'],
+      color: '#1D9E75',
+    },
+    status_flexer: {
+      emoji: '💎',
+      title: 'The Status Flexer',
+      desc: 'Luxury is your language. You buy for status, not function. The leaderboard knows your name.',
+      bonuses: ['👑 +8 dopamine on luxury cards', '📊 Leaderboard featured', '✨ Rare Designer Card possible'],
+      color: '#534AB7',
+    },
+    comfort_seeker: {
+      emoji: '🛋️',
+      title: 'The Comfort Seeker',
+      desc: 'Shopping is self-care. Home and Food are your sanctuary. No regrets — you deserve it.',
+      bonuses: ['🏠 −50% regret on Home & Food', '🕯️ Bonus on Candles, Pillows, Coffee', '🛡️ Subscription Traps never appear'],
+      color: '#BA7517',
+    },
+  };
+
+  // TODO: Card data — Replace with cards.json (55-card library) in final code
+  const SAMPLE_CARDS = [
+    { id: 'c1', emoji: '👟', name: 'Air Max Sneakers', store: 'Fashion', price: 89, dopamine: 12, risk: 25, type: 'product' },
+    { id: 'c2', emoji: '💻', name: 'Wireless Earbuds', store: 'Tech', price: 45, dopamine: 8, risk: 15, type: 'product' },
+    { id: 'c3', emoji: '🕯️', name: 'Scented Candle Set', store: 'Home', price: 28, dopamine: 5, risk: 5, type: 'product' },
+    { id: 'c4', emoji: '⚡', name: 'FLASH SALE!', store: 'Event', price: 0, dopamine: 0, risk: 0, type: 'event', desc: 'All items 30% off this round!' },
+    { id: 'c5', emoji: '👜', name: 'Designer Tote', store: 'Luxury', price: 199, dopamine: 25, risk: 40, type: 'product' },
+  ];
+
+  // TODO: Quiz questions — Update with final wording from PRD §06
+  const QUIZ_QUESTIONS = [
+    {
+      q: "What's your shopping vibe?",
+      options: [
+        { emoji:'🔥', label:'Thrill Hunter', desc:'Live for the rush of finding something new', value:'impulse_king' },
+        { emoji:'💰', label:'Bargain Seeker', desc:'Never pay full price — ever', value:'bargain_hawk' },
+        { emoji:'👑', label:'Luxury Lover', desc:'Only the best will do', value:'status_flexer' },
+        { emoji:'🛋️', label:'Comfort Buyer', desc:'Shopping is self-care', value:'comfort_seeker' },
+      ]
+    },
+    {
+      q: "How do you shop?",
+      options: [
+        { emoji:'⚡', label:'Impulse Only', desc:'Add to cart, buy now, think later', value:'impulse_king' },
+        { emoji:'📋', label:'Careful Planner', desc:'Research for weeks before buying', value:'bargain_hawk' },
+        { emoji:'🏷️', label:'Sale Chaser', desc:'Wait for the discount, always', value:'bargain_hawk' },
+        { emoji:'🎁', label:'Gift Buyer', desc:'Love shopping for others', value:'comfort_seeker' },
+      ]
+    },
+    {
+      q: "Biggest weakness?",
+      options: [
+        { emoji:'💻', label:'Tech Gadgets', desc:'The latest device calls your name', value:'impulse_king' },
+        { emoji:'👗', label:'Fashion Drops', desc:'Limited edition? You\'re there', value:'status_flexer' },
+        { emoji:'🏠', label:'Home Decor', desc:'One more throw pillow won\'t hurt', value:'comfort_seeker' },
+        { emoji:'🍕', label:'Food & Experiences', desc:'Life is too short for bad food', value:'comfort_seeker' },
+      ]
+    },
+    {
+      q: "After a big purchase you feel...",
+      options: [
+        { emoji:'😍', label:'Euphoric', desc:'Best decision you\'ve ever made', value:'impulse_king' },
+        { emoji:'😬', label:'Guilty', desc:'Why did I buy that?', value:'bargain_hawk' },
+        { emoji:'🛒', label:'Already Planning Next', desc:'What else needs to be in the cart?', value:'status_flexer' },
+        { emoji:'🤷', label:'It Depends', desc:'On the item, the price, the mood', value:'comfort_seeker' },
+      ]
+    },
+    {
+      q: "Your checkout speed?",
+      options: [
+        { emoji:'⚡', label:'One-Click Immediately', desc:'Saved card, instant buy', value:'impulse_king' },
+        { emoji:'🛒', label:'Cart For Days', desc:'Items sit in cart for weeks', value:'bargain_hawk' },
+        { emoji:'💸', label:'Only On Payday', desc:'Budget-conscious but ready', value:'bargain_hawk' },
+        { emoji:'🤔', label:'Depends on Price', desc:'Small items fast, big items slow', value:'comfort_seeker' },
+      ]
+    },
+  ];
+
+  // ============================================================
+  // TODO: Screen Navigation — Replace with Next.js router
+  // ============================================================
+  function goToScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    state.currentScreen = screenId;
+    updateIndicator(screenId);
+  }
+
+  function updateIndicator(screenId) {
+    const order = ['screen-landing','screen-quiz','screen-archetype','screen-game','screen-results'];
+    const idx = order.indexOf(screenId);
+    document.querySelectorAll('.indicator-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+  }
+
+  // ============================================================
+  // TODO: Quiz Logic — Replace with archetype scoring in archetype.ts
+  // ============================================================
+  let currentQuestion = 0;
+  const quizScores = { impulse_king:0, bargain_hawk:0, status_flexer:0, comfort_seeker:0 };
+
+  function renderQuestion() {
+    const q = QUIZ_QUESTIONS[currentQuestion];
+    document.getElementById('quizQNum').textContent = currentQuestion + 1;
+    document.getElementById('quizProgressFill').style.width = ((currentQuestion+1)/5*100)+'%';
+    document.getElementById('quizQuestion').innerHTML = `
+      <h2>${q.q}</h2>
+      <div class="quiz-options">
+        ${q.options.map((o,i) => `
+          <div class="quiz-option" onclick="selectAnswer('${o.value}', this)">
+            <div class="quiz-option-emoji">${o.emoji}</div>
+            <div class="quiz-option-label">${o.label}</div>
+            <div class="quiz-option-desc">${o.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function selectAnswer(value, el) {
+    el.classList.add('selected');
+    quizScores[value]++;
+    state.quizAnswers.push(value);
+    setTimeout(() => {
+      if (currentQuestion < 4) {
+        currentQuestion++;
+        renderQuestion();
+      } else {
+        revealArchetype();
+      }
+    }, 350);
+  }
+
+  // ============================================================
+  // TODO: Archetype Reveal — Connect to archetype.ts scoring
+  // ============================================================
+  function revealArchetype() {
+    // Pick archetype with highest score
+    const winner = Object.entries(quizScores).sort((a,b)=>b[1]-a[1])[0][0];
+    state.archetype = winner;
+    const arch = ARCHETYPES[winner];
+
+    document.getElementById('archetypeCard').innerHTML = `
+      <span class="emoji">${arch.emoji}</span>
+      <div class="title">${arch.title}</div>
+      <div class="desc">${arch.desc}</div>
+    `;
+    document.getElementById('archetypeBonuses').innerHTML = arch.bonuses.map(b =>
+      `<span class="pill pill-gray">${b}</span>`
+    ).join('');
+
+    goToScreen('screen-archetype');
+  }
+
+  // ============================================================
+  // TODO: Game Start — Replace with full game-engine.ts init
+  // ============================================================
+  function startGame() {
+    state.budget = 500;
+    state.dopamine = 0;
+    state.regret = 0;
+    state.round = 1;
+    state.cart = [];
+    renderHUD();
+    renderHand();
+    goToScreen('screen-game');
+  }
+
+  function renderHUD() {
+    document.getElementById('hudBudget').textContent = '$' + state.budget;
+    document.getElementById('hudDopamine').textContent = state.dopamine;
+    document.getElementById('hudRegret').textContent = state.regret + '%';
+    document.getElementById('hudRound').textContent = state.round + '/10';
+    document.getElementById('roundLabel').textContent = state.round;
+  }
+
+  // ============================================================
+  // TODO: Card Hand — Replace with weighted deck draw from card-utils.ts
+  // ============================================================
+  function renderHand() {
+    document.getElementById('cardHand').innerHTML = SAMPLE_CARDS.map(card => {
+      const inCart = state.cart.find(c => c.id === card.id);
+      return `
+        <div class="game-card ${inCart ? 'in-cart' : ''} ${card.type === 'event' ? 'event-card' : ''}" id="card-${card.id}">
+          <div class="check-badge">✓</div>
+          <div class="game-card-emoji">${card.emoji}</div>
+          <div class="game-card-name">${card.name}</div>
+          <span class="pill ${card.type==='event'?'pill-coral':'pill-gray'} pill" style="font-size:11px">${card.store}</span>
+          ${card.price > 0 ? `<div class="game-card-price">$${card.price}</div>` : ''}
+          ${card.dopamine > 0 ? `<div class="game-card-dopamine">+${card.dopamine} dopamine</div>` : ''}
+          ${card.type === 'event'
+            ? `<p style="font-size:11px;color:var(--text-mid);margin-top:4px">${card.desc||''}</p>
+               <button class="btn btn-sm" style="background:var(--coral);color:#fff;margin-top:6px" onclick="activateEvent('${card.id}')">Activate!</button>`
+            : `<button class="btn btn-primary btn-sm game-card-add" onclick="addToCart('${card.id}')" ${inCart ? 'disabled' : ''}>
+                ${inCart ? 'In Cart ✓' : 'Add to Cart'}
+               </button>`
+          }
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============================================================
+  // TODO: Cart Logic — Replace with Zustand cart actions
+  // ============================================================
+  function addToCart(cardId) {
+    if (state.cart.length >= 5) return;
+    const card = SAMPLE_CARDS.find(c => c.id === cardId);
+    if (!card || state.cart.find(c => c.id === cardId)) return;
+    if (state.budget < card.price) { alert("Not enough budget!"); return; }
+
+    state.cart.push(card);
+    addLog(`Added ${card.emoji} ${card.name} to cart`);
+    renderHand();
+    renderCart();
+  }
+
+  function removeFromCart(cardId) {
+    state.cart = state.cart.filter(c => c.id !== cardId);
+    renderHand();
+    renderCart();
+  }
+
+  function clearCart() {
+    state.cart = [];
+    renderHand();
+    renderCart();
+    addLog('Cart cleared');
+  }
+
+  function renderCart() {
+    const count = state.cart.length;
+    const totalDopamine = state.cart.reduce((a, c) => a + c.dopamine, 0);
+    document.getElementById('cartCount').textContent = count;
+    document.getElementById('checkoutBtn').disabled = count === 0;
+
+    const dopEl = document.getElementById('cartTotalDopamine');
+    dopEl.style.display = count > 0 ? 'inline-flex' : 'none';
+    dopEl.textContent = '+' + totalDopamine + ' dopamine';
+
+    const itemsEl = document.getElementById('cartItems');
+    if (count === 0) {
+      itemsEl.innerHTML = '<span class="cart-empty-hint">No items yet — add cards from your hand above ☝️</span>';
+    } else {
+      itemsEl.innerHTML = state.cart.map(c => `
+        <div class="cart-pill">
+          ${c.emoji} ${c.name}
+          <span class="cart-pill-remove" onclick="removeFromCart('${c.id}')">×</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ============================================================
+  // TODO: Event Cards — Replace with event resolution in game-engine.ts
+  // ============================================================
+  function activateEvent(cardId) {
+    addLog('⚡ Flash Sale activated! 30% off all items this round');
+    alert('⚡ FLASH SALE! All items are 30% off this round!');
+  }
+
+  // ============================================================
+  // TODO: Checkout Flow — Replace with CheckoutModal.tsx + Framer Motion
+  // ============================================================
+  function openCheckout() {
+    state.checkoutStep = 0;
+    renderCheckout();
+    document.getElementById('checkoutModal').classList.add('open');
+  }
+
+  function closeCheckout() {
+    document.getElementById('checkoutModal').classList.remove('open');
+  }
+
+  function renderCheckout() {
+    const totalPrice = state.cart.reduce((a,c) => a+c.price, 0);
+    const totalDop   = state.cart.reduce((a,c) => a+c.dopamine, 0);
+
+    // Cart items
+    document.getElementById('checkoutCartItems').innerHTML = state.cart.map(c => `
+      <div class="checkout-item">
+        <div class="checkout-item-left">${c.emoji} <span>${c.name}</span></div>
+        <span class="checkout-item-price">$${c.price}</span>
+      </div>
+    `).join('');
+    document.getElementById('checkoutTotal').textContent = '$' + totalPrice;
+    document.getElementById('checkoutDopaminePreview').innerHTML =
+      `⚡ You'll gain <strong>${totalDop} dopamine</strong> from this haul`;
+
+    // Confirm details
+    const regretGain = Math.round(state.cart.reduce((a,c) => a+c.risk,0) / state.cart.length);
+    document.getElementById('confirmDetails').innerHTML = `
+      <div class="confirm-row"><span>Dopamine Gained</span><span class="value" style="color:var(--teal)">+${totalDop}</span></div>
+      <div class="confirm-row"><span>Regret Risk</span><span class="value" style="color:#e07050">+${regretGain}%</span></div>
+      <div class="confirm-row"><span>Budget Remaining</span><span class="value">$${state.budget - totalPrice}</span></div>
+    `;
+  }
+
+  function nextCheckoutStep() {
+    const steps = document.querySelectorAll('.checkout-step');
+    const dots   = document.querySelectorAll('.modal-step-dot');
+    steps[state.checkoutStep].classList.remove('active');
+    dots[state.checkoutStep].classList.remove('active');
+    dots[state.checkoutStep].classList.add('done');
+    state.checkoutStep++;
+    steps[state.checkoutStep].classList.add('active');
+    dots[state.checkoutStep].classList.add('active');
+  }
+
+  function completeCheckout() {
+    const totalPrice = state.cart.reduce((a,c) => a+c.price, 0);
+    const totalDop   = state.cart.reduce((a,c) => a+c.dopamine, 0);
+    const regainGain = Math.round(state.cart.reduce((a,c) => a+c.risk,0) / state.cart.length);
+
+    state.budget   -= totalPrice;
+    state.dopamine += totalDop;
+    state.regret   = Math.min(100, state.regret + regainGain);
+    state.cart = [];
+    state.round++;
+
+    // Dopamine flash
+    const flash = document.getElementById('dopamineFlash');
+    flash.classList.add('flash');
+    setTimeout(() => flash.classList.remove('flash'), 1600);
+
+    closeCheckout();
+    renderHUD();
+    renderCart();
+
+    if (state.round > 10 || state.budget <= 0) {
+      setTimeout(() => showResults(), 400);
+    } else {
+      renderHand();
+      addLog(`✅ Checkout complete! +${totalDop} dopamine • Round ${state.round} begins`);
+    }
+  }
+
+  // ============================================================
+  // TODO: Results — Replace with final score from game-engine.ts
+  // ============================================================
+  function showResults() {
+    const arch = ARCHETYPES[state.archetype] || ARCHETYPES.impulse_king;
+    const archetypeBonus = 3;
+    const regretPenalty = Math.round(state.regret * 0.5);
+    const finalScore = Math.max(0, state.dopamine - regretPenalty + archetypeBonus);
+    const title = finalScore >= 80 ? 'Legendary Haul Queen 👑'
+                : finalScore >= 55 ? 'Master Shopper 🛍️'
+                : finalScore >= 35 ? 'Retail Regular 🛒'
+                : finalScore >= 15 ? 'Bargain Hunter 🏷️'
+                : "Buyer's Remorse 😬";
+
+    document.getElementById('finalScoreNum').textContent = finalScore;
+    document.querySelector('#screen-results .results-score-label').textContent = title;
+    document.getElementById('resTotalDopamine').textContent = '+' + state.dopamine;
+    document.getElementById('resRegretPenalty').textContent = '−' + regretPenalty;
+    document.getElementById('resArchetypeBonus').textContent = '+' + archetypeBonus;
+    document.getElementById('resFinalScore').textContent = finalScore;
+    document.getElementById('resRounds').textContent = Math.min(state.round-1, 10);
+    document.getElementById('resSpent').textContent = '$' + (500 - state.budget);
+    document.getElementById('resultArchetype').innerHTML =
+      `<span class="pill pill-purple">${arch.emoji} ${arch.title}</span>`;
+
+    goToScreen('screen-results');
+  }
+
+  function playAgain() {
+    currentQuestion = 0;
+    Object.keys(quizScores).forEach(k => quizScores[k] = 0);
+    state.quizAnswers = [];
+    state.archetype = null;
+    renderQuestion();
+    goToScreen('screen-quiz');
+  }
+
+  // TODO: Share — Implement real share card generation
+  function shareScore() {
+    alert('📤 Share feature coming soon!\n\nIn the final build this will generate a shareable score card image.');
+  }
+
+  // ============================================================
+  // TODO: Activity Log — Wire up to game event stream
+  // ============================================================
+  function addLog(msg) {
+    const el = document.getElementById('activityLog');
+    const mins = Math.floor(Date.now() % 600000 / 60000);
+    const secs = Math.floor(Date.now() % 60000 / 1000);
+    const time = `${mins}:${String(secs).padStart(2,'0')}`;
+    const entry = document.createElement('div');
+    entry.className = 'activity-entry';
+    entry.innerHTML = `<span class="activity-time">${time}</span><span>${msg}</span>`;
+    el.insertBefore(entry, el.firstChild);
+    state.log.push({ time, msg });
+  }
+
+  // ============================================================
+  // Init
+  // ============================================================
+  renderQuestion();
+  goToScreen('screen-landing');
+</script>
+</body>
+</html>
