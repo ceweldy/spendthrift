@@ -18,7 +18,6 @@ const variants = {
 
 export default function HomePage() {
   const screen = useGameStore((s) => s.screen);
-  const startQuiz = useGameStore((s) => s.startQuiz);
   const reducedMotion = useReducedMotion();
 
   return (
@@ -32,7 +31,7 @@ export default function HomePage() {
           exit={reducedMotion ? undefined : 'exit'}
           transition={{ duration: 0.28, ease: 'easeOut' }}
         >
-          {screen === 'landing' && <LandingScreen onStart={startQuiz} />}
+          {screen === 'landing' && <LandingScreen />}
           {screen === 'quiz' && <QuizScreen />}
           {screen === 'archetype' && <ArchetypeScreen />}
           {screen === 'game' && <GameScreen />}

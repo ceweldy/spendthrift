@@ -7,12 +7,12 @@ import {
   CardEffect,
   CartItem,
   InventoryItem,
+  MembershipTierId,
   PaymentMode,
   PendingRegret,
   PremiumState,
   PurchaseLine,
   RunStats,
-  SubscriptionPlanId,
   SubscriptionState,
 } from '@/types/game';
 
@@ -44,9 +44,15 @@ export type EngineState = {
   purchaseHistory: PurchaseLine[];
   subscription: SubscriptionState;
   stats: RunStats;
+  paydayEvery: number;
+  paydayAmount: number;
+  lastPaydayRound: number | null;
+  announcement: string | null;
 };
 
 const STARTING_BUDGET = 500;
+const PAYDAY_EVERY_ROUNDS = 3;
+const PAYDAY_AMOUNT = 180;
 const logCap = 30;
 
 export type CheckoutTotals = {
@@ -145,9 +151,9 @@ export const createInitialEngineState = (archetype: ArchetypeKey, premiumEnabled
   inventory: [],
   purchaseHistory: [],
   subscription: {
-    currentPlanId: null,
-    startedAt: null,
-    renewalAt: null,
+    currentPlanId: premiumEnabled ? 'paid' : 'free',
+    startedAt: premiumEnabled ? Date.now() : null,
+    renewalAt: premiumEnabled ? nowPlusThirtyDays(Date.now()) : null,
   },
   stats: {
     ordersCompleted: 0,
@@ -156,6 +162,10 @@ export const createInitialEngineState = (archetype: ArchetypeKey, premiumEnabled
     totalOriginalSpent: 0,
     subscriptionPurchases: 0,
   },
+  paydayEvery: PAYDAY_EVERY_ROUNDS,
+  paydayAmount: PAYDAY_AMOUNT,
+  lastPaydayRound: null,
+  announcement: null,
 });
 
 export const drawHandForRound = (state: EngineState): EngineState => {
@@ -163,7 +173,7 @@ export const drawHandForRound = (state: EngineState): EngineState => {
   const products = drawUniqueWeighted(productsPool(state), 4, (card) => getProductWeight(card, archetype));
   const event = drawWeighted(eventPool(state), (card) => getEventWeight(card, archetype));
   const hand = event ? [event, ...products] : products;
-  let next = { ...state, hand };
+  let next: EngineState = { ...state, hand, announcement: null };
   next = applyDelayedRegret(next);
   return pushHistory(next, 'draw', `Round ${next.round} dealt: ${hand.map((c) => c.name).join(', ')}`);
 };
@@ -328,6 +338,40 @@ export const tickTimers = (state: EngineState): EngineState => {
   return next;
 };
 
+export const skipRound = (state: EngineState): { next: EngineState; ended: boolean } => {
+  const nextRound = state.round + 1;
+  const isPaydayRound = nextRound % state.paydayEvery === 0;
+  let next: EngineState = {
+    ...state,
+    round: nextRound,
+    cart: [],
+    flashSaleSecondsLeft: 0,
+    nextDiscount: 0,
+    shippingDiscount: 0,
+    fomoBoost: false,
+    quickBuy: false,
+    cashbackRate: 0,
+    roundDopamineBoost: 0,
+    techDiscountRate: 0,
+    nextCheckoutRegret: 0,
+    halfRegretGain: false,
+    budget: state.budget + (isPaydayRound ? state.paydayAmount : 0),
+    lastPaydayRound: isPaydayRound ? nextRound : state.lastPaydayRound,
+    announcement: isPaydayRound ? `💸 Payday! +$${state.paydayAmount} budget injected for round ${nextRound}.` : null,
+  };
+
+  next = pushHistory(next, 'round', `Round skipped. Advancing to round ${nextRound}.`);
+  if (isPaydayRound) next = pushHistory(next, 'round', `Payday reached: +$${state.paydayAmount} budget.`);
+
+  const ended = nextRound > state.maxRounds;
+  if (!ended) {
+    next = pushHistory(next, 'round', `Round ${next.round} begins.`);
+    next = drawHandForRound(next);
+  }
+
+  return { next, ended };
+};
+
 const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: number): EngineState => {
   const existing = state.inventory.find((inv) => inv.cardId === item.id);
 
@@ -407,10 +451,13 @@ export const calculateCheckoutTotals = (state: EngineState): CheckoutTotals & { 
 export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
   const { originalTotal, chargedTotal, cashback, dopamineGain, regretGain } = calculateCheckoutTotals(state);
 
-  const nextBudget = Math.max(0, state.budget - chargedTotal + cashback);
+  let nextBudget = Math.max(0, state.budget - chargedTotal + cashback);
   const nextDopamine = state.dopamine + dopamineGain;
   const nextRegret = Math.min(100, state.regret + regretGain);
   const nextRound = state.round + 1;
+
+  const isPaydayRound = nextRound % state.paydayEvery === 0;
+  if (isPaydayRound) nextBudget += state.paydayAmount;
 
   let next: EngineState = {
     ...state,
@@ -426,6 +473,8 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
     techDiscountRate: 0,
     nextCheckoutRegret: 0,
     halfRegretGain: false,
+    lastPaydayRound: isPaydayRound ? nextRound : state.lastPaydayRound,
+    announcement: isPaydayRound ? `💸 Payday! +$${state.paydayAmount} budget injected for round ${nextRound}.` : null,
     stats: {
       ...state.stats,
       ordersCompleted: state.stats.ordersCompleted + 1,
@@ -447,8 +496,9 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
   );
   next = pushHistory(next, 'inventory', `Inventory updated with ${state.cart.length} purchased item(s).`);
   if (cashback > 0) next = pushHistory(next, 'checkout', `Cashback applied: +$${cashback}.`);
+  if (isPaydayRound) next = pushHistory(next, 'round', `Payday reached: +$${state.paydayAmount} budget.`);
 
-  const ended = nextRound > state.maxRounds || nextBudget <= 0;
+  const ended = nextRound > state.maxRounds;
   if (!ended) {
     next = pushHistory(next, 'round', `Round ${next.round} begins.`);
     next = drawHandForRound(next);
@@ -462,94 +512,30 @@ export const setPaymentMode = (state: EngineState, mode: PaymentMode): EngineSta
   return pushHistory({ ...state, paymentMode: mode }, 'payment', `Payment mode changed to ${mode === 'demo-free' ? 'Demo free checkout' : 'Real pricing (display only)'}.`);
 };
 
-export const purchaseSubscription = (
-  state: EngineState,
-  plan: { id: SubscriptionPlanId; name: string; price: number },
-): EngineState => {
-  const charge = applyPaymentMode(plan.price, state.paymentMode);
-  if (charge > state.budget) {
-    return pushHistory(state, 'subscription', `${plan.name} plan skipped: insufficient budget.`);
-  }
+export const setMembershipTier = (state: EngineState, tier: MembershipTierId): EngineState => {
+  const isPaid = tier === 'paid';
+  const now = Date.now();
 
-  const timestamp = Date.now();
-  const nextStats: RunStats = {
-    ...state.stats,
-    totalSpent: state.stats.totalSpent + charge,
-    totalOriginalSpent: state.stats.totalOriginalSpent + plan.price,
-    subscriptionPurchases: state.stats.subscriptionPurchases + 1,
-  };
-
-  const line: PurchaseLine = {
-    id: nextId(),
-    itemId: `sub-${plan.id}`,
-    itemName: `${plan.name} Subscription`,
-    emoji: '🧾',
-    quantity: 1,
-    unitOriginalPrice: plan.price,
-    unitPaidPrice: charge,
-    lineOriginalTotal: plan.price,
-    linePaidTotal: charge,
-    timestamp,
-    source: 'subscription',
-  };
-
-  const existingSub = state.inventory.find((inv) => inv.cardId === `sub-${plan.id}`);
-  const subscriptionInventory: InventoryItem = existingSub
-    ? {
-        ...existingSub,
-        quantity: existingSub.quantity + 1,
-        lastPurchasePrice: charge,
-        lastOriginalPrice: plan.price,
-        totalSpent: existingSub.totalSpent + charge,
-        totalOriginalSpent: existingSub.totalOriginalSpent + plan.price,
-        lastPurchasedAt: timestamp,
-      }
-    : {
-        id: nextId(),
-        cardId: `sub-${plan.id}`,
-        emoji: '🧾',
-        name: `${plan.name} Subscription`,
-        store: 'Spendthrift+',
-        category: 'power',
-        quantity: 1,
-        lastPurchasePrice: charge,
-        lastOriginalPrice: plan.price,
-        totalSpent: charge,
-        totalOriginalSpent: plan.price,
-        firstPurchasedAt: timestamp,
-        lastPurchasedAt: timestamp,
-      };
-
-  let next: EngineState = {
-    ...state,
-    budget: Math.max(0, state.budget - charge),
-    premium: {
-      enabled: true,
-      unlocks: {
-        premiumCards: true,
-        analytics: true,
-        noAds: true,
+  return pushHistory(
+    {
+      ...state,
+      premium: {
+        enabled: isPaid,
+        unlocks: {
+          premiumCards: isPaid,
+          analytics: isPaid,
+          noAds: isPaid,
+        },
+      },
+      subscription: {
+        currentPlanId: tier,
+        startedAt: isPaid ? now : null,
+        renewalAt: isPaid ? nowPlusThirtyDays(now) : null,
       },
     },
-    subscription: {
-      currentPlanId: plan.id,
-      startedAt: timestamp,
-      renewalAt: nowPlusThirtyDays(timestamp),
-    },
-    stats: nextStats,
-    purchaseHistory: [line, ...state.purchaseHistory],
-    inventory: existingSub
-      ? state.inventory.map((inv) => (inv.cardId === subscriptionInventory.cardId ? subscriptionInventory : inv))
-      : [subscriptionInventory, ...state.inventory],
-  };
-
-  next = pushHistory(
-    next,
     'subscription',
-    `Subscribed to ${plan.name}: paid $${charge}${state.paymentMode === 'demo-free' ? ` (original $${plan.price})` : ''}.`,
+    `Membership set to ${isPaid ? 'Paid' : 'Free'}. ${isPaid ? 'Premium cards unlocked.' : 'Using free card pool.'}`,
   );
-
-  return next;
 };
 
 export const getFinalScore = (dopamine: number, regret: number, archetype: ArchetypeKey | null) => {

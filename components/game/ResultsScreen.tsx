@@ -12,6 +12,7 @@ export function ResultsScreen() {
   const arch = getArchetype(s.archetype);
 
   const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
+  const purchasedItems = s.inventory.reduce((acc, item) => acc + item.quantity, 0);
 
   const onShare = async () => {
     await navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`);
@@ -45,18 +46,34 @@ export function ResultsScreen() {
         <Row label="Final Score" value={`${finalScore}`} color="text-amber" strong />
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: reducedMotion ? 0 : 0.2 }}
-        className="flex flex-wrap justify-center gap-8"
-      >
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: reducedMotion ? 0 : 0.2 }} className="flex flex-wrap justify-center gap-8">
         <Metric label="Rounds" value={`${Math.min(s.round - 1, s.maxRounds)}`} />
         <Metric label="Run Spent" value={`$${500 - s.budget}`} />
         <Metric label="Lifetime Spent" value={`$${s.stats.totalSpent.toFixed(2)}`} />
         <Metric label="Original Value" value={`$${s.stats.totalOriginalSpent.toFixed(2)}`} />
         <Metric label="Demo Savings" value={`$${demoSavings.toFixed(2)}`} />
       </motion.div>
+
+      <div className="w-full max-w-xl rounded-xl border border-white/10 bg-black/20 p-4 text-left">
+        <div className="mb-2 text-[11px] uppercase tracking-widest text-zinc-500">Purchased Items Summary</div>
+        <div className="mb-2 text-sm text-zinc-300">Total Items: {purchasedItems} • Distinct: {s.inventory.length}</div>
+        <div className="max-h-44 space-y-2 overflow-auto text-sm">
+          {s.inventory.length === 0 && <div className="text-zinc-500">No purchases recorded.</div>}
+          {s.inventory.slice(0, 20).map((item) => (
+            <div key={item.id} className="flex items-center justify-between rounded border border-white/10 bg-black/30 px-2 py-1">
+              <span>{item.emoji} {item.name} × {item.quantity}</span>
+              <span className="text-zinc-300">${item.totalSpent.toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {s.subscription.currentPlanId === 'free' && (
+        <div className="w-full max-w-xl rounded-xl border border-purple/30 bg-purple/10 p-4 text-left">
+          <div className="text-sm font-bold text-purple-light">Upgrade to Paid</div>
+          <div className="mt-1 text-xs text-zinc-300">Unlock premium cards/features before your next run from the landing screen.</div>
+        </div>
+      )}
 
       <div className="w-full max-w-xl rounded-xl border border-white/10 bg-black/20 p-4 text-left">
         <div className="mb-2 text-[11px] uppercase tracking-widest text-zinc-500">Share Card Preview</div>
@@ -67,6 +84,7 @@ export function ResultsScreen() {
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button className="px-7 py-3" onClick={s.startQuiz}>Play Again</Button>
+        <Button variant="ghost" className="px-7 py-3" onClick={s.resetAll}>Back to Home</Button>
         <Button variant="ghost" className="px-7 py-3" onClick={onShare}>
           {copied ? 'Copied ✓' : 'Share Score 📤'}
         </Button>

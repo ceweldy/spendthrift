@@ -17,7 +17,7 @@ export function CheckoutModal() {
   const reducedMotion = useReducedMotion();
 
   const totals = calculateCheckoutTotals(state);
-  const chargedTotal = paymentMode === 'demo-free' ? 0 : totals.total;
+  const chargedTotal = totals.chargedTotal;
   const totalD = cart.reduce((a, c) => a + c.finalDopamine, 0);
 
   return (
@@ -74,7 +74,7 @@ export function CheckoutModal() {
                     {totals.shippingCut > 0 && <div className="flex justify-between py-2 text-sm"><span>🚚 Shipping Discount</span><span className="text-[#e07050]">-${totals.shippingCut}</span></div>}
                   </div>
                   <div className="mt-4 space-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-zinc-400">Original total</span><span className="text-[#e07050]">${totals.total}</span></div>
+                    <div className="flex justify-between"><span className="text-zinc-400">Original total</span><span className="text-[#e07050]">${totals.originalTotal}</span></div>
                     <motion.div layout className="flex justify-between font-semibold"><span>Charged now</span><span className="text-teal">${chargedTotal}</span></motion.div>
                   </div>
                   <div className="mt-3 rounded-md border border-purple/30 bg-purple/10 p-3 text-sm text-purple-light">⚡ You&apos;ll gain <strong>{totalD} dopamine</strong> from this haul</div>
@@ -112,7 +112,7 @@ export function CheckoutModal() {
                     ))}
                   </div>
                   <h3 className="text-2xl font-bold">Order Placed! 🎉</h3>
-                  <p className="mt-1 text-sm text-zinc-400">Charged ${chargedTotal}. Original tracked total: ${totals.total}</p>
+                  <p className="mt-1 text-sm text-zinc-400">Charged ${chargedTotal}. Original tracked total: ${totals.originalTotal}</p>
                   <Button className="mt-5 w-full" onClick={completeCheckout}>Next Round →</Button>
                 </motion.div>
               )}

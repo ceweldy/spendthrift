@@ -116,17 +116,17 @@ export type PurchaseLine = {
   source: 'game-checkout' | 'subscription';
 };
 
-export type SubscriptionPlanId = 'starter' | 'pro' | 'elite';
+export type MembershipTierId = 'free' | 'paid';
 
-export type SubscriptionPlan = {
-  id: SubscriptionPlanId;
+export type MembershipTier = {
+  id: MembershipTierId;
   name: string;
   price: number;
   perks: string[];
 };
 
 export type SubscriptionState = {
-  currentPlanId: SubscriptionPlanId | null;
+  currentPlanId: MembershipTierId;
   startedAt: number | null;
   renewalAt: number | null;
 };
@@ -148,6 +148,6 @@ export type PremiumState = {
   };
 };
 
-export type GameMenu = 'shop' | 'inventory' | 'subscription';
+export type GameMenu = 'shop' | 'inventory' | 'activity';
 
 export type Screen = 'landing' | 'quiz' | 'archetype' | 'game' | 'checkout' | 'results';

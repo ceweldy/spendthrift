@@ -12,12 +12,13 @@ import {
   drawHandForRound,
   getFinalScore,
   playSpecialCard,
-  purchaseSubscription,
   removeFromCart,
+  setMembershipTier,
   setPaymentMode,
+  skipRound,
   tickTimers,
 } from '@/lib/game-engine';
-import { ArchetypeKey, GameMenu, PaymentMode, Screen, SubscriptionPlan, SubscriptionPlanId } from '@/types/game';
+import { ArchetypeKey, GameMenu, MembershipTier, MembershipTierId, PaymentMode, Screen } from '@/types/game';
 
 type CheckoutStep = 0 | 1 | 2;
 
@@ -31,7 +32,7 @@ type GameState = EngineState & {
   checkoutStep: CheckoutStep;
 
   activeMenu: GameMenu;
-  subscriptionPlans: SubscriptionPlan[];
+  membershipTiers: MembershipTier[];
 
   toLanding: () => void;
   startQuiz: () => void;
@@ -48,12 +49,13 @@ type GameState = EngineState & {
   closeCheckout: () => void;
   nextCheckoutStep: () => void;
   completeCheckout: () => void;
+  skipCurrentRound: () => void;
   tick: () => void;
   endGame: () => void;
 
   setActiveMenu: (menu: GameMenu) => void;
   setCheckoutMode: (mode: PaymentMode) => void;
-  buySubscription: (planId: SubscriptionPlanId) => void;
+  chooseMembership: (tier: MembershipTierId) => void;
 
   resetAll: () => void;
 };
@@ -65,10 +67,9 @@ const initialScores: Record<ArchetypeKey, number> = {
   comfort_seeker: 0,
 };
 
-const subscriptionPlans: SubscriptionPlan[] = [
-  { id: 'starter', name: 'Starter', price: 9, perks: ['Premium card previews', 'Basic spend trends'] },
-  { id: 'pro', name: 'Pro', price: 19, perks: ['All Starter perks', 'Deep analytics', 'Priority themes'] },
-  { id: 'elite', name: 'Elite', price: 39, perks: ['All Pro perks', 'VIP drops', 'Ultra flex cosmetics'] },
+const membershipTiers: MembershipTier[] = [
+  { id: 'free', name: 'Free', price: 0, perks: ['Core game cards', 'Standard HUD', 'Default mode'] },
+  { id: 'paid', name: 'Paid', price: 9, perks: ['Premium card pool', 'Advanced analytics', 'Premium features'] },
 ];
 
 const baseEngine = createInitialEngineState('impulse_king');
@@ -84,13 +85,13 @@ export const useGameStore = create<GameState>()(
       checkoutOpen: false,
       checkoutStep: 0,
       activeMenu: 'shop',
-      subscriptionPlans,
+      membershipTiers,
 
       toLanding: () => set({ screen: 'landing' }),
 
       startQuiz: () =>
         set((state) => ({
-          ...createInitialEngineState('impulse_king', state.premium.enabled),
+          ...createInitialEngineState('impulse_king', state.subscription.currentPlanId === 'paid'),
           screen: 'quiz',
           questionIndex: 0,
           quizScores: { ...initialScores },
@@ -100,6 +101,7 @@ export const useGameStore = create<GameState>()(
           inventory: state.inventory,
           purchaseHistory: state.purchaseHistory,
           subscription: state.subscription,
+          premium: state.premium,
           stats: state.stats,
         })),
 
@@ -120,7 +122,7 @@ export const useGameStore = create<GameState>()(
       startGame: () => {
         const state = get();
         const archetype = state.archetype ?? 'impulse_king';
-        let engine = createInitialEngineState(archetype, state.premium.enabled);
+        let engine = createInitialEngineState(archetype, state.subscription.currentPlanId === 'paid');
         engine = drawHandForRound(engine);
 
         set({
@@ -130,6 +132,7 @@ export const useGameStore = create<GameState>()(
           inventory: state.inventory,
           purchaseHistory: state.purchaseHistory,
           subscription: state.subscription,
+          premium: state.premium,
           stats: state.stats,
           screen: 'game',
           checkoutOpen: false,
@@ -164,21 +167,26 @@ export const useGameStore = create<GameState>()(
         });
       },
 
+      skipCurrentRound: () => {
+        const { next, ended } = skipRound(get());
+        set({
+          ...next,
+          screen: ended ? 'results' : 'game',
+          activeMenu: 'shop',
+        });
+      },
+
       tick: () => set((s) => tickTimers(s)),
 
       endGame: () => set({ screen: 'results' }),
 
       setActiveMenu: (menu) => set({ activeMenu: menu }),
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
-      buySubscription: (planId) => {
-        const plan = get().subscriptionPlans.find((p) => p.id === planId);
-        if (!plan) return;
-        set((s) => purchaseSubscription(s, plan));
-      },
+      chooseMembership: (tier) => set((s) => setMembershipTier(s, tier)),
 
       resetAll: () =>
         set((state) => ({
-          ...createInitialEngineState('impulse_king', state.premium.enabled),
+          ...createInitialEngineState('impulse_king', state.subscription.currentPlanId === 'paid'),
           screen: 'landing',
           questionIndex: 0,
           quizScores: { ...initialScores },
@@ -190,11 +198,12 @@ export const useGameStore = create<GameState>()(
           inventory: state.inventory,
           purchaseHistory: state.purchaseHistory,
           subscription: state.subscription,
+          premium: state.premium,
           stats: state.stats,
         })),
     }),
     {
-      name: 'spendthrift-state-v3',
+      name: 'spendthrift-state-v4',
       partialize: (state) => ({
         paymentMode: state.paymentMode,
         inventory: state.inventory,

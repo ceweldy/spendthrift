@@ -25,6 +25,8 @@ export function GameScreen() {
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
   const cartD = s.cart.reduce((a, c) => a + c.finalDopamine, 0);
   const spendPct = Math.min(100, ((500 - s.budget) / 500) * 100);
+  const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => c.price ?? 0), Number.POSITIVE_INFINITY);
+  const cannotAffordAny = minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
 
   useEffect(() => {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
@@ -66,10 +68,10 @@ export function GameScreen() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
         <div className="font-extrabold tracking-wide text-purple-light">SPENDTHRIFT</div>
         <div className="flex flex-wrap gap-4 text-center text-xs sm:gap-5">
-          <Stat label="💰 Budget" value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
-          <Stat label="⚡ Dopamine" value={`${s.dopamine}`} color="text-purple-light" pulseKey={s.dopamine} />
-          <Stat label="😬 Regret" value={`${s.regret}%`} color="text-[#e07050]" pulseKey={s.regret} />
-          <Stat label="🔄 Round" value={`${Math.min(s.round, s.maxRounds)}/${s.maxRounds}`} color="text-white" pulseKey={s.round} />
+          <Stat label="💰 Budget" help="Money available to spend in this run." value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
+          <Stat label="⚡ Dopamine" help="Your score driver from purchases/events." value={`${s.dopamine}`} color="text-purple-light" pulseKey={s.dopamine} />
+          <Stat label="😬 Regret" help="Higher regret lowers final score." value={`${s.regret}%`} color="text-[#ff8d69]" pulseKey={s.regret} />
+          <Stat label="🔄 Round" help={`Every ${s.paydayEvery} rounds you get +$${s.paydayAmount} payday budget.`} value={`${Math.min(s.round, s.maxRounds)}/${s.maxRounds}`} color="text-white" pulseKey={s.round} />
         </div>
         <Button variant="ghost" onClick={s.endGame}>End Game</Button>
       </div>
@@ -78,25 +80,32 @@ export function GameScreen() {
         <div className="mb-3 flex flex-wrap gap-2">
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
-          <MenuPill active={s.activeMenu === 'subscription'} onClick={() => s.setActiveMenu('subscription')} label="Subscription" />
+          <MenuPill active={s.activeMenu === 'activity'} onClick={() => s.setActiveMenu('activity')} label="Activity" />
         </div>
-        <div className="h-2 overflow-hidden rounded bg-white/10">
-          <motion.div
-            animate={{ width: `${mood}%` }}
-            transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="h-full rounded bg-gradient-to-r from-coral via-amber to-teal"
-          />
+        <div className="mb-2">
+          <div className="mb-1 flex items-center justify-between text-[11px] text-zinc-300"><span>Mood Meter</span><span>{Math.round(mood)}%</span></div>
+          <div title="Higher mood means your run is trending better." className="h-3 overflow-hidden rounded border border-white/20 bg-black/40">
+            <motion.div
+              animate={{ width: `${mood}%` }}
+              transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full rounded bg-gradient-to-r from-coral via-amber to-teal"
+            />
+          </div>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded bg-white/10">
-          <motion.div
-            animate={{ width: `${spendPct}%` }}
-            transition={{ duration: reducedMotion ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="h-full rounded bg-gradient-to-r from-teal via-purple to-[#e07050]"
-          />
+        <div>
+          <div className="mb-1 flex items-center justify-between text-[11px] text-zinc-300"><span>Budget Used</span><span>{Math.round(spendPct)}%</span></div>
+          <div title="How much of the starting $500 has been used this run." className="h-3 overflow-hidden rounded border border-white/20 bg-black/40">
+            <motion.div
+              animate={{ width: `${spendPct}%` }}
+              transition={{ duration: reducedMotion ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full rounded bg-gradient-to-r from-teal via-purple to-[#e07050]"
+            />
+          </div>
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
+        {s.announcement && <div className="mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         <AnimatePresence mode="wait" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
@@ -146,8 +155,10 @@ export function GameScreen() {
                 <div className="flex flex-wrap items-center gap-3">
                   <Button onClick={s.openCheckout} disabled={s.cart.length === 0}>Checkout →</Button>
                   <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={s.clearCart}>Clear Cart</button>
+                  <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={s.skipCurrentRound}>Skip Round</button>
                   {s.cart.length > 0 && <span className="pill bg-purple/20 text-purple-light">+{cartD} dopamine</span>}
                 </div>
+                {cannotAffordAny && <div className="mt-2 text-xs text-amber">No affordable products in hand. Use Skip Round to cycle cards until payday.</div>}
               </motion.div>
             </motion.div>
           )}
@@ -155,6 +166,7 @@ export function GameScreen() {
           {s.activeMenu === 'inventory' && (
             <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
+              <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
                 <input className="rounded-md border border-white/10 bg-bg p-2 text-sm" placeholder="Search item" value={query} onChange={(e) => setQuery(e.target.value)} />
                 <select className="rounded-md border border-white/10 bg-bg p-2 text-sm" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}>
@@ -174,22 +186,20 @@ export function GameScreen() {
             </motion.div>
           )}
 
-          {s.activeMenu === 'subscription' && (
-            <motion.div key="menu-subscription" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="space-y-4 rounded-2xl border border-white/10 bg-bg-card p-4">
-              <div className="text-sm font-semibold">Subscription & Payments</div>
+          {s.activeMenu === 'activity' && (
+            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="space-y-4 rounded-2xl border border-white/10 bg-bg-card p-4">
+              <div className="text-sm font-semibold">Activity & Payment Settings</div>
               <div className="flex flex-wrap gap-2">
                 <button className={`pill ${s.paymentMode === 'real-display' ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('real-display')}>Real pricing (display only)</button>
                 <button className={`pill ${s.paymentMode === 'demo-free' ? 'bg-teal text-black' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('demo-free')}>Demo free checkout</button>
               </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                {s.subscriptionPlans.map((plan) => (
-                  <motion.div key={plan.id} whileHover={reducedMotion ? undefined : { y: -2 }} className={`rounded-lg border p-3 ${s.subscription.currentPlanId === plan.id ? 'border-purple bg-purple/10' : 'border-white/10 bg-black/20'}`}>
-                    <div className="text-lg font-bold">{plan.name}</div>
-                    <div className="text-sm text-coral">${plan.price}/mo</div>
-                    <ul className="mt-2 space-y-1 text-xs text-zinc-400">{plan.perks.map((perk) => <li key={perk}>• {perk}</li>)}</ul>
-                    <Button className="mt-3 w-full" onClick={() => s.buySubscription(plan.id)}>Choose Plan</Button>
-                  </motion.div>
-                ))}
+              <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                <div className="mb-2 text-xs uppercase tracking-widest text-zinc-500">Recent Activity</div>
+                <div className="max-h-60 space-y-2 overflow-auto text-sm">
+                  {s.activityLog.slice(0, 12).map((line, idx) => (
+                    <div key={`${line}-${idx}`} className="border-b border-white/5 pb-1 text-zinc-300">• {line}</div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -221,10 +231,10 @@ export function GameScreen() {
   );
 }
 
-function Stat({ label, value, color, pulseKey }: { label: string; value: string; color: string; pulseKey: string | number }) {
+function Stat({ label, help, value, color, pulseKey }: { label: string; help?: string; value: string; color: string; pulseKey: string | number }) {
   return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
+    <div title={help}>
+      <div className="text-[10px] uppercase tracking-wider text-zinc-400">{label}</div>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={pulseKey}

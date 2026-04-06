@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { useGameStore } from '@/store/useGameStore';
 
-export function LandingScreen({ onStart }: { onStart: () => void }) {
+export function LandingScreen() {
+  const startQuiz = useGameStore((s) => s.startQuiz);
+  const membershipTiers = useGameStore((s) => s.membershipTiers);
+  const currentTier = useGameStore((s) => s.subscription.currentPlanId);
+  const chooseMembership = useGameStore((s) => s.chooseMembership);
+
   return (
     <section className="screen-wrap relative flex flex-col items-center justify-between px-6 text-center">
       <div className="pointer-events-none absolute top-0 h-72 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
@@ -20,15 +26,43 @@ export function LandingScreen({ onStart }: { onStart: () => void }) {
         <p className="max-w-md border-l-2 border-purple pl-4 text-left text-sm text-zinc-500">
           &ldquo;The thrill of the purchase. None of the financial guilt.&rdquo;
         </p>
+
+        <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-bg-card/70 p-4 text-left">
+          <div className="mb-3 text-xs uppercase tracking-[0.2em] text-zinc-400">Choose Membership (Pre-Game)</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {membershipTiers.map((tier) => (
+              <button
+                key={tier.id}
+                onClick={() => chooseMembership(tier.id)}
+                className={`rounded-xl border p-4 transition ${
+                  currentTier === tier.id ? 'border-purple bg-purple/15' : 'border-white/10 bg-black/20 hover:border-white/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-bold">{tier.name}</div>
+                  <div className="text-sm text-coral">{tier.id === 'free' ? '$0' : '$9/mo'}</div>
+                </div>
+                <ul className="mt-2 space-y-1 text-xs text-zinc-300">
+                  {tier.perks.map((perk) => (
+                    <li key={perk}>• {perk}</li>
+                  ))}
+                </ul>
+                {currentTier === tier.id && <div className="mt-2 text-xs text-teal">Selected</div>}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 text-xs text-zinc-500">Free is default. Paid unlocks premium cards/features.</div>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-2 text-xs">
-          <span className="pill bg-purple/20 text-purple-light">Freemium</span>
+          <span className="pill bg-purple/20 text-purple-light">Membership First</span>
           <span className="pill border border-white/10 bg-white/5 text-zinc-300">Browser-First</span>
           <span className="pill bg-teal/20 text-teal">No Real Money</span>
           <span className="pill bg-amber/20 text-amber">Brand Ready</span>
         </div>
-        <Button className="px-8 py-4 text-base" onClick={onStart}>Start Shopping →</Button>
+        <Button className="px-8 py-4 text-base" onClick={startQuiz}>Start Shopping →</Button>
       </div>
-      <footer className="w-full border-t border-white/10 py-5 text-xs text-zinc-500">Team 7 · Strategy Class · v2.0 PRD Build</footer>
+      <footer className="w-full border-t border-white/10 py-5 text-xs text-zinc-500">Team 7 · Strategy Class · v2.1 UX Pass</footer>
     </section>
   );
 }
