@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
@@ -30,6 +30,7 @@ export function GameScreen() {
   const reducedMotion = useReducedMotion();
   const cartRef = useRef<HTMLDivElement | null>(null);
   const [flyChips, setFlyChips] = useState<FlyChip[]>([]);
+  const [impactBursts, setImpactBursts] = useState<ImpactBurst[]>([]);
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
@@ -43,6 +44,13 @@ export function GameScreen() {
   const spendPct = Math.min(100, ((500 - s.budget) / 500) * 100);
   const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => c.price ?? 0), Number.POSITIVE_INFINITY);
   const cannotAffordAny = minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
+
+  const pushImpact = useCallback((text: string, tone: ImpactBurst['tone']) => {
+    if (reducedMotion) return;
+    const burst = { id: Date.now() + Math.floor(Math.random() * 1000), text, tone };
+    setImpactBursts((v) => [...v, burst]);
+    setTimeout(() => setImpactBursts((v) => v.filter((b) => b.id !== burst.id)), 760);
+  }, [reducedMotion]);
 
   useEffect(() => {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
@@ -64,6 +72,7 @@ export function GameScreen() {
     if (s.round > prevRoundRef.current) {
       const isPayday = Boolean(s.announcement && /payday/i.test(s.announcement));
       playSfx(isPayday ? 'payday' : 'roundTransition');
+      if (!reducedMotion) pushImpact(isPayday ? 'PAYDAY +BUDGET' : 'NEXT ROUND', 'good');
       prevRoundRef.current = s.round;
     }
 
@@ -73,11 +82,12 @@ export function GameScreen() {
       }
       prevAnnouncementRef.current = s.announcement;
     }
-  }, [s.round, s.announcement]);
+  }, [s.round, s.announcement, reducedMotion, pushImpact]);
 
   const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string) => {
     if (!reducedMotion) {
       setCartPulse((v) => v + 1);
+      pushImpact(`${emoji} added`, 'good');
     }
 
     if (reducedMotion || !cartRef.current) return s.addToCart(cardId);
@@ -147,7 +157,7 @@ export function GameScreen() {
       </div>
 
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
-        {s.announcement && <div className="mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
+        {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="wait" initial={false}>
           {s.activeMenu === 'shop' && (
@@ -162,8 +172,9 @@ export function GameScreen() {
                   return (
                     <motion.div
                       key={card.id}
-                      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015 }}
+                      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015, rotateX: 3, rotateY: -3 }}
                       transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                      style={reducedMotion ? undefined : { transformStyle: 'preserve-3d', perspective: 900 }}
                       className={`tcg-card rarity-${rarity}`}
                     >
                       <div className={`tcg-foil ${isFoil ? 'opacity-100' : 'opacity-0'}`} />
@@ -173,7 +184,7 @@ export function GameScreen() {
                           <div className="tcg-back-title">Spendthrift</div>
                           <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">{rarityLabel[rarity]} Pull</div>
                           <div className="my-4 text-4xl">🎴</div>
-                          <Button className="w-full text-xs" onClick={() => setRevealedCards((v) => ({ ...v, [card.id]: true }))}>Reveal Card</Button>
+                          <Button className="w-full text-xs" onClick={() => { setRevealedCards((v) => ({ ...v, [card.id]: true })); pushImpact(`${rarityLabel[rarity]} reveal`, 'neutral'); }}>Reveal Card</Button>
                         </div>
                       ) : (
                         <div className="tcg-face tcg-front">
@@ -217,7 +228,7 @@ export function GameScreen() {
                               {inCart ? 'In Cart ✓' : 'Add to Cart'}
                             </Button>
                           ) : (
-                            <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => s.playSpecial(card.id)}>Play Card</Button>
+                            <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => { s.playSpecial(card.id); pushImpact('effect triggered', 'neutral'); }}>Play Card</Button>
                           )}
                         </div>
                       )}
@@ -238,14 +249,14 @@ export function GameScreen() {
                   {s.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : s.cart.map((c) => (
                     <motion.span layout key={c.id} className="pill border border-purple/40 bg-purple/20 text-purple-light">
                       {c.emoji} {c.name} (${c.paidPrice})
-                      <button className="ml-1 opacity-80 hover:opacity-100" onClick={() => s.removeFromCart(c.id)}>×</button>
+                      <button className="ml-1 opacity-80 hover:opacity-100" onClick={() => { s.removeFromCart(c.id); pushImpact('removed', 'warn'); }}>×</button>
                     </motion.span>
                   ))}
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button onClick={s.openCheckout} disabled={s.cart.length === 0}>Checkout →</Button>
-                  <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={s.clearCart}>Clear Cart</button>
-                  <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={s.skipCurrentRound}>Skip Round</button>
+                  <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={() => { s.clearCart(); pushImpact('cart cleared', 'warn'); }}>Clear Cart</button>
+                  <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={() => { s.skipCurrentRound(); pushImpact('round skipped', 'neutral'); }}>Skip Round</button>
                   {s.cart.length > 0 && <span className="pill bg-purple/20 text-purple-light">+{cartD} dopamine</span>}
                 </div>
                 {cannotAffordAny && <div className="mt-2 text-xs text-amber">No affordable products in hand. Use Skip Round to cycle cards until payday.</div>}
@@ -295,6 +306,23 @@ export function GameScreen() {
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {impactBursts.map((burst) => (
+          <motion.div
+            key={burst.id}
+            className={`pointer-events-none fixed left-1/2 top-28 z-[65] -translate-x-1/2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+              burst.tone === 'good' ? 'bg-teal/20 text-teal' : burst.tone === 'warn' ? 'bg-[#e07050]/20 text-[#ff9f84]' : 'bg-purple/25 text-purple-light'
+            }`}
+            initial={{ y: 6, opacity: 0, scale: 0.85 }}
+            animate={{ y: -24, opacity: [0, 1, 0.85, 0], scale: [0.85, 1.04, 1] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.75, ease: [0.18, 0.9, 0.3, 1] }}
+          >
+            {burst.text}
+          </motion.div>
+        ))}
+      </AnimatePresence>
 
       <AnimatePresence>
         {flyChips.map((chip) => {
@@ -365,7 +393,7 @@ function MenuPill({ active, label, onClick }: { active: boolean; label: string; 
   return (
     <motion.button
       whileTap={{ scale: 0.97 }}
-      className={`pill ${active ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15 hover:text-zinc-100'}`}
+      className={`pill ${active ? 'bg-purple text-white glow-pulse' : 'bg-white/10 text-zinc-300 hover:bg-white/15 hover:text-zinc-100'}`}
       onClick={onClick}
     >
       {label}

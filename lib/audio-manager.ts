@@ -205,12 +205,14 @@ class AudioManager {
         this.playSequence([{ f: 240, t: 0.07, gain: 0.1 }, { f: 320, t: 0.07, gain: 0.1 }, { f: 410, t: 0.08, gain: 0.12 }]);
         break;
       case 'payday':
+        // Deliberately louder / longer "ka-ching" so it stands out from other cues.
         this.playSequence([
-          { f: 880, t: 0.03, gain: 0.14, type: 'triangle' },
-          { f: 1100, t: 0.03, gain: 0.14, type: 'triangle' },
-          { f: 1320, t: 0.05, gain: 0.13, type: 'sine' },
-          { f: 1760, t: 0.16, gain: 0.2, type: 'sine' },
-        ], { release: 0.12 });
+          { f: 820, t: 0.035, gain: 0.28, type: 'square' },
+          { f: 1180, t: 0.04, gain: 0.26, type: 'square' },
+          { f: 1460, t: 0.06, gain: 0.22, type: 'triangle' },
+          { f: 980, t: 0.09, gain: 0.2, type: 'sine' },
+          { f: 1960, t: 0.22, gain: 0.24, type: 'sine' },
+        ], { release: 0.18 });
         break;
       case 'resultsReveal':
         this.playSequence([
