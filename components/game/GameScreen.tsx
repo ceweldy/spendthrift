@@ -34,7 +34,6 @@ export function GameScreen() {
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
-  const [revealedCards, setRevealedCards] = useState<Record<string, boolean>>({});
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
   const mountedRef = useRef(false);
@@ -56,10 +55,6 @@ export function GameScreen() {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    setRevealedCards({});
-  }, [s.round, s.hand]);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -167,7 +162,6 @@ export function GameScreen() {
                   const inCart = s.cart.some((c) => c.id === card.id);
                   const rarity = getCardRarity(card);
                   const isFoil = rarity === 'epic' || rarity === 'legendary';
-                  const isRevealed = revealedCards[card.id] ?? false;
 
                   return (
                     <motion.div
@@ -178,16 +172,7 @@ export function GameScreen() {
                       className={`tcg-card rarity-${rarity}`}
                     >
                       <div className={`tcg-foil ${isFoil ? 'opacity-100' : 'opacity-0'}`} />
-                      {!isRevealed ? (
-                        <div className="tcg-face tcg-back">
-                          <div className="tcg-back-rings" />
-                          <div className="tcg-back-title">Spendthrift</div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">{rarityLabel[rarity]} Pull</div>
-                          <div className="my-4 text-4xl">🎴</div>
-                          <Button className="w-full text-xs" onClick={() => { setRevealedCards((v) => ({ ...v, [card.id]: true })); pushImpact(`${rarityLabel[rarity]} reveal`, 'neutral'); }}>Reveal Card</Button>
-                        </div>
-                      ) : (
-                        <div className="tcg-face tcg-front">
+                      <div className="tcg-face tcg-front">
                           <div className="tcg-topline">
                             <span className={`tcg-rarity-badge rarity-${rarity}`}>{rarityLabel[rarity]}</span>
                             <span className="tcg-type">{card.type.toUpperCase()}</span>
@@ -195,7 +180,7 @@ export function GameScreen() {
 
                           <div className="tcg-art-frame">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={getCardArtUrl(card)} alt={card.name} className="tcg-art-image" loading="lazy" />
+                            <img src={getCardArtUrl(card)} alt={card.name} className="tcg-art-image" loading="lazy" onError={(e) => { e.currentTarget.src = getFallbackArt(card); }} />
                             <div className="tcg-art-vignette" />
                             <div className="tcg-emoji-badge">{card.emoji}</div>
                           </div>
@@ -231,7 +216,6 @@ export function GameScreen() {
                             <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => { s.playSpecial(card.id); pushImpact('effect triggered', 'neutral'); }}>Play Card</Button>
                           )}
                         </div>
-                      )}
                     </motion.div>
                   );
                 })}
@@ -364,9 +348,15 @@ function getCardRarity(card: Card): Rarity {
 }
 
 function getCardArtUrl(card: Card) {
-  if (card.imageUrl && !card.imageUrl.includes('picsum.photos')) return card.imageUrl;
-  const query = encodeURIComponent(`${card.name} ${card.store} product photography dramatic lighting`);
-  return `https://source.unsplash.com/900x700/?${query}`;
+  if (card.imageUrl) return card.imageUrl;
+  const seed = encodeURIComponent(`${card.id}-${card.name}-${card.store}`);
+  return `https://picsum.photos/seed/${seed}/900/700`;
+}
+
+function getFallbackArt(card: Card) {
+  const label = encodeURIComponent(card.name);
+  const bg = card.type === 'product' ? '2d2a4a' : card.type === 'power' ? '3b2d12' : card.type === 'trap' ? '4a2323' : '233a3a';
+  return `https://placehold.co/900x700/${bg}/f1efe8?text=${label}`;
 }
 
 function Stat({ label, help, value, color, pulseKey }: { label: string; help?: string; value: string; color: string; pulseKey: string | number }) {
