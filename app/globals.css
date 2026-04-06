@@ -27,6 +27,7 @@ body {
   background: radial-gradient(circle at top, #343230 0%, var(--bg) 35%);
   color: var(--text-primary);
   font-family: Inter, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn {
@@ -52,6 +53,36 @@ body {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
 }
 
+.haptic-tap {
+  transition: transform 130ms ease, filter 130ms ease;
+}
+
+.haptic-tap:active {
+  transform: scale(0.97);
+  filter: brightness(1.05);
+}
+
+.card-press {
+  transition: transform 160ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.card-press:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.22);
+}
+
+.card-press:active {
+  transform: translateY(1px) scale(0.995);
+}
+
+.stat-glow-up {
+  text-shadow: 0 0 10px rgba(29, 158, 117, 0.45);
+}
+
+.stat-glow-down {
+  text-shadow: 0 0 10px rgba(224, 112, 80, 0.4);
+}
+
 .screen-wrap {
   min-height: 100vh;
   animation: fadeIn 0.25s ease;
@@ -60,4 +91,13 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

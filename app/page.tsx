@@ -7,6 +7,7 @@ import { QuizScreen } from '@/components/onboarding/QuizScreen';
 import { GameScreen } from '@/components/game/GameScreen';
 import { ResultsScreen } from '@/components/game/ResultsScreen';
 import { ScreenIndicator } from '@/components/ui/ScreenIndicator';
+import { AudioControls } from '@/components/ui/AudioControls';
 import { useGameStore } from '@/store/useGameStore';
 
 const variants = {
@@ -38,6 +39,7 @@ export default function HomePage() {
           {screen === 'results' && <ResultsScreen />}
         </motion.div>
       </AnimatePresence>
+      <AudioControls />
       <ScreenIndicator screen={screen} />
     </main>
   );

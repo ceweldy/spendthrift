@@ -1,12 +1,28 @@
+import { useState } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { playSfx } from '@/lib/audio-manager';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
 
 export function ResultsScreen() {
   const s = useGameStore();
+
+  useEffect(() => {
+    playSfx('resultsReveal');
+  }, []);
   const { finalScore, regretPenalty, archetypeBonus } = getFinalScore(s.dopamine, s.regret, s.archetype);
   const title = getTitleFromScore(finalScore);
   const arch = getArchetype(s.archetype);
+  const [copied, setCopied] = useState(false);
+
+  const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
+
+  const onShare = async () => {
+    await navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
 
   return (
     <section className="screen-wrap relative flex flex-col items-center justify-center gap-7 px-6 py-10 text-center">
@@ -34,10 +50,12 @@ export function ResultsScreen() {
         <Row label="Final Score" value={`${finalScore}`} color="text-amber" strong />
       </motion.div>
 
-      <div className="flex gap-8">
+      <div className="flex flex-wrap justify-center gap-8">
         <Metric label="Rounds" value={`${Math.min(s.round - 1, s.maxRounds)}`} />
-        <Metric label="Spent" value={`$${500 - s.budget}`} />
-        <Metric label="Items" value={`${s.history.filter((h) => h.kind === 'cart' && h.text.startsWith('Added')).length}`} />
+        <Metric label="Run Spent" value={`$${500 - s.budget}`} />
+        <Metric label="Lifetime Spent" value={`$${s.stats.totalSpent.toFixed(2)}`} />
+        <Metric label="Original Value" value={`$${s.stats.totalOriginalSpent.toFixed(2)}`} />
+        <Metric label="Demo Savings" value={`$${demoSavings.toFixed(2)}`} />
       </div>
 
       <div className="w-full max-w-xl rounded-xl border border-white/10 bg-black/20 p-4 text-left">
@@ -49,12 +67,8 @@ export function ResultsScreen() {
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button className="px-7 py-3" onClick={s.startQuiz}>Play Again</Button>
-        <Button
-          variant="ghost"
-          className="px-7 py-3"
-          onClick={() => navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`)}
-        >
-          Share Score 📤
+        <Button variant="ghost" className="px-7 py-3" onClick={onShare}>
+          {copied ? 'Copied ✓' : 'Share Score 📤'}
         </Button>
       </div>
     </section>

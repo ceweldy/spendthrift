@@ -1,6 +1,20 @@
 import { ALL_CARDS } from '@/lib/game-data';
 import { drawUniqueWeighted, drawWeighted, getArchetypeBonus, getEventWeight, getProductWeight } from '@/lib/card-utils';
-import { ActivityEntry, ArchetypeKey, Card, CardEffect, CartItem, PendingRegret, PremiumState } from '@/types/game';
+import {
+  ActivityEntry,
+  ArchetypeKey,
+  Card,
+  CardEffect,
+  CartItem,
+  InventoryItem,
+  PaymentMode,
+  PendingRegret,
+  PremiumState,
+  PurchaseLine,
+  RunStats,
+  SubscriptionPlanId,
+  SubscriptionState,
+} from '@/types/game';
 
 export type EngineState = {
   archetype: ArchetypeKey | null;
@@ -25,12 +39,30 @@ export type EngineState = {
   halfRegretGain: boolean;
   pendingRegret: PendingRegret[];
   premium: PremiumState;
+  paymentMode: PaymentMode;
+  inventory: InventoryItem[];
+  purchaseHistory: PurchaseLine[];
+  subscription: SubscriptionState;
+  stats: RunStats;
 };
 
 const STARTING_BUDGET = 500;
 const logCap = 30;
 
+export type CheckoutTotals = {
+  subtotal: number;
+  shippingCut: number;
+  total: number;
+  cashback: number;
+  dopamineGain: number;
+  regretGain: number;
+};
+
 const nextId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const applyPaymentMode = (amount: number, mode: PaymentMode) => (mode === 'demo-free' ? 0 : amount);
+
+const nowPlusThirtyDays = (now: number) => now + 30 * 24 * 60 * 60 * 1000;
 
 const canUseCard = (card: Card, premium: PremiumState) => !card.premiumOnly || premium.unlocks.premiumCards;
 
@@ -108,6 +140,21 @@ export const createInitialEngineState = (archetype: ArchetypeKey, premiumEnabled
       analytics: premiumEnabled,
       noAds: premiumEnabled,
     },
+  },
+  paymentMode: 'real-display',
+  inventory: [],
+  purchaseHistory: [],
+  subscription: {
+    currentPlanId: null,
+    startedAt: null,
+    renewalAt: null,
+  },
+  stats: {
+    ordersCompleted: 0,
+    itemsPurchased: 0,
+    totalSpent: 0,
+    totalOriginalSpent: 0,
+    subscriptionPurchases: 0,
   },
 });
 
@@ -281,11 +328,72 @@ export const tickTimers = (state: EngineState): EngineState => {
   return next;
 };
 
-export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
+const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: number): EngineState => {
+  const existing = state.inventory.find((inv) => inv.cardId === item.id);
+
+  let inventory: InventoryItem[];
+  if (!existing) {
+    inventory = [
+      {
+        id: nextId(),
+        cardId: item.id,
+        emoji: item.emoji,
+        name: item.name,
+        store: item.store,
+        category: item.type,
+        quantity: 1,
+        lastPurchasePrice: item.paidPrice,
+        lastOriginalPrice: item.price ?? item.paidPrice,
+        totalSpent: item.paidPrice,
+        totalOriginalSpent: item.price ?? item.paidPrice,
+        firstPurchasedAt: timestamp,
+        lastPurchasedAt: timestamp,
+      },
+      ...state.inventory,
+    ];
+  } else {
+    inventory = state.inventory.map((inv) =>
+      inv.cardId !== item.id
+        ? inv
+        : {
+            ...inv,
+            quantity: inv.quantity + 1,
+            lastPurchasePrice: item.paidPrice,
+            lastOriginalPrice: item.price ?? item.paidPrice,
+            totalSpent: inv.totalSpent + item.paidPrice,
+            totalOriginalSpent: inv.totalOriginalSpent + (item.price ?? item.paidPrice),
+            lastPurchasedAt: timestamp,
+          },
+    );
+  }
+
+  const line: PurchaseLine = {
+    id: nextId(),
+    itemId: item.id,
+    itemName: item.name,
+    emoji: item.emoji,
+    quantity: 1,
+    unitOriginalPrice: item.price ?? item.paidPrice,
+    unitPaidPrice: item.paidPrice,
+    lineOriginalTotal: item.price ?? item.paidPrice,
+    linePaidTotal: item.paidPrice,
+    timestamp,
+    source: 'game-checkout',
+  };
+
+  return {
+    ...state,
+    inventory,
+    purchaseHistory: [line, ...state.purchaseHistory],
+  };
+};
+
+export const calculateCheckoutTotals = (state: EngineState): CheckoutTotals & { originalTotal: number; chargedTotal: number } => {
   const subtotal = state.cart.reduce((sum, item) => sum + item.paidPrice, 0);
   const shippingCut = Math.min(subtotal, state.shippingDiscount);
-  const total = Math.max(0, subtotal - shippingCut);
-  const cashback = Math.round(total * state.cashbackRate);
+  const originalTotal = Math.max(0, subtotal - shippingCut);
+  const chargedTotal = applyPaymentMode(originalTotal, state.paymentMode);
+  const cashback = Math.round(chargedTotal * state.cashbackRate);
   const dopamineGain = state.cart.reduce((sum, item) => sum + item.finalDopamine, 0);
 
   const avgRisk = Math.round(state.cart.reduce((sum, item) => sum + (item.risk ?? 0), 0) / Math.max(1, state.cart.length));
@@ -293,7 +401,13 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
   if (state.halfRegretGain) regretGain = Math.round(regretGain * 0.5);
   if (getArchetype(state) === 'comfort_seeker') regretGain = Math.round(regretGain * 0.8);
 
-  const nextBudget = Math.max(0, state.budget - total + cashback);
+  return { subtotal, shippingCut, total: chargedTotal, cashback, dopamineGain, regretGain, originalTotal, chargedTotal };
+};
+
+export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
+  const { originalTotal, chargedTotal, cashback, dopamineGain, regretGain } = calculateCheckoutTotals(state);
+
+  const nextBudget = Math.max(0, state.budget - chargedTotal + cashback);
   const nextDopamine = state.dopamine + dopamineGain;
   const nextRegret = Math.min(100, state.regret + regretGain);
   const nextRound = state.round + 1;
@@ -312,9 +426,26 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
     techDiscountRate: 0,
     nextCheckoutRegret: 0,
     halfRegretGain: false,
+    stats: {
+      ...state.stats,
+      ordersCompleted: state.stats.ordersCompleted + 1,
+      itemsPurchased: state.stats.itemsPurchased + state.cart.length,
+      totalSpent: state.stats.totalSpent + chargedTotal,
+      totalOriginalSpent: state.stats.totalOriginalSpent + originalTotal,
+    },
   };
 
-  next = pushHistory(next, 'checkout', `Checkout complete: spent $${total}, +${dopamineGain} dopamine, +${regretGain} regret.`);
+  const ts = Date.now();
+  state.cart.forEach((item) => {
+    next = recordInventoryPurchase(next, item, ts);
+  });
+
+  next = pushHistory(
+    next,
+    'checkout',
+    `Checkout complete: paid $${chargedTotal}${state.paymentMode === 'demo-free' ? ` (original $${originalTotal})` : ''}, +${dopamineGain} dopamine, +${regretGain} regret.`,
+  );
+  next = pushHistory(next, 'inventory', `Inventory updated with ${state.cart.length} purchased item(s).`);
   if (cashback > 0) next = pushHistory(next, 'checkout', `Cashback applied: +$${cashback}.`);
 
   const ended = nextRound > state.maxRounds || nextBudget <= 0;
@@ -324,6 +455,101 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
   }
 
   return { next, ended };
+};
+
+export const setPaymentMode = (state: EngineState, mode: PaymentMode): EngineState => {
+  if (state.paymentMode === mode) return state;
+  return pushHistory({ ...state, paymentMode: mode }, 'payment', `Payment mode changed to ${mode === 'demo-free' ? 'Demo free checkout' : 'Real pricing (display only)'}.`);
+};
+
+export const purchaseSubscription = (
+  state: EngineState,
+  plan: { id: SubscriptionPlanId; name: string; price: number },
+): EngineState => {
+  const charge = applyPaymentMode(plan.price, state.paymentMode);
+  if (charge > state.budget) {
+    return pushHistory(state, 'subscription', `${plan.name} plan skipped: insufficient budget.`);
+  }
+
+  const timestamp = Date.now();
+  const nextStats: RunStats = {
+    ...state.stats,
+    totalSpent: state.stats.totalSpent + charge,
+    totalOriginalSpent: state.stats.totalOriginalSpent + plan.price,
+    subscriptionPurchases: state.stats.subscriptionPurchases + 1,
+  };
+
+  const line: PurchaseLine = {
+    id: nextId(),
+    itemId: `sub-${plan.id}`,
+    itemName: `${plan.name} Subscription`,
+    emoji: '🧾',
+    quantity: 1,
+    unitOriginalPrice: plan.price,
+    unitPaidPrice: charge,
+    lineOriginalTotal: plan.price,
+    linePaidTotal: charge,
+    timestamp,
+    source: 'subscription',
+  };
+
+  const existingSub = state.inventory.find((inv) => inv.cardId === `sub-${plan.id}`);
+  const subscriptionInventory: InventoryItem = existingSub
+    ? {
+        ...existingSub,
+        quantity: existingSub.quantity + 1,
+        lastPurchasePrice: charge,
+        lastOriginalPrice: plan.price,
+        totalSpent: existingSub.totalSpent + charge,
+        totalOriginalSpent: existingSub.totalOriginalSpent + plan.price,
+        lastPurchasedAt: timestamp,
+      }
+    : {
+        id: nextId(),
+        cardId: `sub-${plan.id}`,
+        emoji: '🧾',
+        name: `${plan.name} Subscription`,
+        store: 'Spendthrift+',
+        category: 'power',
+        quantity: 1,
+        lastPurchasePrice: charge,
+        lastOriginalPrice: plan.price,
+        totalSpent: charge,
+        totalOriginalSpent: plan.price,
+        firstPurchasedAt: timestamp,
+        lastPurchasedAt: timestamp,
+      };
+
+  let next: EngineState = {
+    ...state,
+    budget: Math.max(0, state.budget - charge),
+    premium: {
+      enabled: true,
+      unlocks: {
+        premiumCards: true,
+        analytics: true,
+        noAds: true,
+      },
+    },
+    subscription: {
+      currentPlanId: plan.id,
+      startedAt: timestamp,
+      renewalAt: nowPlusThirtyDays(timestamp),
+    },
+    stats: nextStats,
+    purchaseHistory: [line, ...state.purchaseHistory],
+    inventory: existingSub
+      ? state.inventory.map((inv) => (inv.cardId === subscriptionInventory.cardId ? subscriptionInventory : inv))
+      : [subscriptionInventory, ...state.inventory],
+  };
+
+  next = pushHistory(
+    next,
+    'subscription',
+    `Subscribed to ${plan.name}: paid $${charge}${state.paymentMode === 'demo-free' ? ` (original $${plan.price})` : ''}.`,
+  );
+
+  return next;
 };
 
 export const getFinalScore = (dopamine: number, regret: number, archetype: ArchetypeKey | null) => {
