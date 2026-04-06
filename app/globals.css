@@ -24,17 +24,18 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: radial-gradient(circle at top, #343230 0%, var(--bg) 35%);
   color: var(--text-primary);
   font-family: Inter, system-ui, sans-serif;
 }
 
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition;
+  will-change: transform;
 }
 
 .btn-primary {
-  background: var(--purple);
+  background: linear-gradient(180deg, #5b51c7 0%, var(--purple) 100%);
   color: white;
 }
 

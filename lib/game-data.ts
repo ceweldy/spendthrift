@@ -54,28 +54,35 @@ export const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     emoji: '👑',
     title: 'The Impulse King',
     desc: 'Thrives on spontaneous buys and flash sales.',
-    bonuses: ['⚡ +5 dopamine on quick buys', '🔥 Flash Sale appears more often', '🎲 High risk tolerance'],
+    bonuses: ['⚡ Better odds for event cards', '🔥 Strong tech/fashion draw bias', '🎲 Fast dopamine spikes'],
   },
   bargain_hawk: {
     emoji: '🦅',
     title: 'The Bargain Hawk',
     desc: 'Never pays full price if a deal exists.',
-    bonuses: ['💰 Bonus dopamine on discounted items', '🏷️ Price Match appears more often', '⚠️ −3 dopamine on full-price luxury'],
+    bonuses: ['💰 Better power-card odds', '🏷️ Bonus on discounted products', '📉 Lower luxury draw bias'],
   },
   status_flexer: {
     emoji: '💎',
     title: 'The Status Flexer',
     desc: 'Luxury is the language, not utility.',
-    bonuses: ['👑 +8 dopamine on Luxury cards', '✨ Rare Designer Card chance', '📉 -5 dopamine when card declined'],
+    bonuses: ['👑 Better luxury draw odds', '✨ +8 dopamine on luxury products', '🛍️ Higher power-card density'],
   },
   comfort_seeker: {
     emoji: '🛋️',
     title: 'The Comfort Seeker',
     desc: 'Shopping as emotional reset and cozy ritual.',
-    bonuses: ['🏠 −50% regret on Home/Food', '🕯️ Bonus for candle/coffee/pillow', '🛡️ Subscription Trap blocked'],
+    bonuses: ['🏠 Better home/food draw odds', '🛡️ Trap draw suppression', '🧯 Softer regret growth'],
   },
 };
 
 export const ALL_CARDS = cards as Card[];
 export const PRODUCT_CARDS = ALL_CARDS.filter((c) => c.type === 'product');
-export const EVENT_CARDS = ALL_CARDS.filter((c) => c.type !== 'product');
+export const EVENT_ONLY_CARDS = ALL_CARDS.filter((c) => c.type === 'event');
+export const POWER_CARDS = ALL_CARDS.filter((c) => c.type === 'power');
+export const TRAP_CARDS = ALL_CARDS.filter((c) => c.type === 'trap');
+export const SPECIAL_CARDS = ALL_CARDS.filter((c) => c.type !== 'product');
+
+if (PRODUCT_CARDS.length !== 35 || EVENT_ONLY_CARDS.length !== 10 || POWER_CARDS.length !== 5 || TRAP_CARDS.length !== 5) {
+  throw new Error('cards.json must include exactly 35 product, 10 event, 5 power, and 5 trap cards.');
+}

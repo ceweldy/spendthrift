@@ -1,0 +1,334 @@
+import { ALL_CARDS } from '@/lib/game-data';
+import { drawUniqueWeighted, drawWeighted, getArchetypeBonus, getEventWeight, getProductWeight } from '@/lib/card-utils';
+import { ActivityEntry, ArchetypeKey, Card, CardEffect, CartItem, PendingRegret, PremiumState } from '@/types/game';
+
+export type EngineState = {
+  archetype: ArchetypeKey | null;
+  budget: number;
+  dopamine: number;
+  regret: number;
+  round: number;
+  maxRounds: number;
+  hand: Card[];
+  cart: CartItem[];
+  activityLog: string[];
+  history: ActivityEntry[];
+  flashSaleSecondsLeft: number;
+  nextDiscount: number;
+  shippingDiscount: number;
+  fomoBoost: boolean;
+  quickBuy: boolean;
+  cashbackRate: number;
+  roundDopamineBoost: number;
+  techDiscountRate: number;
+  nextCheckoutRegret: number;
+  halfRegretGain: boolean;
+  pendingRegret: PendingRegret[];
+  premium: PremiumState;
+};
+
+const STARTING_BUDGET = 500;
+const logCap = 30;
+
+const nextId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const canUseCard = (card: Card, premium: PremiumState) => !card.premiumOnly || premium.unlocks.premiumCards;
+
+const getArchetype = (state: EngineState): ArchetypeKey => state.archetype ?? 'impulse_king';
+
+const productsPool = (state: EngineState) => ALL_CARDS.filter((c) => c.type === 'product' && canUseCard(c, state.premium));
+const eventPool = (state: EngineState) =>
+  ALL_CARDS.filter((c) => c.type !== 'product' && canUseCard(c, state.premium) && !(getArchetype(state) === 'comfort_seeker' && c.type === 'trap'));
+
+const pushHistory = (state: EngineState, kind: ActivityEntry['kind'], text: string): EngineState => {
+  const entry: ActivityEntry = { id: nextId(), round: state.round, timestamp: Date.now(), kind, text };
+  return {
+    ...state,
+    activityLog: [text, ...state.activityLog].slice(0, logCap),
+    history: [entry, ...state.history],
+  };
+};
+
+const effectivePrice = (state: EngineState, card: Card) => {
+  let price = card.price ?? 0;
+  if (state.flashSaleSecondsLeft > 0) price *= 0.7;
+  if (state.nextDiscount > 0) price *= 1 - state.nextDiscount;
+  if (state.techDiscountRate > 0 && card.store === 'Tech') price *= 1 - state.techDiscountRate;
+  return Math.max(0, Math.round(price));
+};
+
+const applyDelayedRegret = (state: EngineState): EngineState => {
+  const due = state.pendingRegret.filter((item) => item.dueRound === state.round);
+  if (!due.length) return state;
+
+  const total = due.reduce((acc, item) => acc + item.amount, 0);
+  const reduced = state.pendingRegret.filter((item) => item.dueRound !== state.round);
+
+  let next = { ...state, regret: Math.min(100, state.regret + total), pendingRegret: reduced };
+  due.forEach((item) => {
+    next = pushHistory(next, 'effect', `Delayed remorse: +${item.amount} regret (${item.source})`);
+  });
+  return next;
+};
+
+export const createInitialEngineState = (archetype: ArchetypeKey, premiumEnabled = false): EngineState => ({
+  archetype,
+  budget: STARTING_BUDGET,
+  dopamine: 0,
+  regret: 0,
+  round: 1,
+  maxRounds: 10,
+  hand: [],
+  cart: [],
+  activityLog: ['Game initialized.'],
+  history: [
+    {
+      id: nextId(),
+      round: 1,
+      timestamp: Date.now(),
+      kind: 'system',
+      text: 'Game initialized.',
+    },
+  ],
+  flashSaleSecondsLeft: 0,
+  nextDiscount: 0,
+  shippingDiscount: 0,
+  fomoBoost: false,
+  quickBuy: false,
+  cashbackRate: 0,
+  roundDopamineBoost: 0,
+  techDiscountRate: 0,
+  nextCheckoutRegret: 0,
+  halfRegretGain: false,
+  pendingRegret: [],
+  premium: {
+    enabled: premiumEnabled,
+    unlocks: {
+      premiumCards: premiumEnabled,
+      analytics: premiumEnabled,
+      noAds: premiumEnabled,
+    },
+  },
+});
+
+export const drawHandForRound = (state: EngineState): EngineState => {
+  const archetype = getArchetype(state);
+  const products = drawUniqueWeighted(productsPool(state), 4, (card) => getProductWeight(card, archetype));
+  const event = drawWeighted(eventPool(state), (card) => getEventWeight(card, archetype));
+  const hand = event ? [event, ...products] : products;
+  let next = { ...state, hand };
+  next = applyDelayedRegret(next);
+  return pushHistory(next, 'draw', `Round ${next.round} dealt: ${hand.map((c) => c.name).join(', ')}`);
+};
+
+const applyProductArchetypeBonuses = (state: EngineState, card: Card, dopamine: number): number => {
+  let total = dopamine;
+  const archetype = getArchetype(state);
+  if (archetype === 'status_flexer' && card.store === 'Luxury') total += 8;
+  if (archetype === 'bargain_hawk' && effectivePrice(state, card) < (card.price ?? 0)) total += 3;
+  if (archetype === 'comfort_seeker' && (card.tags ?? []).some((tag) => ['comfort', 'home', 'food'].includes(tag))) total += 2;
+  return total;
+};
+
+export const addCardToCart = (state: EngineState, cardId: string): EngineState => {
+  if (state.cart.length >= 5) return state;
+  const card = state.hand.find((c) => c.id === cardId);
+  if (!card || card.type !== 'product') return state;
+  if (state.cart.some((c) => c.id === cardId)) return state;
+
+  const paidPrice = effectivePrice(state, card);
+  if (paidPrice > state.budget) return pushHistory(state, 'cart', `${card.name} skipped: insufficient budget.`);
+
+  let finalDopamine = (card.dopamine ?? 0) + state.roundDopamineBoost;
+  if (state.fomoBoost) finalDopamine += 4;
+  if (state.quickBuy) finalDopamine += 5;
+  finalDopamine = applyProductArchetypeBonuses(state, card, finalDopamine);
+
+  const cartItem: CartItem = { ...card, paidPrice, finalDopamine };
+
+  const next = {
+    ...state,
+    cart: [...state.cart, cartItem],
+    nextDiscount: 0,
+    quickBuy: false,
+    fomoBoost: false,
+  };
+
+  return pushHistory(next, 'cart', `Added ${card.name} ($${paidPrice}) to cart.`);
+};
+
+const scheduleRegret = (state: EngineState, source: string, amount: number, delayRounds: number): EngineState => {
+  const pending: PendingRegret = { id: nextId(), source, amount, dueRound: state.round + delayRounds };
+  return {
+    ...state,
+    pendingRegret: [...state.pendingRegret, pending],
+  };
+};
+
+export const playSpecialCard = (state: EngineState, cardId: string): EngineState => {
+  const card = state.hand.find((c) => c.id === cardId);
+  if (!card || card.type === 'product') return state;
+  if (!card.effect) return state;
+
+  const nextHand = state.hand.filter((h) => h.id !== cardId);
+  let next: EngineState = { ...state, hand: nextHand };
+
+  const effect = card.effect as CardEffect;
+  switch (effect) {
+    case 'flash-sale':
+      next.flashSaleSecondsLeft = 20;
+      next = pushHistory(next, 'effect', 'Flash sale started: 30% off for 20 seconds.');
+      break;
+    case 'declined':
+      next.dopamine = Math.max(0, next.dopamine - 10);
+      next = pushHistory(next, 'effect', 'Card declined: -10 dopamine.');
+      break;
+    case 'refund':
+      next.budget += 40;
+      next = pushHistory(next, 'effect', 'Refund processed: +$40 budget.');
+      break;
+    case 'fomo':
+      next.fomoBoost = true;
+      next = pushHistory(next, 'effect', 'FOMO active: next product +4 dopamine.');
+      break;
+    case 'gift':
+      next.dopamine += 8;
+      next = pushHistory(next, 'effect', 'Mystery gift: +8 dopamine.');
+      break;
+    case 'cashback':
+      next.cashbackRate = 0.1;
+      next = pushHistory(next, 'effect', 'Cashback armed: 10% of checkout total returned.');
+      break;
+    case 'influencer-hype':
+      next.roundDopamineBoost += 2;
+      next = pushHistory(next, 'effect', 'Influencer hype: products are +2 dopamine this round.');
+      break;
+    case 'stock-drop':
+      next.techDiscountRate = 0.15;
+      next = pushHistory(next, 'effect', 'Stock drop: Tech products 15% off this round.');
+      break;
+    case 'cart-abandon':
+      next.nextCheckoutRegret += 5;
+      next = pushHistory(next, 'effect', 'Cart nudge: next checkout gains +5 regret.');
+      break;
+    case 'loyalty-points':
+      next.dopamine += 6;
+      next.shippingDiscount += 10;
+      next = pushHistory(next, 'effect', 'Loyalty points: +6 dopamine and -$10 checkout.');
+      break;
+    case 'ship15':
+      next.shippingDiscount += 15;
+      next = pushHistory(next, 'effect', 'Shipping power ready: -$15 checkout.');
+      break;
+    case 'price-match':
+      next.nextDiscount = 0.4;
+      next = pushHistory(next, 'effect', 'Price Match: next item 40% off.');
+      break;
+    case 'quick-buy':
+      next.quickBuy = true;
+      next = pushHistory(next, 'effect', 'Quick Buy active: next product +5 dopamine.');
+      break;
+    case 'designer':
+      next.dopamine += 60;
+      next = pushHistory(next, 'effect', 'Designer Card: +60 dopamine.');
+      break;
+    case 'calm':
+      next.regret = Math.max(0, next.regret - 8);
+      next = pushHistory(next, 'effect', 'Calm mode: -8 regret.');
+      break;
+    case 'sub-trap':
+      next.nextCheckoutRegret += 8;
+      next = pushHistory(next, 'effect', 'Subscription trap armed: +8 regret at checkout.');
+      break;
+    case 'future-remorse':
+      next = scheduleRegret(next, 'Buyer Remorse', 10, 1);
+      next = pushHistory(next, 'effect', 'Buyer Remorse queued: +10 regret next round.');
+      break;
+    case 'impulse-auto': {
+      const cheapest = [...next.hand]
+        .filter((h) => h.type === 'product')
+        .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))[0];
+      next = pushHistory(next, 'effect', 'Impulse trap triggered: auto-adding cheapest product.');
+      if (cheapest) next = addCardToCart(next, cheapest.id);
+      break;
+    }
+    case 'doom-scroll':
+      next = scheduleRegret(next, 'Doom Scroll', 12, 2);
+      next = pushHistory(next, 'effect', 'Doom Scroll queued: +12 regret in 2 rounds.');
+      break;
+    case 'return-window':
+      next = scheduleRegret(next, 'Missed Return Window', 8, 2);
+      next = pushHistory(next, 'effect', 'Missed Return Window queued: +8 regret in 2 rounds.');
+      break;
+  }
+
+  return next;
+};
+
+export const removeFromCart = (state: EngineState, cardId: string): EngineState => ({
+  ...state,
+  cart: state.cart.filter((item) => item.id !== cardId),
+});
+
+export const clearCart = (state: EngineState): EngineState => pushHistory({ ...state, cart: [] }, 'cart', 'Cart cleared.');
+
+export const tickTimers = (state: EngineState): EngineState => {
+  if (state.flashSaleSecondsLeft <= 0) return state;
+  const next = { ...state, flashSaleSecondsLeft: state.flashSaleSecondsLeft - 1 };
+  if (next.flashSaleSecondsLeft === 0) {
+    return pushHistory(next, 'effect', 'Flash sale ended.');
+  }
+  return next;
+};
+
+export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
+  const subtotal = state.cart.reduce((sum, item) => sum + item.paidPrice, 0);
+  const shippingCut = Math.min(subtotal, state.shippingDiscount);
+  const total = Math.max(0, subtotal - shippingCut);
+  const cashback = Math.round(total * state.cashbackRate);
+  const dopamineGain = state.cart.reduce((sum, item) => sum + item.finalDopamine, 0);
+
+  const avgRisk = Math.round(state.cart.reduce((sum, item) => sum + (item.risk ?? 0), 0) / Math.max(1, state.cart.length));
+  let regretGain = avgRisk + state.nextCheckoutRegret;
+  if (state.halfRegretGain) regretGain = Math.round(regretGain * 0.5);
+  if (getArchetype(state) === 'comfort_seeker') regretGain = Math.round(regretGain * 0.8);
+
+  const nextBudget = Math.max(0, state.budget - total + cashback);
+  const nextDopamine = state.dopamine + dopamineGain;
+  const nextRegret = Math.min(100, state.regret + regretGain);
+  const nextRound = state.round + 1;
+
+  let next: EngineState = {
+    ...state,
+    budget: nextBudget,
+    dopamine: nextDopamine,
+    regret: nextRegret,
+    round: nextRound,
+    cart: [],
+    flashSaleSecondsLeft: 0,
+    shippingDiscount: 0,
+    cashbackRate: 0,
+    roundDopamineBoost: 0,
+    techDiscountRate: 0,
+    nextCheckoutRegret: 0,
+    halfRegretGain: false,
+  };
+
+  next = pushHistory(next, 'checkout', `Checkout complete: spent $${total}, +${dopamineGain} dopamine, +${regretGain} regret.`);
+  if (cashback > 0) next = pushHistory(next, 'checkout', `Cashback applied: +$${cashback}.`);
+
+  const ended = nextRound > state.maxRounds || nextBudget <= 0;
+  if (!ended) {
+    next = pushHistory(next, 'round', `Round ${next.round} begins.`);
+    next = drawHandForRound(next);
+  }
+
+  return { next, ended };
+};
+
+export const getFinalScore = (dopamine: number, regret: number, archetype: ArchetypeKey | null) => {
+  const regretPenalty = regret * 0.5;
+  const archetypeBonus = getArchetypeBonus(archetype);
+  const finalScore = Math.max(0, Math.round(dopamine - regretPenalty + archetypeBonus));
+  return { finalScore, regretPenalty: Math.round(regretPenalty), archetypeBonus };
+};

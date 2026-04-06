@@ -1,10 +1,18 @@
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 
 export function LandingScreen({ onStart }: { onStart: () => void }) {
   return (
-    <section className="screen-wrap flex flex-col items-center justify-between px-6 text-center">
+    <section className="screen-wrap relative flex flex-col items-center justify-between px-6 text-center">
+      <div className="pointer-events-none absolute top-0 h-72 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-16">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-purple text-5xl font-black text-white shadow-[0_0_40px_rgba(83,74,183,0.4)]">S</div>
+        <motion.div
+          initial={{ rotate: -5, scale: 0.9 }}
+          animate={{ rotate: 0, scale: 1 }}
+          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-purple text-5xl font-black text-white shadow-[0_0_40px_rgba(83,74,183,0.4)]"
+        >
+          S
+        </motion.div>
         <div>
           <h1 className="text-5xl font-black tracking-tight sm:text-7xl">SPENDTHRIFT</h1>
           <p className="mt-1 text-zinc-400">The Compulsive Shopping Card Game</p>
