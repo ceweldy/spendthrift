@@ -43,6 +43,8 @@ export type CardEffect =
   | 'doom-scroll'
   | 'return-window';
 
+export type CardRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
 export type Card = {
   id: string;
   emoji: string;
@@ -51,6 +53,7 @@ export type Card = {
   category?: string;
   store: string;
   type: CardType;
+  rarity?: CardRarity;
   price?: number;
   dopamine?: number;
   risk?: number;

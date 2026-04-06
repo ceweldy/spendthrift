@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useState, type ReactNode } from 'react';
+import { motion, useMotionValue, animate, useTransform, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
 
@@ -10,6 +10,27 @@ export function ResultsScreen() {
   const { finalScore, regretPenalty, archetypeBonus } = getFinalScore(s.dopamine, s.regret, s.archetype);
   const title = getTitleFromScore(finalScore);
   const arch = getArchetype(s.archetype);
+
+  const scoreMV = useMotionValue(reducedMotion ? finalScore : 0);
+  const dopamineMV = useMotionValue(reducedMotion ? s.dopamine : 0);
+  const penaltyMV = useMotionValue(reducedMotion ? regretPenalty : 0);
+  const bonusMV = useMotionValue(reducedMotion ? archetypeBonus : 0);
+
+  const scoreText = useTransform(scoreMV, (v) => Math.round(v));
+  const dopamineText = useTransform(dopamineMV, (v) => Math.round(v));
+  const penaltyText = useTransform(penaltyMV, (v) => Math.round(v));
+  const bonusText = useTransform(bonusMV, (v) => Math.round(v));
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const controls = [
+      animate(scoreMV, finalScore, { duration: 1.1, ease: [0.16, 1, 0.3, 1] }),
+      animate(dopamineMV, s.dopamine, { duration: 0.65, delay: 0.08 }),
+      animate(penaltyMV, regretPenalty, { duration: 0.65, delay: 0.16 }),
+      animate(bonusMV, archetypeBonus, { duration: 0.65, delay: 0.24 }),
+    ];
+    return () => controls.forEach((c) => c.stop());
+  }, [finalScore, s.dopamine, regretPenalty, archetypeBonus, reducedMotion, scoreMV, dopamineMV, penaltyMV, bonusMV]);
 
   const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
   const purchasedItems = s.inventory.reduce((acc, item) => acc + item.quantity, 0);
@@ -23,10 +44,17 @@ export function ResultsScreen() {
   return (
     <section className="screen-wrap relative flex flex-col items-center justify-center gap-7 px-6 py-10 text-center">
       <div className="pointer-events-none absolute top-0 h-64 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
+      {!reducedMotion && <div className="pointer-events-none absolute inset-0 score-grid-glow opacity-40" />}
 
       <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Game Over — Final Score</p>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : 0.24 }}>
-        <div className="text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_20px_rgba(83,74,183,0.25)] sm:text-9xl">{finalScore}</div>
+        <motion.div
+          className="text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_20px_rgba(83,74,183,0.25)] sm:text-9xl"
+          animate={reducedMotion ? undefined : { textShadow: ['0 0 16px rgba(83,74,183,0.1)', '0 0 36px rgba(83,74,183,0.5)', '0 0 22px rgba(83,74,183,0.2)'] }}
+          transition={{ duration: 1.15 }}
+        >
+          <motion.span>{scoreText}</motion.span>
+        </motion.div>
         <div className="text-xl font-semibold text-purple-light">{title}</div>
       </motion.div>
 
@@ -40,10 +68,10 @@ export function ResultsScreen() {
           <div className="text-xs uppercase tracking-widest text-zinc-500">Score Breakdown</div>
           <span className="pill bg-purple/20 text-purple-light">{arch.emoji} {arch.title}</span>
         </div>
-        <Row label="Total Dopamine" value={`+${s.dopamine}`} color="text-teal" />
-        <Row label="Regret Penalty" value={`-${regretPenalty}`} color="text-[#e07050]" />
-        <Row label="Archetype Bonus" value={`+${archetypeBonus}`} color="text-purple-light" />
-        <Row label="Final Score" value={`${finalScore}`} color="text-amber" strong />
+        <Row label="Total Dopamine" value={<><span>+</span><motion.span>{dopamineText}</motion.span></>} color="text-teal" />
+        <Row label="Regret Penalty" value={<><span>-</span><motion.span>{penaltyText}</motion.span></>} color="text-[#e07050]" />
+        <Row label="Archetype Bonus" value={<><span>+</span><motion.span>{bonusText}</motion.span></>} color="text-purple-light" />
+        <Row label="Final Score" value={<motion.span>{scoreText}</motion.span>} color="text-amber" strong />
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: reducedMotion ? 0 : 0.2 }} className="flex flex-wrap justify-center gap-8">
@@ -60,10 +88,10 @@ export function ResultsScreen() {
         <div className="max-h-44 space-y-2 overflow-auto text-sm">
           {s.inventory.length === 0 && <div className="text-zinc-500">No purchases recorded.</div>}
           {s.inventory.slice(0, 20).map((item) => (
-            <div key={item.id} className="flex items-center justify-between rounded border border-white/10 bg-black/30 px-2 py-1">
+            <motion.div key={item.id} layout className="flex items-center justify-between rounded border border-white/10 bg-black/30 px-2 py-1">
               <span>{item.emoji} {item.name} × {item.quantity}</span>
               <span className="text-zinc-300">${item.totalSpent.toFixed(2)}</span>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -93,8 +121,8 @@ export function ResultsScreen() {
   );
 }
 
-function Row({ label, value, color, strong }: { label: string; value: string; color: string; strong?: boolean }) {
-  return <div className={`flex justify-between border-b border-white/10 py-2 text-sm ${strong ? 'font-bold' : ''}`}><span className="text-zinc-400">{label}</span><span className={color}>{value}</span></div>;
+function Row({ label, value, color, strong }: { label: string; value: ReactNode; color: string; strong?: boolean }) {
+  return <div className={`flex justify-between border-b border-white/10 py-2 text-sm ${strong ? 'font-bold' : ''}`}><span className="text-zinc-400">{label}</span><span className={`inline-flex items-center gap-0.5 ${color}`}>{value}</span></div>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

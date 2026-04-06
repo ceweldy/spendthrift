@@ -5,13 +5,24 @@ import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { CheckoutModal } from './CheckoutModal';
 import { playSfx } from '@/lib/audio-manager';
+import type { Card } from '@/types/game';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
+type ImpactBurst = { id: number; text: string; tone: 'good' | 'warn' | 'neutral' };
+type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 const panelVariants = {
   initial: { opacity: 0, y: 8, scale: 0.995 },
   animate: { opacity: 1, y: 0, scale: 1 },
   exit: { opacity: 0, y: -6, scale: 0.995 },
+};
+
+const rarityLabel: Record<Rarity, string> = {
+  common: 'Common',
+  uncommon: 'Uncommon',
+  rare: 'Rare',
+  epic: 'Epic',
+  legendary: 'Legendary',
 };
 
 export function GameScreen() {
@@ -22,6 +33,7 @@ export function GameScreen() {
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
+  const [revealedCards, setRevealedCards] = useState<Record<string, boolean>>({});
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
   const mountedRef = useRef(false);
@@ -36,6 +48,10 @@ export function GameScreen() {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    setRevealedCards({});
+  }, [s.round, s.hand]);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -132,30 +148,78 @@ export function GameScreen() {
 
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
         {s.announcement && <div className="mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
+        {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="wait" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
+                  const rarity = getCardRarity(card);
+                  const isFoil = rarity === 'epic' || rarity === 'legendary';
+                  const isRevealed = revealedCards[card.id] ?? false;
+
                   return (
                     <motion.div
                       key={card.id}
-                      whileHover={reducedMotion ? undefined : { y: -2, scale: 1.01 }}
-                      transition={{ type: 'spring', stiffness: 340, damping: 26 }}
-                      className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#403f3d] to-bg-card p-3 text-center shadow-[0_8px_26px_rgba(0,0,0,0.2)]"
+                      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                      className={`tcg-card rarity-${rarity}`}
                     >
-                      <div className="text-4xl">{card.emoji}</div>
-                      <div className="text-sm font-bold">{card.name}</div>
-                      {card.type === 'product' ? (
-                        <>
-                          <div className="text-lg font-bold text-[#e07050]">${card.price}</div>
-                          <Button className="mt-2 w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name)}>
-                            {inCart ? 'In Cart ✓' : 'Add to Cart'}
-                          </Button>
-                        </>
+                      <div className={`tcg-foil ${isFoil ? 'opacity-100' : 'opacity-0'}`} />
+                      {!isRevealed ? (
+                        <div className="tcg-face tcg-back">
+                          <div className="tcg-back-rings" />
+                          <div className="tcg-back-title">Spendthrift</div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">{rarityLabel[rarity]} Pull</div>
+                          <div className="my-4 text-4xl">🎴</div>
+                          <Button className="w-full text-xs" onClick={() => setRevealedCards((v) => ({ ...v, [card.id]: true }))}>Reveal Card</Button>
+                        </div>
                       ) : (
-                        <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => s.playSpecial(card.id)}>Play Card</Button>
+                        <div className="tcg-face tcg-front">
+                          <div className="tcg-topline">
+                            <span className={`tcg-rarity-badge rarity-${rarity}`}>{rarityLabel[rarity]}</span>
+                            <span className="tcg-type">{card.type.toUpperCase()}</span>
+                          </div>
+
+                          <div className="tcg-art-frame">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={getCardArtUrl(card)} alt={card.name} className="tcg-art-image" loading="lazy" />
+                            <div className="tcg-art-vignette" />
+                            <div className="tcg-emoji-badge">{card.emoji}</div>
+                          </div>
+
+                          <div className="mt-2 text-sm font-bold leading-tight">{card.name}</div>
+                          <div className="text-[11px] text-zinc-400">{card.brand ?? card.store} • {card.category ?? card.store}</div>
+                          <p className="mt-1 line-clamp-2 text-[11px] text-zinc-300">{card.description ?? card.desc ?? 'No description provided.'}</p>
+
+                          {card.type === 'product' ? (
+                            <>
+                              <div className="mt-1 text-lg font-bold text-[#ffb18d]">${card.price}</div>
+                              <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-zinc-300">
+                                <span className="tcg-mini-pill">⚡ {card.dopamine ?? 0}</span>
+                                <span className="tcg-mini-pill">😬 {card.risk ?? 0}</span>
+                                {card.premiumOnly && <span className="tcg-mini-pill">👑 Premium</span>}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-coral">{card.type}</div>
+                          )}
+
+                          <div className="mt-2 space-y-1">
+                            {getCardEffectLines(card).map((line) => (
+                              <div key={`${card.id}-${line}`} className="rounded border border-white/10 bg-black/20 px-2 py-1 text-left text-[10px] leading-relaxed text-zinc-200">{line}</div>
+                            ))}
+                          </div>
+
+                          {card.type === 'product' ? (
+                            <Button className="mt-2 w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name)}>
+                              {inCart ? 'In Cart ✓' : 'Add to Cart'}
+                            </Button>
+                          ) : (
+                            <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => s.playSpecial(card.id)}>Play Card</Button>
+                          )}
+                        </div>
                       )}
                     </motion.div>
                   );
@@ -257,6 +321,26 @@ export function GameScreen() {
   );
 }
 
+function getCardRarity(card: Card): Rarity {
+  if (card.type === 'power') return card.effect === 'designer' ? 'legendary' : 'epic';
+  if (card.type === 'event') return ['cashback', 'stock-drop', 'loyalty-points'].includes(card.effect ?? '') ? 'rare' : 'uncommon';
+  if (card.type === 'trap') return ['doom-scroll', 'future-remorse'].includes(card.effect ?? '') ? 'rare' : 'uncommon';
+  if (card.premiumOnly) {
+    if ((card.price ?? 0) >= 500) return 'legendary';
+    if ((card.price ?? 0) >= 350) return 'epic';
+    return 'rare';
+  }
+  if ((card.price ?? 0) >= 150 || (card.dopamine ?? 0) >= 20) return 'rare';
+  if ((card.price ?? 0) >= 75 || (card.dopamine ?? 0) >= 12) return 'uncommon';
+  return 'common';
+}
+
+function getCardArtUrl(card: Card) {
+  if (card.imageUrl && !card.imageUrl.includes('picsum.photos')) return card.imageUrl;
+  const query = encodeURIComponent(`${card.name} ${card.store} product photography dramatic lighting`);
+  return `https://source.unsplash.com/900x700/?${query}`;
+}
+
 function Stat({ label, help, value, color, pulseKey }: { label: string; help?: string; value: string; color: string; pulseKey: string | number }) {
   return (
     <div title={help}>
@@ -287,4 +371,101 @@ function MenuPill({ active, label, onClick }: { active: boolean; label: string; 
       {label}
     </motion.button>
   );
+}
+
+type EffectPanelState = ReturnType<typeof useGameStore.getState>;
+
+function EffectStatePanel({ state }: { state: EffectPanelState }) {
+  const effects = getActiveEffectStates(state);
+
+  return (
+    <div className="mb-4 rounded-xl border border-white/10 bg-black/20 p-3">
+      <div className="mb-2 text-xs uppercase tracking-[0.16em] text-zinc-400">Armed / Active Effects</div>
+      {effects.length === 0 ? (
+        <div className="text-xs text-zinc-500">No temporary effects armed right now.</div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {effects.map((effect) => (
+            <span key={effect.label} className={`pill border ${effect.active ? 'border-teal/60 bg-teal/20 text-teal' : 'border-amber/50 bg-amber/20 text-amber'}`}>
+              {effect.active ? '🟢 Active' : '🟡 Armed'} · {effect.label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getActiveEffectStates(state: EffectPanelState): Array<{ label: string; active: boolean }> {
+  const out: Array<{ label: string; active: boolean }> = [];
+  if (state.flashSaleSecondsLeft > 0) out.push({ label: `Flash Sale (${state.flashSaleSecondsLeft}s left)`, active: true });
+  if (state.nextDiscount > 0) out.push({ label: `Price Match (${Math.round(state.nextDiscount * 100)}% off next product)`, active: false });
+  if (state.shippingDiscount > 0) out.push({ label: `Checkout discount -$${state.shippingDiscount}`, active: false });
+  if (state.fomoBoost) out.push({ label: 'FOMO (+4 dopamine on next product)', active: false });
+  if (state.quickBuy) out.push({ label: 'Quick Buy (+5 dopamine on next product)', active: false });
+  if (state.cashbackRate > 0) out.push({ label: `Cashback (${Math.round(state.cashbackRate * 100)}% on checkout)`, active: false });
+  if (state.roundDopamineBoost > 0) out.push({ label: `Round hype (+${state.roundDopamineBoost} dopamine this round)`, active: true });
+  if (state.techDiscountRate > 0) out.push({ label: `Tech markdown (${Math.round(state.techDiscountRate * 100)}% this round)`, active: true });
+  if (state.nextCheckoutRegret > 0) out.push({ label: `Checkout regret +${state.nextCheckoutRegret}`, active: false });
+  if (state.halfRegretGain) out.push({ label: 'Regret gain halved on next checkout', active: false });
+  state.pendingRegret.forEach((pending) => {
+    const roundsLeft = pending.dueRound - state.round;
+    out.push({ label: `${pending.source}: +${pending.amount} regret in ${Math.max(0, roundsLeft)} round${Math.abs(roundsLeft) === 1 ? '' : 's'}`, active: false });
+  });
+  return out;
+}
+
+function getCardEffectLines(card: Card): string[] {
+  if (card.type === 'product') {
+    return [
+      `Now: Add to cart for current price (base $${card.price ?? 0}).`,
+      `Checkout: Gain +${card.dopamine ?? 0} dopamine from this item.`,
+      `Checkout: Adds risk ${card.risk ?? 0} into regret calculation.`,
+    ];
+  }
+
+  switch (card.effect) {
+    case 'flash-sale':
+      return ['Now: Start Flash Sale immediately.', 'This round: All product prices are 30% off for 20 seconds.'];
+    case 'declined':
+      return ['Now: Lose 10 dopamine instantly.'];
+    case 'refund':
+      return ['Now: Gain $40 budget immediately.'];
+    case 'fomo':
+      return ['Now: Arm FOMO boost.', 'Next product added this round gets +4 dopamine, then effect clears.'];
+    case 'gift':
+      return ['Now: Gain +8 dopamine instantly.'];
+    case 'cashback':
+      return ['Now: Arm cashback.', 'Next checkout returns 10% of charged total.'];
+    case 'influencer-hype':
+      return ['Now: Apply round hype.', 'This round: Products added to cart gain +2 dopamine.'];
+    case 'stock-drop':
+      return ['Now: Apply tech markdown.', 'This round: Tech products are 15% cheaper.'];
+    case 'cart-abandon':
+      return ['Now: Arm checkout penalty.', 'Next checkout adds +5 regret.'];
+    case 'loyalty-points':
+      return ['Now: Gain +6 dopamine instantly.', 'Next checkout gets an extra -$10 discount.'];
+    case 'ship15':
+      return ['Now: Arm shipping discount.', 'Next checkout gets -$15 total.'];
+    case 'price-match':
+      return ['Now: Arm price match.', 'Next product added is 40% off.'];
+    case 'quick-buy':
+      return ['Now: Arm quick-buy boost.', 'Next product added gets +5 dopamine.'];
+    case 'designer':
+      return ['Now: Gain +60 dopamine instantly.'];
+    case 'calm':
+      return ['Now: Reduce current regret by 8 (minimum 0).'];
+    case 'sub-trap':
+      return ['Now: Arm trap.', 'Next checkout adds +8 regret.'];
+    case 'future-remorse':
+      return ['Now: Queue delayed remorse.', 'Next round: +10 regret when new hand is dealt.'];
+    case 'impulse-auto':
+      return ['Now: Auto-add cheapest product currently in hand to cart.'];
+    case 'doom-scroll':
+      return ['Now: Queue delayed regret.', 'In 2 rounds: +12 regret when new hand is dealt.'];
+    case 'return-window':
+      return ['Now: Queue delayed regret.', 'In 2 rounds: +8 regret when new hand is dealt.'];
+    default:
+      return ['Effect: No explicit effect text configured.'];
+  }
 }

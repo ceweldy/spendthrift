@@ -6,9 +6,9 @@ import { calculateCheckoutTotals } from '@/lib/game-engine';
 const stepTitle = ['Review', 'Shipping', 'Confirm'];
 
 const slide = {
-  initial: { opacity: 0, x: 16, scale: 0.995 },
-  animate: { opacity: 1, x: 0, scale: 1 },
-  exit: { opacity: 0, x: -16, scale: 0.995 },
+  initial: { opacity: 0, x: 24, scale: 0.97, filter: 'blur(4px)' },
+  animate: { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' },
+  exit: { opacity: 0, x: -20, scale: 0.985, filter: 'blur(3px)' },
 };
 
 export function CheckoutModal() {
@@ -27,16 +27,17 @@ export function CheckoutModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-[2px] sm:p-4"
         >
           <motion.div
-            initial={{ y: 18, opacity: 0, scale: 0.98 }}
+            initial={{ y: 30, opacity: 0, scale: 0.965 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 18, opacity: 0, scale: 0.98 }}
-            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#2f2e2c] p-5 sm:p-7"
+            exit={{ y: 24, opacity: 0, scale: 0.97 }}
+            transition={{ duration: reducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#2f2e2c] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-7"
           >
-            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-purple/20 blur-2xl" />
+            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-purple/30 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-12 left-10 h-24 w-24 rounded-full bg-teal/20 blur-2xl" />
             <button className="absolute right-4 top-3 text-xl text-zinc-500 transition hover:text-zinc-300" onClick={closeCheckout}>✕</button>
 
             <div className="mb-2 text-xs uppercase tracking-widest text-zinc-500">Checkout · {stepTitle[checkoutStep]}</div>
@@ -49,7 +50,7 @@ export function CheckoutModal() {
                     initial={false}
                     animate={{ scaleX: checkoutStep >= n ? 1 : 0.12, opacity: checkoutStep >= n ? 1 : 0.45 }}
                     style={{ transformOrigin: 'left center' }}
-                    transition={{ duration: reducedMotion ? 0 : 0.2 }}
+                    transition={{ duration: reducedMotion ? 0 : 0.24 }}
                   />
                 </span>
               ))}
@@ -57,7 +58,7 @@ export function CheckoutModal() {
 
             <AnimatePresence mode="wait">
               {checkoutStep === 0 && (
-                <motion.div key="step-0" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.2 }}>
+                <motion.div key="step-0" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24 }}>
                   <h3 className="mb-4 text-xl font-bold">🛒 Your Cart</h3>
                   <div className="space-y-2">
                     {cart.map((c, idx) => (
@@ -65,7 +66,7 @@ export function CheckoutModal() {
                         key={c.id}
                         initial={reducedMotion ? undefined : { opacity: 0, y: 8 }}
                         animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.03 }}
+                        transition={{ delay: idx * 0.04 }}
                         className="flex justify-between border-b border-white/10 py-2 text-sm"
                       >
                         <span>{c.emoji} {c.name}</span><span className="text-[#e07050]">${c.paidPrice}</span>
@@ -77,13 +78,19 @@ export function CheckoutModal() {
                     <div className="flex justify-between"><span className="text-zinc-400">Original total</span><span className="text-[#e07050]">${totals.originalTotal}</span></div>
                     <motion.div layout className="flex justify-between font-semibold"><span>Charged now</span><span className="text-teal">${chargedTotal}</span></motion.div>
                   </div>
-                  <div className="mt-3 rounded-md border border-purple/30 bg-purple/10 p-3 text-sm text-purple-light">⚡ You&apos;ll gain <strong>{totalD} dopamine</strong> from this haul</div>
+                  <motion.div
+                    className="mt-3 rounded-md border border-purple/30 bg-purple/10 p-3 text-sm text-purple-light"
+                    animate={reducedMotion ? undefined : { scale: [1, 1.014, 1] }}
+                    transition={{ duration: 0.45 }}
+                  >
+                    ⚡ You&apos;ll gain <strong>{totalD} dopamine</strong> from this haul
+                  </motion.div>
                   <Button className="mt-5 w-full" onClick={nextCheckoutStep}>Continue →</Button>
                 </motion.div>
               )}
 
               {checkoutStep === 1 && (
-                <motion.div key="step-1" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.2 }}>
+                <motion.div key="step-1" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }}>
                   <h3 className="mb-2 text-xl font-bold">📦 Where should we ship?</h3>
                   <div className="mb-4 rounded-md border border-teal/30 bg-teal/10 p-3 text-sm text-teal">Virtual shipping only — no real address needed.</div>
                   <input className="mb-2 w-full rounded-md border border-white/10 bg-bg p-2 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/30" defaultValue="Shopaholic" />
@@ -94,20 +101,20 @@ export function CheckoutModal() {
               )}
 
               {checkoutStep === 2 && (
-                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.2 }} className="text-center">
+                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="text-center">
                   <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-teal text-3xl text-black">✓
-                    {!reducedMotion && [...Array(8)].map((_, i) => (
+                    {!reducedMotion && [...Array(12)].map((_, i) => (
                       <motion.span
                         key={i}
                         className="absolute h-1.5 w-1.5 rounded-full bg-amber"
-                        initial={{ x: 0, y: 0, opacity: 0.9 }}
+                        initial={{ x: 0, y: 0, opacity: 0.95, scale: 1.2 }}
                         animate={{
-                          x: Math.cos((i / 8) * Math.PI * 2) * 44,
-                          y: Math.sin((i / 8) * Math.PI * 2) * 44,
+                          x: Math.cos((i / 12) * Math.PI * 2) * 50,
+                          y: Math.sin((i / 12) * Math.PI * 2) * 50,
                           opacity: 0,
-                          scale: 0.4,
+                          scale: 0.3,
                         }}
-                        transition={{ duration: 0.7, repeat: Infinity, repeatDelay: 0.35, delay: i * 0.05 }}
+                        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: i * 0.01 }}
                       />
                     ))}
                   </div>

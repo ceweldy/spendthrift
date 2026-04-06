@@ -103,6 +103,216 @@ body {
   animation: fadeIn 0.25s ease;
 }
 
+.tcg-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(61, 60, 58, 0.96), rgba(34, 34, 32, 0.95));
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.tcg-face {
+  position: relative;
+  z-index: 2;
+  padding: 12px;
+  min-height: 318px;
+}
+
+.tcg-front {
+  display: flex;
+  flex-direction: column;
+}
+
+.tcg-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.14), transparent 45%),
+    radial-gradient(circle at 70% 75%, rgba(255, 255, 255, 0.08), transparent 45%),
+    linear-gradient(150deg, rgba(22, 22, 34, 0.9), rgba(36, 29, 59, 0.95));
+}
+
+.tcg-back-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ddd8ff;
+}
+
+.tcg-back-rings {
+  position: absolute;
+  inset: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+.tcg-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tcg-rarity-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tcg-type {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #c9c6d5;
+}
+
+.tcg-art-frame {
+  position: relative;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 12px;
+  height: 132px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.tcg-art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.tcg-art-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.52), transparent 56%);
+}
+
+.tcg-emoji-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  border-radius: 999px;
+  background: rgba(14, 14, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 4px 7px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tcg-mini-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.tcg-foil {
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  z-index: 1;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.25) 34%, transparent 45%, rgba(152, 255, 229, 0.2) 56%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: foilSweep 3s linear infinite;
+  transition: opacity 220ms ease;
+}
+
+@keyframes foilSweep {
+  from { transform: translateX(-22%) rotate(8deg); }
+  to { transform: translateX(22%) rotate(8deg); }
+}
+
+.rarity-common { border-color: rgba(168, 175, 190, 0.34); }
+.rarity-common .tcg-rarity-badge { background: rgba(140, 149, 168, 0.24); color: #dee4f3; }
+
+.rarity-uncommon { border-color: rgba(114, 210, 158, 0.6); box-shadow: 0 0 0 1px rgba(114, 210, 158, 0.16), 0 14px 28px rgba(0, 0, 0, 0.32); }
+.rarity-uncommon .tcg-rarity-badge { background: rgba(40, 147, 104, 0.32); color: #b7ffda; }
+
+.rarity-rare { border-color: rgba(96, 147, 255, 0.68); box-shadow: 0 0 0 1px rgba(96, 147, 255, 0.2), 0 0 20px rgba(56, 117, 247, 0.22), 0 14px 28px rgba(0, 0, 0, 0.34); }
+.rarity-rare .tcg-rarity-badge { background: rgba(72, 109, 230, 0.34); color: #cae0ff; }
+
+.rarity-epic { border-color: rgba(187, 103, 255, 0.74); box-shadow: 0 0 0 1px rgba(187, 103, 255, 0.22), 0 0 26px rgba(170, 74, 255, 0.26), 0 14px 30px rgba(0, 0, 0, 0.34); }
+.rarity-epic .tcg-rarity-badge { background: rgba(153, 73, 241, 0.34); color: #edd2ff; }
+
+.rarity-legendary {
+  border-color: rgba(255, 195, 87, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 215, 128, 0.28),
+    0 0 32px rgba(255, 179, 51, 0.32),
+    0 14px 32px rgba(0, 0, 0, 0.36);
+}
+.rarity-legendary .tcg-rarity-badge {
+  background: linear-gradient(90deg, rgba(255, 146, 61, 0.36), rgba(255, 219, 112, 0.36));
+  color: #fff2d1;
+}
+
+.deal-card {
+  transform-style: preserve-3d;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.deal-card:hover {
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.33);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.deal-rarity-common { --deal-rarity-glow: rgba(255, 255, 255, 0.08); }
+.deal-rarity-rare { --deal-rarity-glow: rgba(29, 158, 117, 0.26); }
+.deal-rarity-epic { --deal-rarity-glow: rgba(83, 74, 183, 0.34); }
+.deal-rarity-legendary { --deal-rarity-glow: rgba(250, 180, 70, 0.34); }
+.deal-rarity-special { --deal-rarity-glow: rgba(224, 112, 80, 0.34); }
+
+.deal-card::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--deal-rarity-glow), 0 0 26px var(--deal-rarity-glow);
+  opacity: 0.55;
+}
+
+.glow-pulse {
+  animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+.announcement-pulse {
+  animation: softPulse 1.8s ease-in-out infinite;
+}
+
+.score-grid-glow {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(circle at center, black 45%, transparent 72%);
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(83, 74, 183, 0); }
+  50% { box-shadow: 0 0 14px rgba(83, 74, 183, 0.45); }
+}
+
+@keyframes softPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(29, 158, 117, 0); }
+  50% { box-shadow: 0 0 16px rgba(29, 158, 117, 0.2); }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
