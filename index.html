@@ -1161,115 +1161,187 @@
      TODO: Replace this logic with Zustand store + game-engine.ts
      ============================================================ -->
 <script>
-  // ============================================================
-  // TODO: Game State — Replace with Zustand store in final code
-  // ============================================================
-  const state = {
-    currentScreen: 'screen-landing',
-    quizAnswers: [],
-    archetype: null,
-    budget: 500,
-    dopamine: 0,
-    regret: 0,
-    round: 1,
-    cart: [],
-    log: [],
-    checkoutStep: 0,
-  };
-
-  // TODO: Archetypes — Add/edit archetype profiles here
-  const ARCHETYPES = {
-    impulse_king: {
-      emoji: '👑',
-      title: 'The Impulse King',
-      desc: 'Thrives on spontaneous purchases and flash sales. High risk tolerance. You live for the one-click buy.',
-      bonuses: ['⚡ +5 dopamine on quick buys', '🔥 Flash Sales appear 40% more', '🎲 High risk tolerance'],
-      color: '#e07050',
-    },
-    bargain_hawk: {
-      emoji: '🦅',
-      title: 'The Bargain Hawk',
-      desc: 'Never pays full price. Bonus dopamine on discounted items. Price Match power card is your best friend.',
-      bonuses: ['💰 Bonus dopamine on sales', '🏷️ Price Match appears 3x more', '⚠️ −3 dopamine on full-price luxury'],
-      color: '#1D9E75',
-    },
-    status_flexer: {
-      emoji: '💎',
-      title: 'The Status Flexer',
-      desc: 'Luxury is your language. You buy for status, not function. The leaderboard knows your name.',
-      bonuses: ['👑 +8 dopamine on luxury cards', '📊 Leaderboard featured', '✨ Rare Designer Card possible'],
-      color: '#534AB7',
-    },
-    comfort_seeker: {
-      emoji: '🛋️',
-      title: 'The Comfort Seeker',
-      desc: 'Shopping is self-care. Home and Food are your sanctuary. No regrets — you deserve it.',
-      bonuses: ['🏠 −50% regret on Home & Food', '🕯️ Bonus on Candles, Pillows, Coffee', '🛡️ Subscription Traps never appear'],
-      color: '#BA7517',
-    },
-  };
-
-  // TODO: Card data — Replace with cards.json (55-card library) in final code
-  const SAMPLE_CARDS = [
-    { id: 'c1', emoji: '👟', name: 'Air Max Sneakers', store: 'Fashion', price: 89, dopamine: 12, risk: 25, type: 'product' },
-    { id: 'c2', emoji: '💻', name: 'Wireless Earbuds', store: 'Tech', price: 45, dopamine: 8, risk: 15, type: 'product' },
-    { id: 'c3', emoji: '🕯️', name: 'Scented Candle Set', store: 'Home', price: 28, dopamine: 5, risk: 5, type: 'product' },
-    { id: 'c4', emoji: '⚡', name: 'FLASH SALE!', store: 'Event', price: 0, dopamine: 0, risk: 0, type: 'event', desc: 'All items 30% off this round!' },
-    { id: 'c5', emoji: '👜', name: 'Designer Tote', store: 'Luxury', price: 199, dopamine: 25, risk: 40, type: 'product' },
-  ];
-
-  // TODO: Quiz questions — Update with final wording from PRD §06
   const QUIZ_QUESTIONS = [
     {
       q: "What's your shopping vibe?",
       options: [
-        { emoji:'🔥', label:'Thrill Hunter', desc:'Live for the rush of finding something new', value:'impulse_king' },
-        { emoji:'💰', label:'Bargain Seeker', desc:'Never pay full price — ever', value:'bargain_hawk' },
-        { emoji:'👑', label:'Luxury Lover', desc:'Only the best will do', value:'status_flexer' },
+        { emoji:'🔥', label:'Thrill Hunter', desc:'Live for the rush', value:'impulse_king' },
+        { emoji:'💰', label:'Bargain Seeker', desc:'Never pay full price', value:'bargain_hawk' },
+        { emoji:'👑', label:'Luxury Lover', desc:'Only the best', value:'status_flexer' },
         { emoji:'🛋️', label:'Comfort Buyer', desc:'Shopping is self-care', value:'comfort_seeker' },
       ]
     },
     {
-      q: "How do you shop?",
+      q: 'How do you shop?',
       options: [
-        { emoji:'⚡', label:'Impulse Only', desc:'Add to cart, buy now, think later', value:'impulse_king' },
-        { emoji:'📋', label:'Careful Planner', desc:'Research for weeks before buying', value:'bargain_hawk' },
-        { emoji:'🏷️', label:'Sale Chaser', desc:'Wait for the discount, always', value:'bargain_hawk' },
+        { emoji:'⚡', label:'Impulse Only', desc:'Buy now, think later', value:'impulse_king' },
+        { emoji:'📋', label:'Careful Planner', desc:'Research first', value:'bargain_hawk' },
+        { emoji:'🏷️', label:'Sale Chaser', desc:'Wait for discounts', value:'bargain_hawk' },
         { emoji:'🎁', label:'Gift Buyer', desc:'Love shopping for others', value:'comfort_seeker' },
       ]
     },
     {
-      q: "Biggest weakness?",
+      q: 'Biggest weakness?',
       options: [
-        { emoji:'💻', label:'Tech Gadgets', desc:'The latest device calls your name', value:'impulse_king' },
-        { emoji:'👗', label:'Fashion Drops', desc:'Limited edition? You\'re there', value:'status_flexer' },
-        { emoji:'🏠', label:'Home Decor', desc:'One more throw pillow won\'t hurt', value:'comfort_seeker' },
-        { emoji:'🍕', label:'Food & Experiences', desc:'Life is too short for bad food', value:'comfort_seeker' },
+        { emoji:'💻', label:'Tech Gadgets', desc:'Latest gear every time', value:'impulse_king' },
+        { emoji:'👗', label:'Fashion Drops', desc:'Limited edition is dangerous', value:'status_flexer' },
+        { emoji:'🏠', label:'Home Decor', desc:'One more pillow', value:'comfort_seeker' },
+        { emoji:'🍕', label:'Food & Experiences', desc:'Treat yourself energy', value:'comfort_seeker' },
       ]
     },
     {
-      q: "After a big purchase you feel...",
+      q: 'After a big purchase you feel...',
       options: [
-        { emoji:'😍', label:'Euphoric', desc:'Best decision you\'ve ever made', value:'impulse_king' },
-        { emoji:'😬', label:'Guilty', desc:'Why did I buy that?', value:'bargain_hawk' },
-        { emoji:'🛒', label:'Already Planning Next', desc:'What else needs to be in the cart?', value:'status_flexer' },
-        { emoji:'🤷', label:'It Depends', desc:'On the item, the price, the mood', value:'comfort_seeker' },
+        { emoji:'😍', label:'Euphoric', desc:'No regrets', value:'impulse_king' },
+        { emoji:'😬', label:'Guilty', desc:'That was maybe dumb', value:'bargain_hawk' },
+        { emoji:'🛒', label:'Next Purchase Ready', desc:'Cart stays loaded', value:'status_flexer' },
+        { emoji:'🤷', label:'It Depends', desc:'Mood + price decide', value:'comfort_seeker' },
       ]
     },
     {
-      q: "Your checkout speed?",
+      q: 'Your checkout speed?',
       options: [
-        { emoji:'⚡', label:'One-Click Immediately', desc:'Saved card, instant buy', value:'impulse_king' },
-        { emoji:'🛒', label:'Cart For Days', desc:'Items sit in cart for weeks', value:'bargain_hawk' },
-        { emoji:'💸', label:'Only On Payday', desc:'Budget-conscious but ready', value:'bargain_hawk' },
-        { emoji:'🤔', label:'Depends on Price', desc:'Small items fast, big items slow', value:'comfort_seeker' },
+        { emoji:'⚡', label:'One-click', desc:'Instant checkout', value:'impulse_king' },
+        { emoji:'🛒', label:'Cart for days', desc:'Let it sit', value:'bargain_hawk' },
+        { emoji:'💸', label:'Only payday', desc:'Timing matters', value:'bargain_hawk' },
+        { emoji:'🤔', label:'Depends on price', desc:'Small yes, big maybe', value:'comfort_seeker' },
       ]
     },
   ];
 
-  // ============================================================
-  // TODO: Screen Navigation — Replace with Next.js router
-  // ============================================================
+  const ARCHETYPES = {
+    impulse_king: {
+      emoji: '👑',
+      title: 'The Impulse King',
+      desc: 'Thrives on spontaneous buys and flash sales.',
+      bonuses: ['⚡ +5 dopamine on quick buys', '🔥 Flash Sale appears more often', '🎲 High risk tolerance'],
+    },
+    bargain_hawk: {
+      emoji: '🦅',
+      title: 'The Bargain Hawk',
+      desc: 'Never pays full price if a deal exists.',
+      bonuses: ['💰 Bonus dopamine on discounted items', '🏷️ Price Match appears more often', '⚠️ −3 dopamine on full-price luxury'],
+    },
+    status_flexer: {
+      emoji: '💎',
+      title: 'The Status Flexer',
+      desc: 'Luxury is the language, not utility.',
+      bonuses: ['👑 +8 dopamine on Luxury cards', '✨ Rare Designer Card chance', '📉 -5 dopamine when card declined'],
+    },
+    comfort_seeker: {
+      emoji: '🛋️',
+      title: 'The Comfort Seeker',
+      desc: 'Shopping as emotional reset and cozy ritual.',
+      bonuses: ['🏠 −50% regret on Home/Food', '🕯️ Bonus for candle/coffee/pillow', '🛡️ Subscription Trap blocked'],
+    },
+  };
+
+  const PRODUCTS = [
+    ['👟','Air Max Sneakers','Fashion',89,12,25], ['🧢','Limited Cap Drop','Fashion',42,8,22], ['🧥','Streetwear Jacket','Fashion',118,16,28],
+    ['👗','Silk Night Dress','Fashion',97,14,26], ['👢','Chunky Boots','Fashion',104,14,24], ['🕶️','Designer Shades','Fashion',132,18,30],
+    ['💻','Wireless Earbuds','Tech',45,8,15], ['⌚','Smart Watch','Tech',139,19,28], ['🎧','Noise Cancel Headset','Tech',167,20,29],
+    ['📱','Phone Gimbal','Tech',64,10,16], ['🎮','Retro Console','Tech',152,21,33], ['🖥️','Mini Projector','Tech',129,18,27],
+    ['🕯️','Scented Candle Set','Home',28,5,5], ['🛏️','Memory Foam Pillow','Home',39,7,8], ['☕','Coffee Maker','Home',86,12,11],
+    ['🪴','Designer Plant Pot','Home',34,6,7], ['🛋️','Weighted Throw Blanket','Home',78,11,10], ['🧺','Aesthetic Storage Set','Home',49,8,9],
+    ['🍕','Truffle Pizza Night','Food',38,9,8], ['🍣','Premium Sushi Box','Food',46,10,10], ['🍰','Dessert Sampler','Food',29,7,6],
+    ['🥤','Matcha Starter Kit','Food',36,8,8], ['🍷','Wine Pairing Crate','Food',74,13,14], ['🍫','Luxury Chocolate Box','Food',54,10,12],
+    ['👜','Designer Tote','Luxury',199,25,40], ['⌚','Swiss Timepiece','Luxury',220,28,45], ['💍','Statement Ring','Luxury',175,24,38],
+    ['🧴','Signature Fragrance','Luxury',155,22,35], ['👠','Runway Heels','Luxury',184,24,39], ['🎩','Tailored Blazer','Luxury',210,27,44],
+    ['💄','Pro Makeup Kit','Beauty',76,12,18], ['🧴','Skincare Vault','Beauty',91,13,20], ['💇','Salon Blowout Voucher','Beauty',52,9,14],
+    ['🪞','Vanity Mirror Pro','Beauty',63,10,15], ['💅','Gel Nail Studio Set','Beauty',58,9,13],
+  ].map((c, i) => ({ id:`p${i+1}`, emoji:c[0], name:c[1], store:c[2], price:c[3], dopamine:c[4], risk:c[5], type:'product' }));
+
+  const EVENTS = [
+    { id:'e1', emoji:'⚡', name:'Flash Sale', store:'Event', type:'event', desc:'All product cards 30% off this round', effect:'flash-sale' },
+    { id:'e2', emoji:'⛔', name:'Card Declined', store:'Event', type:'event', desc:'Lose 10 dopamine instantly', effect:'declined' },
+    { id:'e3', emoji:'💸', name:'Refund Hit', store:'Event', type:'event', desc:'Get $40 budget back', effect:'refund' },
+    { id:'e4', emoji:'🧠', name:'FOMO Trigger', store:'Event', type:'event', desc:'Next added product gains +4 dopamine', effect:'fomo' },
+    { id:'e5', emoji:'🎁', name:'Mystery Gift', store:'Event', type:'event', desc:'Gain +8 dopamine now', effect:'gift' },
+    { id:'e6', emoji:'📦', name:'Free Shipping', store:'Power', type:'power', desc:'Next checkout gets -$15', effect:'ship15' },
+    { id:'e7', emoji:'🏷️', name:'Price Match', store:'Power', type:'power', desc:'Next product is 40% off', effect:'price-match' },
+    { id:'e8', emoji:'🛒', name:'One Click Buy', store:'Power', type:'power', desc:'Next product gets +5 dopamine', effect:'quick-buy' },
+    { id:'e9', emoji:'🕳️', name:'Subscription Trap', store:'Trap', type:'trap', desc:'At checkout add +8 regret', effect:'sub-trap' },
+    { id:'e10', emoji:'😬', name:'Buyer Remorse', store:'Trap', type:'trap', desc:'At next round add +10 regret', effect:'future-remorse' },
+    { id:'e11', emoji:'📣', name:'Impulse Buy', store:'Trap', type:'trap', desc:'Auto-add cheapest product to cart', effect:'impulse-auto' },
+    { id:'e12', emoji:'💳', name:'Cashback Weekend', store:'Event', type:'event', desc:'Checkout returns 10% of spend', effect:'cashback' },
+    { id:'e13', emoji:'🧪', name:'Designer Card', store:'Luxury', type:'power', desc:'Instant +60 dopamine card draw chance', effect:'designer' },
+    { id:'e14', emoji:'🧯', name:'Calm Mode', store:'Power', type:'power', desc:'Reduce current regret by 8%', effect:'calm' },
+    { id:'e15', emoji:'🎯', name:'Mood Stabilizer', store:'Power', type:'power', desc:'Next checkout halves regret gain', effect:'half-regret' },
+    { id:'e16', emoji:'🧨', name:'Return Window Closed', store:'Trap', type:'trap', desc:'Next regret roll +15%', effect:'spike-regret' },
+    { id:'e17', emoji:'🛑', name:'Budget Freeze', store:'Trap', type:'trap', desc:'Reduce budget by $25 now', effect:'budget-freeze' },
+    { id:'e18', emoji:'🔄', name:'Return Accepted', store:'Event', type:'event', desc:'Remove one cart item and refund', effect:'return-accepted' },
+    { id:'e19', emoji:'🧷', name:'Bundle Deal', store:'Event', type:'event', desc:'If cart has 2+ items, save $20', effect:'bundle' },
+    { id:'e20', emoji:'📈', name:'Hype Surge', store:'Event', type:'event', desc:'All current cart items +2 dopamine', effect:'hype' },
+  ];
+
+  const state = {
+    currentScreen: 'screen-landing',
+    quizAnswers: [], archetype: null,
+    budget: 500, dopamine: 0, regret: 0,
+    round: 1, maxRounds: 10,
+    hand: [], cart: [], checkoutStep: 0,
+    log: [],
+    flashSale: false,
+    nextDiscount: 0,
+    quickBuy: false,
+    shippingDiscount: 0,
+    futureRegret: 0,
+    regretMultiplier: 1,
+    halfRegret: false,
+    fomoBoost: false,
+    cashback: false,
+    quickBuyWindowUntil: 0,
+  };
+
+  function weightedRand(weights) {
+    const t = weights.reduce((a,b)=>a+b,0); let r = Math.random() * t;
+    for (let i = 0; i < weights.length; i++) { r -= weights[i]; if (r <= 0) return i; }
+    return weights.length - 1;
+  }
+
+  function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function drawHand() {
+    const pool = [...PRODUCTS];
+    const hand = [];
+
+    if (state.archetype === 'comfort_seeker') {
+      const filtered = EVENTS.filter(e => e.effect !== 'sub-trap');
+      hand.push(randomPick(filtered));
+    } else {
+      hand.push(randomPick(EVENTS));
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const weights = pool.map(p => {
+        let w = 1;
+        if (state.archetype === 'status_flexer' && p.store === 'Luxury') w += 1.2;
+        if (state.archetype === 'bargain_hawk' && p.price < 80) w += 0.8;
+        if (state.archetype === 'comfort_seeker' && ['Home','Food'].includes(p.store)) w += 1.0;
+        if (state.archetype === 'impulse_king' && ['Tech','Fashion'].includes(p.store)) w += 0.6;
+        return w;
+      });
+      const idx = weightedRand(weights);
+      hand.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+
+    if (state.archetype === 'impulse_king' && Math.random() < 0.4) hand[0] = EVENTS.find(e => e.effect === 'flash-sale');
+    if (state.archetype === 'bargain_hawk' && Math.random() < 0.35) hand[0] = EVENTS.find(e => e.effect === 'price-match');
+    if (state.archetype === 'status_flexer' && Math.random() < 0.12) hand[3] = { id:'x-legend', emoji:'💠', name:'Designer Card', store:'Luxury', price:0, dopamine:60, risk:0, type:'power', effect:'designer' };
+
+    state.hand = hand;
+  }
+
+  function effectivePrice(card) {
+    let price = card.price;
+    if (state.flashSale) price *= 0.7;
+    if (state.nextDiscount > 0) {
+      price *= (1 - state.nextDiscount);
+    }
+    return Math.max(0, Math.round(price));
+  }
+
   function goToScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
@@ -1280,25 +1352,20 @@
   function updateIndicator(screenId) {
     const order = ['screen-landing','screen-quiz','screen-archetype','screen-game','screen-results'];
     const idx = order.indexOf(screenId);
-    document.querySelectorAll('.indicator-dot').forEach((d, i) => {
-      d.classList.toggle('active', i === idx);
-    });
+    document.querySelectorAll('.indicator-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 
-  // ============================================================
-  // TODO: Quiz Logic — Replace with archetype scoring in archetype.ts
-  // ============================================================
   let currentQuestion = 0;
   const quizScores = { impulse_king:0, bargain_hawk:0, status_flexer:0, comfort_seeker:0 };
 
   function renderQuestion() {
     const q = QUIZ_QUESTIONS[currentQuestion];
     document.getElementById('quizQNum').textContent = currentQuestion + 1;
-    document.getElementById('quizProgressFill').style.width = ((currentQuestion+1)/5*100)+'%';
+    document.getElementById('quizProgressFill').style.width = ((currentQuestion+1)/5*100) + '%';
     document.getElementById('quizQuestion').innerHTML = `
       <h2>${q.q}</h2>
       <div class="quiz-options">
-        ${q.options.map((o,i) => `
+        ${q.options.map(o => `
           <div class="quiz-option" onclick="selectAnswer('${o.value}', this)">
             <div class="quiz-option-emoji">${o.emoji}</div>
             <div class="quiz-option-label">${o.label}</div>
@@ -1314,47 +1381,36 @@
     quizScores[value]++;
     state.quizAnswers.push(value);
     setTimeout(() => {
-      if (currentQuestion < 4) {
-        currentQuestion++;
-        renderQuestion();
-      } else {
-        revealArchetype();
-      }
-    }, 350);
+      if (currentQuestion < 4) { currentQuestion++; renderQuestion(); }
+      else revealArchetype();
+    }, 280);
   }
 
-  // ============================================================
-  // TODO: Archetype Reveal — Connect to archetype.ts scoring
-  // ============================================================
   function revealArchetype() {
-    // Pick archetype with highest score
     const winner = Object.entries(quizScores).sort((a,b)=>b[1]-a[1])[0][0];
     state.archetype = winner;
     const arch = ARCHETYPES[winner];
-
     document.getElementById('archetypeCard').innerHTML = `
       <span class="emoji">${arch.emoji}</span>
       <div class="title">${arch.title}</div>
       <div class="desc">${arch.desc}</div>
     `;
-    document.getElementById('archetypeBonuses').innerHTML = arch.bonuses.map(b =>
-      `<span class="pill pill-gray">${b}</span>`
-    ).join('');
-
+    document.getElementById('archetypeBonuses').innerHTML = arch.bonuses.map(b => `<span class="pill pill-gray">${b}</span>`).join('');
     goToScreen('screen-archetype');
   }
 
-  // ============================================================
-  // TODO: Game Start — Replace with full game-engine.ts init
-  // ============================================================
   function startGame() {
-    state.budget = 500;
-    state.dopamine = 0;
-    state.regret = 0;
-    state.round = 1;
-    state.cart = [];
+    Object.assign(state, {
+      budget: 500, dopamine: 0, regret: 0, round: 1, cart: [], log: [],
+      flashSale: false, nextDiscount: 0, quickBuy: false, shippingDiscount: 0,
+      futureRegret: 0, regretMultiplier: 1, halfRegret: false, fomoBoost: false, cashback: false,
+      quickBuyWindowUntil: 0,
+    });
+    drawHand();
     renderHUD();
     renderHand();
+    renderCart();
+    addLog('Game started, round 1 dealt 🃏');
     goToScreen('screen-game');
   }
 
@@ -1362,47 +1418,54 @@
     document.getElementById('hudBudget').textContent = '$' + state.budget;
     document.getElementById('hudDopamine').textContent = state.dopamine;
     document.getElementById('hudRegret').textContent = state.regret + '%';
-    document.getElementById('hudRound').textContent = state.round + '/10';
+    document.getElementById('hudRound').textContent = `${state.round}/${state.maxRounds}`;
     document.getElementById('roundLabel').textContent = state.round;
+    document.getElementById('moodBar').style.width = `${Math.max(5, Math.min(100, 50 + state.dopamine * 0.35 - state.regret * 0.5))}%`;
   }
 
-  // ============================================================
-  // TODO: Card Hand — Replace with weighted deck draw from card-utils.ts
-  // ============================================================
   function renderHand() {
-    document.getElementById('cardHand').innerHTML = SAMPLE_CARDS.map(card => {
+    document.getElementById('cardHand').innerHTML = state.hand.map(card => {
       const inCart = state.cart.find(c => c.id === card.id);
+      const isProduct = card.type === 'product';
+      const price = isProduct ? effectivePrice(card) : 0;
       return `
-        <div class="game-card ${inCart ? 'in-cart' : ''} ${card.type === 'event' ? 'event-card' : ''}" id="card-${card.id}">
+        <div class="game-card ${inCart ? 'in-cart' : ''} ${!isProduct ? 'event-card' : ''}" id="card-${card.id}">
           <div class="check-badge">✓</div>
           <div class="game-card-emoji">${card.emoji}</div>
           <div class="game-card-name">${card.name}</div>
-          <span class="pill ${card.type==='event'?'pill-coral':'pill-gray'} pill" style="font-size:11px">${card.store}</span>
-          ${card.price > 0 ? `<div class="game-card-price">$${card.price}</div>` : ''}
-          ${card.dopamine > 0 ? `<div class="game-card-dopamine">+${card.dopamine} dopamine</div>` : ''}
-          ${card.type === 'event'
-            ? `<p style="font-size:11px;color:var(--text-mid);margin-top:4px">${card.desc||''}</p>
-               <button class="btn btn-sm" style="background:var(--coral);color:#fff;margin-top:6px" onclick="activateEvent('${card.id}')">Activate!</button>`
-            : `<button class="btn btn-primary btn-sm game-card-add" onclick="addToCart('${card.id}')" ${inCart ? 'disabled' : ''}>
-                ${inCart ? 'In Cart ✓' : 'Add to Cart'}
-               </button>`
+          <span class="pill ${!isProduct ? 'pill-coral' : 'pill-gray'}" style="font-size:11px">${card.store}</span>
+          ${isProduct ? `<div class="game-card-price">$${price}</div>` : ''}
+          ${card.dopamine ? `<div class="game-card-dopamine">+${card.dopamine} dopamine</div>` : ''}
+          ${!isProduct ? `<p style="font-size:11px;color:var(--text-mid);margin-top:4px">${card.desc || ''}</p>` : ''}
+          ${isProduct
+            ? `<button class="btn btn-primary btn-sm game-card-add" onclick="addToCart('${card.id}')" ${inCart ? 'disabled' : ''}>${inCart ? 'In Cart ✓' : 'Add to Cart'}</button>`
+            : `<button class="btn btn-sm" style="background:var(--coral);color:#fff;margin-top:6px" onclick="activateSpecial('${card.id}')">Play Card</button>`
           }
         </div>
       `;
     }).join('');
   }
 
-  // ============================================================
-  // TODO: Cart Logic — Replace with Zustand cart actions
-  // ============================================================
   function addToCart(cardId) {
     if (state.cart.length >= 5) return;
-    const card = SAMPLE_CARDS.find(c => c.id === cardId);
-    if (!card || state.cart.find(c => c.id === cardId)) return;
-    if (state.budget < card.price) { alert("Not enough budget!"); return; }
+    const card = state.hand.find(c => c.id === cardId);
+    if (!card || card.type !== 'product' || state.cart.find(c => c.id === cardId)) return;
 
-    state.cart.push(card);
-    addLog(`Added ${card.emoji} ${card.name} to cart`);
+    const price = effectivePrice(card);
+    if (state.budget < price) return alert('Not enough budget.');
+
+    let dopamine = card.dopamine;
+    if (state.fomoBoost) { dopamine += 4; state.fomoBoost = false; }
+    if (state.quickBuy || (state.archetype === 'impulse_king' && Date.now() < state.quickBuyWindowUntil)) dopamine += 5;
+    if (state.archetype === 'status_flexer' && card.store === 'Luxury') dopamine += 8;
+    if (state.archetype === 'comfort_seeker' && ['Memory Foam Pillow','Coffee Maker','Scented Candle Set'].includes(card.name)) dopamine += 3;
+    if (state.archetype === 'bargain_hawk' && price < card.price) dopamine += 3;
+    if (state.archetype === 'bargain_hawk' && card.store === 'Luxury' && price === card.price) dopamine -= 3;
+
+    state.nextDiscount = 0;
+    state.quickBuy = false;
+    state.cart.push({ ...card, paidPrice: price, finalDopamine: Math.max(0, dopamine) });
+    addLog(`Added ${card.emoji} ${card.name} for $${price}`);
     renderHand();
     renderCart();
   }
@@ -1422,75 +1485,107 @@
 
   function renderCart() {
     const count = state.cart.length;
-    const totalDopamine = state.cart.reduce((a, c) => a + c.dopamine, 0);
+    const totalD = state.cart.reduce((a,c)=>a+(c.finalDopamine || c.dopamine || 0),0);
     document.getElementById('cartCount').textContent = count;
     document.getElementById('checkoutBtn').disabled = count === 0;
-
     const dopEl = document.getElementById('cartTotalDopamine');
-    dopEl.style.display = count > 0 ? 'inline-flex' : 'none';
-    dopEl.textContent = '+' + totalDopamine + ' dopamine';
+    dopEl.style.display = count ? 'inline-flex' : 'none';
+    dopEl.textContent = `+${totalD} dopamine`;
 
     const itemsEl = document.getElementById('cartItems');
-    if (count === 0) {
-      itemsEl.innerHTML = '<span class="cart-empty-hint">No items yet — add cards from your hand above ☝️</span>';
+    if (!count) {
+      itemsEl.innerHTML = '<span class="cart-empty-hint">No items yet, add cards from your hand above ☝️</span>';
     } else {
-      itemsEl.innerHTML = state.cart.map(c => `
-        <div class="cart-pill">
-          ${c.emoji} ${c.name}
-          <span class="cart-pill-remove" onclick="removeFromCart('${c.id}')">×</span>
-        </div>
-      `).join('');
+      itemsEl.innerHTML = state.cart.map(c => `<div class="cart-pill">${c.emoji} ${c.name} ($${c.paidPrice}) <span class="cart-pill-remove" onclick="removeFromCart('${c.id}')">×</span></div>`).join('');
     }
   }
 
-  // ============================================================
-  // TODO: Event Cards — Replace with event resolution in game-engine.ts
-  // ============================================================
-  function activateEvent(cardId) {
-    addLog('⚡ Flash Sale activated! 30% off all items this round');
-    alert('⚡ FLASH SALE! All items are 30% off this round!');
+  function removeCardFromHand(cardId) { state.hand = state.hand.filter(c => c.id !== cardId); renderHand(); }
+
+  function activateSpecial(cardId) {
+    const card = state.hand.find(c => c.id === cardId);
+    if (!card) return;
+
+    switch(card.effect) {
+      case 'flash-sale': state.flashSale = true; addLog('⚡ Flash Sale active, 30% off products this round'); break;
+      case 'declined': state.dopamine = Math.max(0, state.dopamine - 10); if (state.archetype === 'status_flexer') state.dopamine = Math.max(0, state.dopamine - 5); addLog('⛔ Card declined, dopamine dropped'); break;
+      case 'refund': state.budget += 40; addLog('💸 Refund hit, +$40 budget'); break;
+      case 'fomo': state.fomoBoost = true; addLog('🧠 FOMO triggered, next item +4 dopamine'); break;
+      case 'gift': state.dopamine += 8; addLog('🎁 Mystery gift, +8 dopamine'); break;
+      case 'ship15': state.shippingDiscount = 15; addLog('📦 Free shipping loaded, -$15 next checkout'); break;
+      case 'price-match': state.nextDiscount = 0.4; addLog('🏷️ Price Match ready, next product 40% off'); break;
+      case 'quick-buy': state.quickBuy = true; state.quickBuyWindowUntil = Date.now() + 10000; addLog('🛒 One-click mode for next item'); break;
+      case 'sub-trap': state.futureRegret += 8; addLog('🕳️ Subscription trap queued'); break;
+      case 'future-remorse': state.futureRegret += 10; addLog('😬 Buyer remorse queued for next round'); break;
+      case 'impulse-auto': {
+        const options = state.hand.filter(c => c.type === 'product' && !state.cart.find(x => x.id === c.id));
+        if (options.length) {
+          const cheapest = [...options].sort((a,b)=>effectivePrice(a)-effectivePrice(b))[0];
+          addToCart(cheapest.id);
+          addLog('📣 Impulse buy auto-added cheapest item');
+        }
+        break;
+      }
+      case 'cashback': state.cashback = true; addLog('💳 Cashback armed for checkout'); break;
+      case 'designer': state.dopamine += 60; addLog('💠 Designer card pulled, +60 dopamine'); break;
+      case 'calm': state.regret = Math.max(0, state.regret - 8); addLog('🧯 Calm mode, regret reduced'); break;
+      case 'half-regret': state.halfRegret = true; addLog('🎯 Next checkout regret cut in half'); break;
+      case 'spike-regret': state.regretMultiplier += 0.15; addLog('🧨 Regret spike active'); break;
+      case 'budget-freeze': state.budget = Math.max(0, state.budget - 25); addLog('🛑 Budget freeze, -$25'); break;
+      case 'return-accepted': {
+        if (state.cart.length) {
+          const item = state.cart.pop();
+          state.budget += item.paidPrice;
+          addLog(`🔄 Returned ${item.name}, refunded $${item.paidPrice}`);
+          renderCart();
+        } else addLog('🔄 Return accepted, but cart was empty');
+        break;
+      }
+      case 'bundle': if (state.cart.length >= 2) { state.shippingDiscount += 20; addLog('🧷 Bundle discount ready, -$20 checkout'); } else addLog('🧷 Need 2+ items in cart for bundle'); break;
+      case 'hype': state.cart = state.cart.map(c => ({...c, finalDopamine:(c.finalDopamine||c.dopamine)+2})); addLog('📈 Hype surge, cart dopamine boosted'); renderCart(); break;
+    }
+
+    removeCardFromHand(cardId);
+    renderHUD();
+    renderHand();
   }
 
-  // ============================================================
-  // TODO: Checkout Flow — Replace with CheckoutModal.tsx + Framer Motion
-  // ============================================================
   function openCheckout() {
+    if (!state.cart.length) return;
     state.checkoutStep = 0;
+    document.querySelectorAll('.checkout-step').forEach((s, i) => s.classList.toggle('active', i===0));
+    document.querySelectorAll('.modal-step-dot').forEach((d, i) => d.className = `modal-step-dot ${i===0?'active':''}`);
     renderCheckout();
     document.getElementById('checkoutModal').classList.add('open');
   }
 
-  function closeCheckout() {
-    document.getElementById('checkoutModal').classList.remove('open');
-  }
+  function closeCheckout() { document.getElementById('checkoutModal').classList.remove('open'); }
 
   function renderCheckout() {
-    const totalPrice = state.cart.reduce((a,c) => a+c.price, 0);
-    const totalDop   = state.cart.reduce((a,c) => a+c.dopamine, 0);
+    const subtotal = state.cart.reduce((a,c)=>a+c.paidPrice,0);
+    const shippingCut = Math.min(subtotal, state.shippingDiscount);
+    const total = Math.max(0, subtotal - shippingCut);
+    const totalD = state.cart.reduce((a,c)=>a+(c.finalDopamine||c.dopamine||0),0);
 
-    // Cart items
     document.getElementById('checkoutCartItems').innerHTML = state.cart.map(c => `
-      <div class="checkout-item">
-        <div class="checkout-item-left">${c.emoji} <span>${c.name}</span></div>
-        <span class="checkout-item-price">$${c.price}</span>
-      </div>
-    `).join('');
-    document.getElementById('checkoutTotal').textContent = '$' + totalPrice;
-    document.getElementById('checkoutDopaminePreview').innerHTML =
-      `⚡ You'll gain <strong>${totalDop} dopamine</strong> from this haul`;
+      <div class="checkout-item"><div class="checkout-item-left">${c.emoji} <span>${c.name}</span></div><span class="checkout-item-price">$${c.paidPrice}</span></div>
+    `).join('') + (shippingCut ? `<div class="checkout-item"><div class="checkout-item-left">🚚 <span>Shipping Discount</span></div><span class="checkout-item-price">−$${shippingCut}</span></div>` : '');
 
-    // Confirm details
-    const regretGain = Math.round(state.cart.reduce((a,c) => a+c.risk,0) / state.cart.length);
+    document.getElementById('checkoutTotal').textContent = '$' + total;
+    document.getElementById('checkoutDopaminePreview').innerHTML = `⚡ You'll gain <strong>${totalD} dopamine</strong> from this haul`;
+
+    const avgRisk = Math.round(state.cart.reduce((a,c)=>a+c.risk,0) / Math.max(1,state.cart.length));
     document.getElementById('confirmDetails').innerHTML = `
-      <div class="confirm-row"><span>Dopamine Gained</span><span class="value" style="color:var(--teal)">+${totalDop}</span></div>
-      <div class="confirm-row"><span>Regret Risk</span><span class="value" style="color:#e07050">+${regretGain}%</span></div>
-      <div class="confirm-row"><span>Budget Remaining</span><span class="value">$${state.budget - totalPrice}</span></div>
+      <div class="confirm-row"><span>Dopamine Gained</span><span class="value" style="color:var(--teal)">+${totalD}</span></div>
+      <div class="confirm-row"><span>Projected Regret</span><span class="value" style="color:#e07050">+${avgRisk}%</span></div>
+      <div class="confirm-row"><span>Budget Remaining</span><span class="value">$${Math.max(0, state.budget-total)}</span></div>
     `;
   }
 
   function nextCheckoutStep() {
-    const steps = document.querySelectorAll('.checkout-step');
-    const dots   = document.querySelectorAll('.modal-step-dot');
+    const steps = [...document.querySelectorAll('.checkout-step')];
+    const dots = [...document.querySelectorAll('.modal-step-dot')];
+    if (state.checkoutStep >= steps.length - 1) return;
     steps[state.checkoutStep].classList.remove('active');
     dots[state.checkoutStep].classList.remove('active');
     dots[state.checkoutStep].classList.add('done');
@@ -1500,46 +1595,65 @@
   }
 
   function completeCheckout() {
-    const totalPrice = state.cart.reduce((a,c) => a+c.price, 0);
-    const totalDop   = state.cart.reduce((a,c) => a+c.dopamine, 0);
-    const regainGain = Math.round(state.cart.reduce((a,c) => a+c.risk,0) / state.cart.length);
+    const subtotal = state.cart.reduce((a,c)=>a+c.paidPrice,0);
+    const shippingCut = Math.min(subtotal, state.shippingDiscount);
+    const total = Math.max(0, subtotal - shippingCut);
+    const totalD = state.cart.reduce((a,c)=>a+(c.finalDopamine||c.dopamine||0),0);
 
-    state.budget   -= totalPrice;
-    state.dopamine += totalDop;
-    state.regret   = Math.min(100, state.regret + regainGain);
-    state.cart = [];
+    let regretGain = Math.round(state.cart.reduce((a,c)=>a+c.risk,0) / Math.max(1,state.cart.length));
+    if (state.archetype === 'comfort_seeker') {
+      const comfy = state.cart.filter(c => ['Home','Food'].includes(c.store));
+      if (comfy.length) regretGain = Math.round(regretGain * 0.5);
+    }
+    if (state.halfRegret) { regretGain = Math.round(regretGain * 0.5); state.halfRegret = false; }
+    regretGain = Math.round((regretGain + state.futureRegret) * state.regretMultiplier);
+
+    state.budget = Math.max(0, state.budget - total);
+    state.dopamine += totalD;
+    state.regret = Math.min(100, state.regret + regretGain);
+
+    if (state.cashback) {
+      const bonus = Math.round(total * 0.1);
+      state.budget += bonus;
+      addLog(`💳 Cashback credited +$${bonus}`);
+      state.cashback = false;
+    }
+
     state.round++;
+    state.cart = [];
+    state.flashSale = false;
+    state.shippingDiscount = 0;
+    state.futureRegret = 0;
+    state.regretMultiplier = 1;
 
-    // Dopamine flash
-    const flash = document.getElementById('dopamineFlash');
-    flash.classList.add('flash');
-    setTimeout(() => flash.classList.remove('flash'), 1600);
+    document.getElementById('dopamineFlash').classList.add('flash');
+    setTimeout(() => document.getElementById('dopamineFlash').classList.remove('flash'), 1600);
 
     closeCheckout();
     renderHUD();
     renderCart();
 
-    if (state.round > 10 || state.budget <= 0) {
-      setTimeout(() => showResults(), 400);
-    } else {
-      renderHand();
-      addLog(`✅ Checkout complete! +${totalDop} dopamine • Round ${state.round} begins`);
+    if (state.round > state.maxRounds || state.budget <= 0) {
+      showResults();
+      return;
     }
+
+    drawHand();
+    renderHand();
+    addLog(`✅ Checkout complete: +${totalD} dopamine, +${regretGain}% regret, round ${state.round}`);
   }
 
-  // ============================================================
-  // TODO: Results — Replace with final score from game-engine.ts
-  // ============================================================
   function showResults() {
     const arch = ARCHETYPES[state.archetype] || ARCHETYPES.impulse_king;
     const archetypeBonus = 3;
     const regretPenalty = Math.round(state.regret * 0.5);
     const finalScore = Math.max(0, state.dopamine - regretPenalty + archetypeBonus);
+
     const title = finalScore >= 80 ? 'Legendary Haul Queen 👑'
-                : finalScore >= 55 ? 'Master Shopper 🛍️'
-                : finalScore >= 35 ? 'Retail Regular 🛒'
-                : finalScore >= 15 ? 'Bargain Hunter 🏷️'
-                : "Buyer's Remorse 😬";
+      : finalScore >= 55 ? 'Master Shopper 🛍️'
+      : finalScore >= 35 ? 'Retail Regular 🛒'
+      : finalScore >= 15 ? 'Bargain Hunter 🏷️'
+      : "Buyer's Remorse 😬";
 
     document.getElementById('finalScoreNum').textContent = finalScore;
     document.querySelector('#screen-results .results-score-label').textContent = title;
@@ -1547,10 +1661,10 @@
     document.getElementById('resRegretPenalty').textContent = '−' + regretPenalty;
     document.getElementById('resArchetypeBonus').textContent = '+' + archetypeBonus;
     document.getElementById('resFinalScore').textContent = finalScore;
-    document.getElementById('resRounds').textContent = Math.min(state.round-1, 10);
+    document.getElementById('resRounds').textContent = Math.min(state.round - 1, state.maxRounds);
     document.getElementById('resSpent').textContent = '$' + (500 - state.budget);
-    document.getElementById('resultArchetype').innerHTML =
-      `<span class="pill pill-purple">${arch.emoji} ${arch.title}</span>`;
+    document.getElementById('resItems').textContent = state.log.filter(x => x.msg.includes('Added')).length;
+    document.getElementById('resultArchetype').innerHTML = `<span class="pill pill-purple">${arch.emoji} ${arch.title}</span>`;
 
     goToScreen('screen-results');
   }
@@ -1564,14 +1678,17 @@
     goToScreen('screen-quiz');
   }
 
-  // TODO: Share — Implement real share card generation
-  function shareScore() {
-    alert('📤 Share feature coming soon!\n\nIn the final build this will generate a shareable score card image.');
+  async function shareScore() {
+    const score = document.getElementById('resFinalScore').textContent;
+    const text = `I scored ${score} in SPENDTHRIFT. Can your cart survive 10 rounds?`;
+    try {
+      await navigator.clipboard.writeText(text + ' http://spendthrift.cweldy.com');
+      alert('Share text copied to clipboard.');
+    } catch {
+      alert(text + '\n\nhttp://spendthrift.cweldy.com');
+    }
   }
 
-  // ============================================================
-  // TODO: Activity Log — Wire up to game event stream
-  // ============================================================
   function addLog(msg) {
     const el = document.getElementById('activityLog');
     const mins = Math.floor(Date.now() % 600000 / 60000);
@@ -1584,9 +1701,6 @@
     state.log.push({ time, msg });
   }
 
-  // ============================================================
-  // Init
-  // ============================================================
   renderQuestion();
   goToScreen('screen-landing');
 </script>
