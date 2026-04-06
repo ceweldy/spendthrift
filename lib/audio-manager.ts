@@ -12,6 +12,7 @@ type SfxName =
   | 'dopamineGain'
   | 'rarePull'
   | 'roundTransition'
+  | 'payday'
   | 'resultsReveal';
 
 type AudioSettings = {
@@ -202,6 +203,14 @@ class AudioManager {
         break;
       case 'roundTransition':
         this.playSequence([{ f: 240, t: 0.07, gain: 0.1 }, { f: 320, t: 0.07, gain: 0.1 }, { f: 410, t: 0.08, gain: 0.12 }]);
+        break;
+      case 'payday':
+        this.playSequence([
+          { f: 880, t: 0.03, gain: 0.14, type: 'triangle' },
+          { f: 1100, t: 0.03, gain: 0.14, type: 'triangle' },
+          { f: 1320, t: 0.05, gain: 0.13, type: 'sine' },
+          { f: 1760, t: 0.16, gain: 0.2, type: 'sine' },
+        ], { release: 0.12 });
         break;
       case 'resultsReveal':
         this.playSequence([

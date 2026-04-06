@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { CheckoutModal } from './CheckoutModal';
+import { playSfx } from '@/lib/audio-manager';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
 
@@ -21,6 +22,9 @@ export function GameScreen() {
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
+  const prevRoundRef = useRef(s.round);
+  const prevAnnouncementRef = useRef<string | null>(s.announcement);
+  const mountedRef = useRef(false);
 
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
   const cartD = s.cart.reduce((a, c) => a + c.finalDopamine, 0);
@@ -32,6 +36,28 @@ export function GameScreen() {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      prevRoundRef.current = s.round;
+      prevAnnouncementRef.current = s.announcement;
+      return;
+    }
+
+    if (s.round > prevRoundRef.current) {
+      const isPayday = Boolean(s.announcement && /payday/i.test(s.announcement));
+      playSfx(isPayday ? 'payday' : 'roundTransition');
+      prevRoundRef.current = s.round;
+    }
+
+    if (s.announcement !== prevAnnouncementRef.current) {
+      if (s.announcement && /payday/i.test(s.announcement) && s.round === prevRoundRef.current) {
+        playSfx('payday');
+      }
+      prevAnnouncementRef.current = s.announcement;
+    }
+  }, [s.round, s.announcement]);
 
   const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string) => {
     if (!reducedMotion) {
