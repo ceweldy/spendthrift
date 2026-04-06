@@ -1,27 +1,22 @@
 import { useState } from 'react';
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
-import { playSfx } from '@/lib/audio-manager';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
 
 export function ResultsScreen() {
   const s = useGameStore();
-
-  useEffect(() => {
-    playSfx('resultsReveal');
-  }, []);
+  const reducedMotion = useReducedMotion();
+  const [copied, setCopied] = useState(false);
   const { finalScore, regretPenalty, archetypeBonus } = getFinalScore(s.dopamine, s.regret, s.archetype);
   const title = getTitleFromScore(finalScore);
   const arch = getArchetype(s.archetype);
-  const [copied, setCopied] = useState(false);
 
   const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
 
   const onShare = async () => {
     await navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    setTimeout(() => setCopied(false), 1400);
   };
 
   return (
@@ -29,7 +24,7 @@ export function ResultsScreen() {
       <div className="pointer-events-none absolute top-0 h-64 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
 
       <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Game Over — Final Score</p>
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : 0.24 }}>
         <div className="text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_20px_rgba(83,74,183,0.25)] sm:text-9xl">{finalScore}</div>
         <div className="text-xl font-semibold text-purple-light">{title}</div>
       </motion.div>
@@ -37,7 +32,7 @@ export function ResultsScreen() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.06 }}
+        transition={{ delay: 0.05, duration: reducedMotion ? 0 : 0.24 }}
         className="w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-b from-[#3d3b38] to-bg-card p-6 text-left shadow-[0_14px_34px_rgba(0,0,0,0.28)]"
       >
         <div className="mb-4 flex items-center justify-between">
@@ -50,13 +45,18 @@ export function ResultsScreen() {
         <Row label="Final Score" value={`${finalScore}`} color="text-amber" strong />
       </motion.div>
 
-      <div className="flex flex-wrap justify-center gap-8">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: reducedMotion ? 0 : 0.2 }}
+        className="flex flex-wrap justify-center gap-8"
+      >
         <Metric label="Rounds" value={`${Math.min(s.round - 1, s.maxRounds)}`} />
         <Metric label="Run Spent" value={`$${500 - s.budget}`} />
         <Metric label="Lifetime Spent" value={`$${s.stats.totalSpent.toFixed(2)}`} />
         <Metric label="Original Value" value={`$${s.stats.totalOriginalSpent.toFixed(2)}`} />
         <Metric label="Demo Savings" value={`$${demoSavings.toFixed(2)}`} />
-      </div>
+      </motion.div>
 
       <div className="w-full max-w-xl rounded-xl border border-white/10 bg-black/20 p-4 text-left">
         <div className="mb-2 text-[11px] uppercase tracking-widest text-zinc-500">Share Card Preview</div>
