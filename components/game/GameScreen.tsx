@@ -179,7 +179,7 @@ export function GameScreen() {
   }, [s, unlockedBadgeIds]);
 
   return (
-    <section className="screen-wrap relative flex h-screen min-h-screen flex-col overflow-hidden">
+    <section className="screen-wrap relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
         <div className="flex flex-wrap gap-4 text-center text-xs sm:gap-5">
@@ -220,12 +220,12 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col p-4 sm:p-6">
+      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-4 sm:p-6">
         {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-auto pr-1">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-auto overflow-x-hidden pr-1">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
@@ -238,7 +238,7 @@ export function GameScreen() {
                       whileHover={reducedMotion ? undefined : { y: -4, scale: 1.02, rotateX: 4, rotateY: -4, rotateZ: -0.3 }}
                       transition={{ type: 'spring', stiffness: 420, damping: 18 }}
                       style={reducedMotion ? undefined : { transformStyle: 'preserve-3d', perspective: 1200 }}
-                      className={`tcg-card rarity-${rarity}`}
+                      className={`tcg-card h-full rarity-${rarity}`}
                     >
                       <div className={`tcg-foil ${isFoil ? 'opacity-100' : 'opacity-0'}`} />
                       <div className="tcg-face tcg-front">
@@ -256,7 +256,7 @@ export function GameScreen() {
 
                           <div className="mt-2 text-sm font-bold leading-tight">{card.name}</div>
                           <div className="text-[11px] text-zinc-400">{card.brand ?? card.store} • {card.category ?? card.store}</div>
-                          <p className="mt-1 line-clamp-2 text-[11px] text-zinc-300">{card.description ?? card.desc ?? 'No description provided.'}</p>
+                          <p className="mt-1 min-h-8 line-clamp-2 text-[11px] text-zinc-300">{card.description ?? card.desc ?? 'No description provided.'}</p>
 
                           {card.type === 'product' ? (
                             (() => {
@@ -265,42 +265,46 @@ export function GameScreen() {
                               const roundSaleRate = s.randomDiscountSecondsLeft > 0 ? s.randomDiscounts[card.id] : 0;
 
                               return (
-                                <>
-                                  {isOnSale ? (
-                                    <div className="mt-1 inline-flex rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">SALE -{pricing.discountPercent}%</div>
-                                  ) : null}
-                                  <div className="mt-1 flex items-baseline gap-2">
+                                <div className="tcg-product-meta mt-1">
+                                  <div className="min-h-5">
+                                    {isOnSale ? (
+                                      <div className="inline-flex rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">SALE -{pricing.discountPercent}%</div>
+                                    ) : <span className="inline-block h-[18px]" aria-hidden />}
+                                  </div>
+                                  <div className="flex min-h-7 items-baseline gap-2">
                                     {isOnSale ? <span className="text-xs text-zinc-500 line-through">${pricing.basePrice}</span> : null}
                                     <div className="text-lg font-bold text-[#ffb18d]">${pricing.finalPrice}</div>
                                   </div>
-                                  {!!pricing.applied.length && <div className="text-[10px] text-red-300">{pricing.applied.join(' • ')}</div>}
-                                  <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-zinc-300">
+                                  <div className="min-h-4 text-[10px] text-red-300">{!!pricing.applied.length ? pricing.applied.join(' • ') : <span aria-hidden> </span>}</div>
+                                  <div className="mt-1 flex min-h-8 flex-wrap content-start gap-1 text-[10px] text-zinc-300">
                                     <span className="tcg-mini-pill">⚡ {card.dopamine ?? 0}</span>
                                     <span className="tcg-mini-pill">😬 {card.risk ?? 0}</span>
                                     {isOnSale && <span className="tcg-mini-pill">Save ${pricing.savings}</span>}
                                     {roundSaleRate ? <span className="tcg-mini-pill">⏳ {s.randomDiscountSecondsLeft}s</span> : null}
                                     {card.premiumOnly && <span className="tcg-mini-pill">👑 Premium</span>}
                                   </div>
-                                </>
+                                </div>
                               );
                             })()
                           ) : (
-                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-coral">{card.type}</div>
+                            <div className="mt-1 min-h-20 text-[10px] font-semibold uppercase tracking-wide text-coral">{card.type}</div>
                           )}
 
-                          <div className="mt-2 space-y-1">
+                          <div className="mt-2 min-h-[90px] space-y-1">
                             {getCardEffectLines(card).map((line) => (
                               <div key={`${card.id}-${line}`} className="rounded border border-white/10 bg-black/20 px-2 py-1 text-left text-[10px] leading-relaxed text-zinc-200">{line}</div>
                             ))}
                           </div>
 
-                          {card.type === 'product' ? (
-                            <Button className="mt-2 w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name)}>
-                              {inCart ? 'In Cart ✓' : 'Add to Cart'}
-                            </Button>
-                          ) : (
-                            <Button className="mt-2 w-full bg-coral text-xs text-white" onClick={() => { s.playSpecial(card.id); pushImpact('effect triggered', 'neutral'); }}>Play Card</Button>
-                          )}
+                          <div className="mt-auto pt-2">
+                            {card.type === 'product' ? (
+                              <Button className="w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name)}>
+                                {inCart ? 'In Cart ✓' : 'Add to Cart'}
+                              </Button>
+                            ) : (
+                              <Button className="w-full bg-coral text-xs text-white" onClick={() => { s.playSpecial(card.id); pushImpact('effect triggered', 'neutral'); }}>Play Card</Button>
+                            )}
+                          </div>
                         </div>
                     </motion.div>
                   );
@@ -310,9 +314,9 @@ export function GameScreen() {
               <motion.div
                 key={cartPulse}
                 ref={cartRef}
-                animate={reducedMotion ? undefined : { scale: [1, 1.035, 0.995, 1.02, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 5px rgba(83,74,183,0.65)', '0 0 0 0 rgba(83,74,183,0)', '0 0 0 7px rgba(29,158,117,0.5)', '0 0 0 rgba(29,158,117,0)'] }}
+                animate={reducedMotion ? undefined : { scale: [1, 1.01, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 3px rgba(83,74,183,0.45)', '0 0 0 rgba(83,74,183,0)'] }}
                 transition={{ duration: 0.9, ease: [0.2, 0.9, 0.2, 1] }}
-                className="rounded-2xl border border-white/10 bg-bg-card p-4"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4"
               >
                 <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
                 <div className="mb-3 flex min-h-10 flex-wrap gap-2">
@@ -335,7 +339,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'inventory' && (
-            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
               <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
@@ -358,7 +362,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'activity' && (
-            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col space-y-4 rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="text-sm font-semibold">Activity & Payment Settings</div>
               <div className="flex flex-wrap gap-2">
                 <button className={`pill ${s.paymentMode === 'real-display' ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('real-display')}>Real pricing (display only)</button>
@@ -376,7 +380,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'badges' && (
-            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-1 text-sm font-semibold">Badges & Milestones</div>
               <div className="mb-3 text-xs text-zinc-400">Unlocked {s.achievements.unlocked.length}/{ACHIEVEMENTS.length} • Bonus dopamine earned: +{s.achievements.totalRewardDopamine}</div>
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">

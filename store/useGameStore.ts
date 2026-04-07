@@ -82,6 +82,7 @@ const membershipTiers: MembershipTier[] = [
 const baseEngine = createInitialEngineState('impulse_king');
 
 const validMenus: GameMenu[] = ['shop', 'inventory', 'activity', 'badges'];
+const validPaymentModes: PaymentMode[] = ['real-display', 'demo-free'];
 
 const reconstructInventoryFromHistory = (purchaseHistory: PurchaseLine[]): InventoryItem[] => {
   const byCard = new Map<string, InventoryItem>();
@@ -123,17 +124,20 @@ const normalizePersistentState = (state: Partial<GameState>): Partial<GameState>
   const purchaseHistory = Array.isArray(state.purchaseHistory) ? state.purchaseHistory : [];
   const inventory = Array.isArray(state.inventory) ? state.inventory : [];
   const safeMenu = state.activeMenu && validMenus.includes(state.activeMenu) ? state.activeMenu : 'shop';
+  const safePaymentMode = state.paymentMode && validPaymentModes.includes(state.paymentMode) ? state.paymentMode : 'real-display';
 
   return {
     ...state,
     activeMenu: safeMenu,
+    paymentMode: safePaymentMode,
     inventory: inventory.length ? inventory : reconstructInventoryFromHistory(purchaseHistory),
-    activityLog: Array.isArray(state.activityLog) && state.activityLog.length ? state.activityLog : ['Activity feed ready.'],
+    activityLog: Array.isArray(state.activityLog) && state.activityLog.length ? state.activityLog.slice(0, 40) : ['Activity feed ready.'],
     achievements: {
       ...initialAchievementState(),
       ...(state.achievements ?? {}),
       unlocked: Array.isArray(state.achievements?.unlocked) ? state.achievements?.unlocked : [],
     },
+    badgeToasts: [],
   };
 };
 

@@ -123,6 +123,7 @@ body {
   z-index: 2;
   padding: 12px;
   min-height: 318px;
+  height: 100%;
 }
 
 .tcg-front {
@@ -225,6 +226,10 @@ body {
   padding: 2px 8px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(0, 0, 0, 0.25);
+}
+
+.tcg-product-meta {
+  min-height: 96px;
 }
 
 .tcg-foil {
