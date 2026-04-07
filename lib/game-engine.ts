@@ -56,6 +56,8 @@ const STARTING_BUDGET = 500;
 const PAYDAY_EVERY_ROUNDS = 3;
 const PAYDAY_AMOUNT = 180;
 const RANDOM_DISCOUNT_SECONDS = 25;
+const RANDOM_DISCOUNT_MIN_PRODUCTS = 1;
+const RANDOM_DISCOUNT_MAX_PRODUCTS = 3;
 const logCap = 30;
 
 export type CheckoutTotals = {
@@ -128,11 +130,18 @@ const applyRandomRoundDiscounts = (state: EngineState, hand: Card[]): EngineStat
   const products = hand.filter((card) => card.type === 'product');
   if (!products.length) return { ...state, randomDiscounts: {}, randomDiscountSecondsLeft: 0 };
 
-  const maxDiscounted = Math.max(1, Math.ceil(products.length * 0.5));
-  const discountedCount = Math.max(1, Math.floor(Math.random() * maxDiscounted) + 1);
+  const maxByPool = Math.max(RANDOM_DISCOUNT_MIN_PRODUCTS, Math.ceil(products.length * 0.6));
+  const discountedCount = Math.min(
+    products.length,
+    Math.max(
+      RANDOM_DISCOUNT_MIN_PRODUCTS,
+      RANDOM_DISCOUNT_MIN_PRODUCTS + Math.floor(Math.random() * (Math.min(RANDOM_DISCOUNT_MAX_PRODUCTS, maxByPool) - RANDOM_DISCOUNT_MIN_PRODUCTS + 1)),
+    ),
+  );
+
   const shuffled = [...products].sort(() => Math.random() - 0.5);
   const picked = shuffled.slice(0, discountedCount);
-  const rates = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35];
+  const rates = [0.12, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4];
 
   const randomDiscounts = picked.reduce<Record<string, number>>((acc, card) => {
     acc[card.id] = rates[Math.floor(Math.random() * rates.length)];
@@ -142,6 +151,9 @@ const applyRandomRoundDiscounts = (state: EngineState, hand: Card[]): EngineStat
   let next = { ...state, randomDiscounts, randomDiscountSecondsLeft: RANDOM_DISCOUNT_SECONDS };
   const label = picked.map((card) => `${card.name} ${Math.round((randomDiscounts[card.id] ?? 0) * 100)}% off`).join(', ');
   next = pushHistory(next, 'effect', `Round SALE live (${RANDOM_DISCOUNT_SECONDS}s): ${label}.`);
+  if (picked.length >= 2) {
+    next = pushHistory(next, 'effect', `Combo discount event: ${picked.length} products discounted together.`);
+  }
   return next;
 };
 
@@ -531,6 +543,7 @@ export const calculateCheckoutTotals = (state: EngineState): CheckoutTotals & { 
 
 export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
   const { originalTotal, chargedTotal, cashback, dopamineGain, regretGain } = calculateCheckoutTotals(state);
+  const saleSavings = Math.max(0, state.cart.reduce((sum, item) => sum + Math.max(0, (item.originalPrice ?? item.paidPrice) - item.paidPrice), 0));
 
   if (state.paymentMode !== 'demo-free' && chargedTotal > state.budget) {
     return {
@@ -585,6 +598,7 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
     `Checkout complete: paid $${chargedTotal}${state.paymentMode === 'demo-free' ? ` (original $${originalTotal})` : ''}, +${dopamineGain} dopamine, +${regretGain} regret.`,
   );
   next = pushHistory(next, 'inventory', `Inventory updated with ${state.cart.length} purchased item(s).`);
+  if (saleSavings > 0) next = pushHistory(next, 'checkout', `Discount savings captured: $${saleSavings}.`);
   if (cashback > 0) next = pushHistory(next, 'checkout', `Cashback applied: +$${cashback}.`);
   if (isPaydayRound) next = pushHistory(next, 'round', `Payday reached: +$${state.paydayAmount} budget.`);
 
