@@ -225,7 +225,7 @@ export function GameScreen() {
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-auto overflow-x-hidden pr-1">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
