@@ -135,14 +135,12 @@ body {
 }
 
 .screen-wrap {
-  height: var(--app-height, 100svh);
   min-height: var(--app-height, 100svh);
   animation: fadeIn 0.25s ease;
 }
 
 @supports (height: 100dvh) {
   .screen-wrap {
-    height: var(--app-height, 100dvh);
     min-height: var(--app-height, 100dvh);
   }
 }

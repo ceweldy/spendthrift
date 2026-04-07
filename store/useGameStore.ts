@@ -358,7 +358,13 @@ export const useGameStore = create<GameState>()(
 
       tick: () => set((s) => tickTimers(s)),
 
-      endGame: () => set({ screen: 'results', badgeModalOpen: false }),
+      endGame: () =>
+        set({
+          screen: 'results',
+          badgeModalOpen: false,
+          checkoutOpen: false,
+          checkoutStep: 0,
+        }),
 
       setActiveMenu: (menu) => set({ activeMenu: validMenus.includes(menu) ? menu : 'shop' }),
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
