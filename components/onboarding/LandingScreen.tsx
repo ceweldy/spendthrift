@@ -12,22 +12,24 @@ export function LandingScreen() {
 
   return (
     <section className="screen-wrap relative flex flex-col items-center justify-between px-6 text-center">
-      <div className="pointer-events-none absolute top-0 h-72 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
+      <div className="pointer-events-none absolute top-0 h-80 w-full bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.2),rgba(142,130,255,0.18),transparent_72%)]" />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-16">
         <motion.div
           initial={{ rotate: -2, scale: 0.96, opacity: 0.9 }}
           animate={{ rotate: 0, scale: 1, opacity: 1 }}
-          className="w-full max-w-[280px] sm:max-w-[340px]"
+          className="w-full max-w-[260px] sm:max-w-[320px]"
         >
-          <Image
-            src="/branding/asi-logo.png"
-            alt="Applied Strategy Inc. logo"
-            width={1306}
-            height={703}
-            priority
-            className="h-auto w-full drop-shadow-[0_10px_24px_rgba(0,0,0,0.45)]"
-          />
-          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">An Applied Strategy Inc. game</p>
+          <div className="rounded-2xl border border-white/30 bg-white/85 px-4 py-3 shadow-[0_16px_40px_rgba(8,8,20,0.28)] backdrop-blur-sm sm:px-5 sm:py-4">
+            <Image
+              src="/branding/asi-logo.png"
+              alt="Applied Strategy Inc. logo"
+              width={1306}
+              height={703}
+              priority
+              className="h-auto w-full drop-shadow-[0_8px_16px_rgba(0,0,0,0.22)]"
+            />
+          </div>
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-300">An Applied Strategy Inc. game</p>
         </motion.div>
 
         <div>
