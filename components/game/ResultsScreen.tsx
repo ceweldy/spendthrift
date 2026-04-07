@@ -13,6 +13,7 @@ export function ResultsScreen() {
   const { finalScore, regretPenalty, archetypeBonus } = getFinalScore(s.dopamine, s.regret, s.archetype);
   const title = getTitleFromScore(finalScore);
   const arch = getArchetype(s.archetype);
+  const openBadgesView = s.openBadgesView;
 
   const scoreMV = useMotionValue(reducedMotion ? finalScore : 0);
   const dopamineMV = useMotionValue(reducedMotion ? s.dopamine : 0);
@@ -164,6 +165,7 @@ export function ResultsScreen() {
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button className="px-7 py-3" onClick={s.startQuiz}>Play Again</Button>
+        <Button variant="ghost" className="px-7 py-3" onClick={openBadgesView} aria-label="View badges">View Badges 🏅</Button>
         <Button variant="ghost" className="px-7 py-3" onClick={s.resetAll}>Back to Home</Button>
       </div>
     </section>

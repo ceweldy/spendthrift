@@ -7,6 +7,7 @@ export function LandingScreen() {
   const membershipTiers = useGameStore((s) => s.membershipTiers);
   const currentTier = useGameStore((s) => s.subscription.currentPlanId);
   const chooseMembership = useGameStore((s) => s.chooseMembership);
+  const openBadgesView = useGameStore((s) => s.openBadgesView);
 
   return (
     <section className="screen-wrap relative flex flex-col items-center justify-between px-6 text-center">
@@ -60,7 +61,17 @@ export function LandingScreen() {
           <span className="pill bg-teal/20 text-teal">No Real Money</span>
           <span className="pill bg-amber/20 text-amber">Brand Ready</span>
         </div>
-        <Button className="px-8 py-4 text-base" onClick={startQuiz}>Start Shopping →</Button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button className="px-8 py-4 text-base" onClick={startQuiz}>Start Shopping →</Button>
+          <Button
+            variant="ghost"
+            className="px-8 py-4 text-base"
+            onClick={openBadgesView}
+            aria-label="View badges"
+          >
+            View Badges 🏅
+          </Button>
+        </div>
       </div>
       <footer className="w-full border-t border-white/10 py-5 text-xs text-zinc-500">Team 7 · Strategy Class · v2.1 UX Pass</footer>
     </section>

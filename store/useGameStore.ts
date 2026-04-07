@@ -63,6 +63,7 @@ type GameState = EngineState & {
   setCheckoutMode: (mode: PaymentMode) => void;
   chooseMembership: (tier: MembershipTierId) => void;
   removeBadgeToast: (toastId: string) => void;
+  openBadgesView: () => void;
 
   resetAll: () => void;
 };
@@ -358,6 +359,13 @@ export const useGameStore = create<GameState>()(
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
       chooseMembership: (tier) => set((s) => setMembershipTier(s, tier)),
       removeBadgeToast: (toastId) => set((s) => ({ badgeToasts: s.badgeToasts.filter((toast) => toast.toastId !== toastId) })),
+      openBadgesView: () =>
+        set({
+          screen: 'game',
+          activeMenu: 'badges',
+          checkoutOpen: false,
+          checkoutStep: 0,
+        }),
 
       resetAll: () =>
         set((state) => ({
