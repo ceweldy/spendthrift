@@ -53,6 +53,8 @@ export function GameScreen() {
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
   const [checkoutConfetti, setCheckoutConfetti] = useState<CheckoutConfettiPiece[]>([]);
+  const [animationPreset, setAnimationPreset] = useState(() => getUxSettings().animationPreset);
+  const animationDuration = getAnimationDurationMultiplier(animationPreset, !!reducedMotion);
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
   const prevActivityHeadRef = useRef<string | undefined>(s.activityLog[0]);
@@ -97,6 +99,44 @@ export function GameScreen() {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const syncSettings = (event: Event) => {
+      const detail = (event as CustomEvent<{ animationPreset?: 'full' | 'balanced' | 'reduced' }>).detail;
+      if (detail?.animationPreset) setAnimationPreset(detail.animationPreset);
+    };
+
+    window.addEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+    return () => window.removeEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const isEditable = (target: EventTarget | null) => {
+      const element = target as HTMLElement | null;
+      if (!element) return false;
+      return Boolean(element.closest('input, textarea, select, [contenteditable="true"]'));
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isEditable(event.target) || event.altKey || event.metaKey || event.ctrlKey) return;
+      const key = event.key.toLowerCase();
+
+      if (key === '1') s.setActiveMenu('shop');
+      else if (key === '2') s.setActiveMenu('inventory');
+      else if (key === '3') s.setActiveMenu('activity');
+      else if (key === '4') s.setActiveMenu('badges');
+      else if (key === 'c' && s.cart.length) s.openCheckout();
+      else if (key === 'k') s.skipCurrentRound();
+      else if (key === 'x' && s.cart.length) s.clearCart();
+      else if (key === 'e' && event.shiftKey) s.endGame();
+      else return;
+
+      event.preventDefault();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [s]);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -238,7 +278,7 @@ export function GameScreen() {
           <div title="Higher mood means your run is trending better." className="h-3 overflow-hidden rounded border border-white/20 bg-black/40">
             <motion.div
               animate={{ width: `${mood}%` }}
-              transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.35 * animationDuration, ease: [0.22, 1, 0.36, 1] }}
               className="h-full rounded bg-gradient-to-r from-coral via-amber to-teal"
             />
           </div>
@@ -248,7 +288,7 @@ export function GameScreen() {
           <div title="How much of the starting $500 has been used this run." className="h-3 overflow-hidden rounded border border-white/20 bg-black/40">
             <motion.div
               animate={{ width: `${spendPct}%` }}
-              transition={{ duration: reducedMotion ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.3 * animationDuration, ease: [0.22, 1, 0.36, 1] }}
               className="h-full rounded bg-gradient-to-r from-teal via-purple to-[#e07050]"
             />
           </div>
@@ -261,7 +301,7 @@ export function GameScreen() {
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
@@ -378,7 +418,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'inventory' && (
-            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
               <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
@@ -401,7 +441,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'activity' && (
-            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="text-sm font-semibold">Activity & Payment Settings</div>
               <div className="flex flex-wrap gap-2">
                 <button className={`pill ${s.paymentMode === 'real-display' ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('real-display')}>Real pricing (display only)</button>
@@ -419,7 +459,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'badges' && (
-            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-1 text-sm font-semibold">Badges & Milestones</div>
               <div className="mb-3 text-xs text-zinc-400">Unlocked {s.achievements.unlocked.length}/{ACHIEVEMENTS.length} • Bonus dopamine earned: +{s.achievements.totalRewardDopamine}</div>
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
@@ -433,7 +473,7 @@ export function GameScreen() {
                       </div>
                       <div className="mt-1 text-xs text-zinc-300">{isHiddenLocked ? 'Hidden badge. Keep playing to reveal unlock conditions.' : badge.description}</div>
                       <div className="mt-2 h-2 overflow-hidden rounded bg-black/40">
-                        <motion.div className={`h-full ${badge.unlocked ? 'bg-teal' : 'bg-purple'}`} animate={{ width: `${Math.max(4, isHiddenLocked ? 0 : badge.progress * 100)}%` }} transition={{ duration: reducedMotion ? 0 : 0.35 }} />
+                        <motion.div className={`h-full ${badge.unlocked ? 'bg-teal' : 'bg-purple'}`} animate={{ width: `${Math.max(4, isHiddenLocked ? 0 : badge.progress * 100)}%` }} transition={{ duration: 0.35 * animationDuration }} />
                       </div>
                       <div className="mt-1 text-[11px] text-zinc-400">{isHiddenLocked ? `Progress: Hidden/${badge.goal} • Reward +${badge.reward} dopamine` : `Progress: ${Math.min(badge.goal, Math.round(badge.progressRaw))}/${badge.goal} • Reward +${badge.reward} dopamine`}</div>
                     </div>

@@ -655,7 +655,7 @@
       "warehouse",
       "rare"
     ],
-    "description": "Executive tier membership card with 2% annual rewards and extra warehouse perks.",
+    "description": "Executive membership with 2% annual reward on eligible purchases.",
     "stock": 999,
     "sku": "COSTCO-EXEC-ANNUAL",
     "imageUrl": "/images/cards/p37-costco-executive-membership.jpg"
@@ -676,7 +676,7 @@
       "rare",
       "party"
     ],
-    "description": "Full orange faux-fur costume with mustache kit, made for loud party energy.",
+    "description": "Full orange faux-fur costume with mustache kit for bold party energy.",
     "stock": 42,
     "sku": "FF-LORAX-001",
     "imageUrl": "/images/cards/p36-lorax-costume.jpg"
@@ -687,7 +687,7 @@
     "name": "Flash Sale",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Start Flash Sale. This round only, products are 30% off for 20 seconds.",
+    "desc": "Now: Start a Flash Sale. For 20 seconds, all product prices are 30% off this round.",
     "effect": "flash-sale"
   },
   {
@@ -696,7 +696,7 @@
     "name": "Card Declined",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Lose 10 dopamine instantly.",
+    "desc": "Now: Lose 10 dopamine.",
     "effect": "declined"
   },
   {
@@ -705,7 +705,7 @@
     "name": "Refund Hit",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain $40 budget instantly.",
+    "desc": "Now: Gain $40 budget.",
     "effect": "refund"
   },
   {
@@ -714,7 +714,7 @@
     "name": "FOMO Trigger",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Arm FOMO. The next product you add this round gets +4 dopamine.",
+    "desc": "Now: Arm FOMO. Your next product this round gets +4 dopamine.",
     "effect": "fomo"
   },
   {
@@ -723,7 +723,7 @@
     "name": "Mystery Gift",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain +8 dopamine instantly.",
+    "desc": "Now: Gain +8 dopamine.",
     "effect": "gift"
   },
   {
@@ -732,7 +732,7 @@
     "name": "Cashback Weekend",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Arm cashback. Your next checkout returns 10% of charged total.",
+    "desc": "Now: Arm cashback. Your next checkout returns 10% of what you pay.",
     "effect": "cashback"
   },
   {
@@ -741,7 +741,7 @@
     "name": "Influencer Hype",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Apply hype. Products added this round get +2 dopamine.",
+    "desc": "Now: Hype this round. Products added this round get +2 dopamine.",
     "effect": "influencer-hype"
   },
   {
@@ -750,7 +750,7 @@
     "name": "Market Stock Drop",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Apply markdown. Tech products are 15% off this round.",
+    "desc": "Now: Mark down Tech. Tech products are 15% off this round.",
     "effect": "stock-drop"
   },
   {
@@ -768,7 +768,7 @@
     "name": "Loyalty Points",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain +6 dopamine. Next checkout gets an extra -$10 discount.",
+    "desc": "Now: Gain +6 dopamine. Your next checkout also gets -$10.",
     "effect": "loyalty-points"
   },
   {
@@ -777,7 +777,7 @@
     "name": "Free Shipping",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm discount. Next checkout gets -$15 total.",
+    "desc": "Now: Arm shipping discount. Your next checkout gets -$15.",
     "effect": "ship15"
   },
   {
@@ -786,7 +786,7 @@
     "name": "Price Match",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm price match. Next product added is 40% off.",
+    "desc": "Now: Arm price match. Your next product added is 40% off.",
     "effect": "price-match"
   },
   {
@@ -795,7 +795,7 @@
     "name": "One Click Buy",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm quick buy. Next product added gets +5 dopamine.",
+    "desc": "Now: Arm quick-buy. Your next product added gets +5 dopamine.",
     "effect": "quick-buy"
   },
   {
@@ -804,7 +804,7 @@
     "name": "Designer Card",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Gain +60 dopamine instantly.",
+    "desc": "Now: Gain +60 dopamine.",
     "effect": "designer",
     "premiumOnly": true
   },
@@ -823,7 +823,7 @@
     "name": "Subscription Trap",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Arm trap. Next checkout adds +8 regret.",
+    "desc": "Now: Arm trap. Your next checkout adds +8 regret.",
     "effect": "sub-trap"
   },
   {
@@ -832,7 +832,7 @@
     "name": "Buyer Remorse",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. Next round, gain +10 regret when hand is dealt.",
+    "desc": "Now: Queue delayed regret. At next hand deal, gain +10 regret.",
     "effect": "future-remorse"
   },
   {
@@ -841,7 +841,7 @@
     "name": "Impulse Buy",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Trigger auto-buy. Cheapest product in hand is added to cart immediately.",
+    "desc": "Now: Auto-buy. Add the cheapest product in hand to cart immediately.",
     "effect": "impulse-auto"
   },
   {
@@ -850,7 +850,7 @@
     "name": "Doom Scroll",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. In 2 rounds, gain +12 regret when hand is dealt.",
+    "desc": "Now: Queue delayed regret. In 2 rounds, gain +12 regret at hand deal.",
     "effect": "doom-scroll"
   },
   {
@@ -859,7 +859,7 @@
     "name": "Missed Return Window",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. In 2 rounds, gain +8 regret when hand is dealt.",
+    "desc": "Now: Queue delayed regret. In 2 rounds, gain +8 regret at hand deal.",
     "effect": "return-window"
   }
 ]
