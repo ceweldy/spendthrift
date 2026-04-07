@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { motion, useMotionValue, animate, useTransform, useReducedMotion } from 'framer-motion';
+import { motion, animate, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
 import { playSfx } from '@/lib/audio-manager';
@@ -15,30 +15,32 @@ export function ResultsScreen() {
   const arch = getArchetype(s.archetype);
   const openBadgesView = s.openBadgesView;
 
-  const scoreMV = useMotionValue(reducedMotion ? finalScore : 0);
-  const dopamineMV = useMotionValue(reducedMotion ? s.dopamine : 0);
-  const penaltyMV = useMotionValue(reducedMotion ? regretPenalty : 0);
-  const bonusMV = useMotionValue(reducedMotion ? archetypeBonus : 0);
-
-  const scoreText = useTransform(scoreMV, (v) => Math.round(v));
-  const dopamineText = useTransform(dopamineMV, (v) => Math.round(v));
-  const penaltyText = useTransform(penaltyMV, (v) => Math.round(v));
-  const bonusText = useTransform(bonusMV, (v) => Math.round(v));
+  const [scoreText, setScoreText] = useState(finalScore);
+  const [dopamineText, setDopamineText] = useState(s.dopamine);
+  const [penaltyText, setPenaltyText] = useState(regretPenalty);
+  const [bonusText, setBonusText] = useState(archetypeBonus);
 
   useEffect(() => {
     playSfx('resultsReveal');
   }, []);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion) {
+      setScoreText(finalScore);
+      setDopamineText(s.dopamine);
+      setPenaltyText(regretPenalty);
+      setBonusText(archetypeBonus);
+      return;
+    }
+
     const controls = [
-      animate(scoreMV, finalScore, { duration: 1.1, ease: [0.16, 1, 0.3, 1] }),
-      animate(dopamineMV, s.dopamine, { duration: 0.65, delay: 0.08 }),
-      animate(penaltyMV, regretPenalty, { duration: 0.65, delay: 0.16 }),
-      animate(bonusMV, archetypeBonus, { duration: 0.65, delay: 0.24 }),
+      animate(0, finalScore, { duration: 1.1, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => setScoreText(Math.round(v)) }),
+      animate(0, s.dopamine, { duration: 0.65, delay: 0.08, onUpdate: (v) => setDopamineText(Math.round(v)) }),
+      animate(0, regretPenalty, { duration: 0.65, delay: 0.16, onUpdate: (v) => setPenaltyText(Math.round(v)) }),
+      animate(0, archetypeBonus, { duration: 0.65, delay: 0.24, onUpdate: (v) => setBonusText(Math.round(v)) }),
     ];
     return () => controls.forEach((c) => c.stop());
-  }, [finalScore, s.dopamine, regretPenalty, archetypeBonus, reducedMotion, scoreMV, dopamineMV, penaltyMV, bonusMV]);
+  }, [finalScore, s.dopamine, regretPenalty, archetypeBonus, reducedMotion]);
 
   const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
   const purchasedItems = s.inventory.reduce((acc, item) => acc + item.quantity, 0);
