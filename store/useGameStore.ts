@@ -18,7 +18,7 @@ import {
   skipRound,
   tickTimers,
 } from '@/lib/game-engine';
-import { ArchetypeKey, GameMenu, MembershipTier, MembershipTierId, PaymentMode, Screen } from '@/types/game';
+import { ArchetypeKey, GameMenu, InventoryItem, MembershipTier, MembershipTierId, PaymentMode, PurchaseLine, Screen } from '@/types/game';
 
 type CheckoutStep = 0 | 1 | 2;
 
@@ -30,6 +30,7 @@ type GameState = EngineState & {
 
   checkoutOpen: boolean;
   checkoutStep: CheckoutStep;
+  checkoutSuccessFxTick: number;
 
   activeMenu: GameMenu;
   membershipTiers: MembershipTier[];
@@ -74,6 +75,57 @@ const membershipTiers: MembershipTier[] = [
 
 const baseEngine = createInitialEngineState('impulse_king');
 
+const validMenus: GameMenu[] = ['shop', 'inventory', 'activity'];
+
+const reconstructInventoryFromHistory = (purchaseHistory: PurchaseLine[]): InventoryItem[] => {
+  const byCard = new Map<string, InventoryItem>();
+
+  const chronological = [...purchaseHistory].sort((a, b) => a.timestamp - b.timestamp);
+  for (const line of chronological) {
+    const existing = byCard.get(line.itemId);
+    if (!existing) {
+      byCard.set(line.itemId, {
+        id: `inv-${line.itemId}`,
+        cardId: line.itemId,
+        emoji: line.emoji,
+        name: line.itemName,
+        store: 'Unknown',
+        category: 'product',
+        quantity: line.quantity,
+        lastPurchasePrice: line.unitPaidPrice,
+        lastOriginalPrice: line.unitOriginalPrice,
+        totalSpent: line.linePaidTotal,
+        totalOriginalSpent: line.lineOriginalTotal,
+        firstPurchasedAt: line.timestamp,
+        lastPurchasedAt: line.timestamp,
+      });
+      continue;
+    }
+
+    existing.quantity += line.quantity;
+    existing.lastPurchasePrice = line.unitPaidPrice;
+    existing.lastOriginalPrice = line.unitOriginalPrice;
+    existing.totalSpent += line.linePaidTotal;
+    existing.totalOriginalSpent += line.lineOriginalTotal;
+    existing.lastPurchasedAt = line.timestamp;
+  }
+
+  return Array.from(byCard.values()).sort((a, b) => b.lastPurchasedAt - a.lastPurchasedAt);
+};
+
+const normalizePersistentState = (state: Partial<GameState>): Partial<GameState> => {
+  const purchaseHistory = Array.isArray(state.purchaseHistory) ? state.purchaseHistory : [];
+  const inventory = Array.isArray(state.inventory) ? state.inventory : [];
+  const safeMenu = state.activeMenu && validMenus.includes(state.activeMenu) ? state.activeMenu : 'shop';
+
+  return {
+    ...state,
+    activeMenu: safeMenu,
+    inventory: inventory.length ? inventory : reconstructInventoryFromHistory(purchaseHistory),
+    activityLog: Array.isArray(state.activityLog) && state.activityLog.length ? state.activityLog : ['Activity feed ready.'],
+  };
+};
+
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
@@ -84,6 +136,7 @@ export const useGameStore = create<GameState>()(
       archetype: null,
       checkoutOpen: false,
       checkoutStep: 0,
+      checkoutSuccessFxTick: 0,
       activeMenu: 'shop',
       membershipTiers,
 
@@ -137,6 +190,7 @@ export const useGameStore = create<GameState>()(
           screen: 'game',
           checkoutOpen: false,
           checkoutStep: 0,
+          checkoutSuccessFxTick: state.checkoutSuccessFxTick,
           activeMenu: 'shop',
         });
       },
@@ -157,11 +211,17 @@ export const useGameStore = create<GameState>()(
         }),
 
       completeCheckout: () => {
-        const { next, ended } = checkout(get());
+        const before = get();
+        const { next, ended } = checkout(before);
+        const repaired = next.inventory.length ? next.inventory : reconstructInventoryFromHistory(next.purchaseHistory);
+        const didPlaceOrder = next.stats.ordersCompleted > before.stats.ordersCompleted;
+
         set({
           ...next,
+          inventory: repaired,
           checkoutOpen: false,
           checkoutStep: 0,
+          checkoutSuccessFxTick: didPlaceOrder ? before.checkoutSuccessFxTick + 1 : before.checkoutSuccessFxTick,
           screen: ended ? 'results' : 'game',
           activeMenu: 'shop',
         });
@@ -180,7 +240,7 @@ export const useGameStore = create<GameState>()(
 
       endGame: () => set({ screen: 'results' }),
 
-      setActiveMenu: (menu) => set({ activeMenu: menu }),
+      setActiveMenu: (menu) => set({ activeMenu: validMenus.includes(menu) ? menu : 'shop' }),
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
       chooseMembership: (tier) => set((s) => setMembershipTier(s, tier)),
 
@@ -193,6 +253,7 @@ export const useGameStore = create<GameState>()(
           archetype: null,
           checkoutOpen: false,
           checkoutStep: 0,
+          checkoutSuccessFxTick: state.checkoutSuccessFxTick,
           activeMenu: 'shop',
           paymentMode: state.paymentMode,
           inventory: state.inventory,
@@ -203,7 +264,8 @@ export const useGameStore = create<GameState>()(
         })),
     }),
     {
-      name: 'spendthrift-state-v4',
+      name: 'spendthrift-state-v5',
+      version: 5,
       partialize: (state) => ({
         paymentMode: state.paymentMode,
         inventory: state.inventory,
@@ -211,7 +273,16 @@ export const useGameStore = create<GameState>()(
         subscription: state.subscription,
         premium: state.premium,
         stats: state.stats,
+        activeMenu: state.activeMenu,
       }),
+      migrate: (persisted) => normalizePersistentState((persisted ?? {}) as Partial<GameState>) as GameState,
+      merge: (persisted, current) => {
+        const normalized = normalizePersistentState((persisted ?? {}) as Partial<GameState>);
+        return {
+          ...current,
+          ...normalized,
+        };
+      },
     },
   ),
 );

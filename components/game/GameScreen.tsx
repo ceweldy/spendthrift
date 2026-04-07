@@ -377,6 +377,29 @@ export function GameScreen() {
         })}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {checkoutConfetti.length > 0 && (
+          <motion.div className="pointer-events-none fixed inset-0 z-[62] overflow-hidden" aria-hidden>
+            {checkoutConfetti.map((piece) => (
+              <motion.span
+                key={piece.id}
+                className="absolute -top-6 block rounded-[2px]"
+                style={{
+                  left: piece.left,
+                  width: piece.size,
+                  height: Math.max(4, piece.size * 0.66),
+                  backgroundColor: piece.color,
+                  boxShadow: '0 0 10px rgba(255,255,255,0.12)',
+                }}
+                initial={{ y: -20, x: 0, rotate: 0, opacity: 0 }}
+                animate={{ y: piece.driftY, x: piece.driftX, rotate: piece.rotate, opacity: [0, 1, 1, 0] }}
+                transition={{ duration: piece.duration, ease: 'easeOut', delay: piece.delay }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <CheckoutModal />
     </section>
   );
