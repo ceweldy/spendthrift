@@ -255,8 +255,8 @@ export function GameScreen() {
   }, [s, unlockedBadgeIds]);
 
   return (
-    <section className="screen-wrap relative flex h-dvh min-h-dvh flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#222220] px-3 py-2 sm:px-5 sm:py-2">
+    <section className="screen-wrap relative flex min-h-0 flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#222220] px-3 py-1.5 sm:px-4 sm:py-2">
         <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
         <div className="flex flex-wrap gap-3 text-center text-xs sm:gap-4">
           <Stat label="💰 Budget" help="Money available to spend in this run." value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
@@ -267,7 +267,7 @@ export function GameScreen() {
         <Button variant="ghost" onClick={s.endGame}>End Game</Button>
       </div>
 
-      <div className="border-b border-white/10 bg-[#222220] px-3 py-2 sm:px-5 sm:py-2">
+      <div className="border-b border-white/10 bg-[#222220] px-3 py-1.5 sm:px-4 sm:py-2">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
@@ -297,7 +297,7 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="flex w-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-3 xl:px-4">
+      <div className="flex w-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3 lg:px-3 xl:px-4">
         <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_270px] lg:gap-3 xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-4">
           <div className="min-h-0 overflow-hidden">
             {s.activeMenu === 'shop' ? (
@@ -319,8 +319,8 @@ export function GameScreen() {
             ) : null}
             <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-4 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-2 overflow-y-auto overflow-x-hidden pr-1 pb-24 [scrollbar-gutter:stable] sm:space-y-3 lg:pb-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
                   const rarity = getCardRarity(card);
@@ -348,9 +348,9 @@ export function GameScreen() {
                             <div className="tcg-emoji-badge">{card.emoji}</div>
                           </div>
 
-                          <div className="mt-2 text-sm font-bold leading-tight">{card.name}</div>
-                          <div className="text-[11px] text-zinc-400">{card.brand ?? card.store} • {card.category ?? card.store}</div>
-                          <p className="mt-1 min-h-8 line-clamp-2 text-[11px] text-zinc-300">{card.description ?? card.desc ?? 'No description provided.'}</p>
+                          <div className="mt-1 text-xs font-bold leading-tight sm:mt-1.5 sm:text-sm">{card.name}</div>
+                          <div className="text-[10px] text-zinc-400 sm:text-[11px] max-[900px]:hidden">{card.brand ?? card.store} • {card.category ?? card.store}</div>
+                          <p className="mt-0.5 min-h-4 line-clamp-1 text-[10px] text-zinc-300 sm:mt-1 sm:min-h-8 sm:line-clamp-2 sm:text-[11px] max-[900px]:hidden">{card.description ?? card.desc ?? 'No description provided.'}</p>
 
                           {card.type === 'product' ? (
                             (() => {
@@ -387,13 +387,13 @@ export function GameScreen() {
                             <div className="mt-1 min-h-20 text-[10px] font-semibold uppercase tracking-wide text-coral">{card.type}</div>
                           )}
 
-                          <div className="mt-2 min-h-[90px] space-y-1">
+                          <div className="mt-1 min-h-[42px] space-y-1 sm:mt-1.5 sm:min-h-[70px] lg:min-h-[84px]">
                             {getCardEffectLines(card).map((line) => (
-                              <div key={`${card.id}-${line}`} className="rounded border border-white/10 bg-black/20 px-2 py-1 text-left text-[10px] leading-relaxed text-zinc-200">{line}</div>
+                              <div key={`${card.id}-${line}`} className="tcg-effect-line rounded border border-white/10 bg-black/20 px-2 py-1 text-left text-[10px] leading-relaxed text-zinc-200">{line}</div>
                             ))}
                           </div>
 
-                          <div className="mt-auto pt-2">
+                          <div className="mt-auto pt-1.5 sm:pt-2">
                             {card.type === 'product' ? (
                               <Button className="w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name, card.dopamine ?? 0)}>
                                 {inCart ? 'In Cart ✓' : 'Add to Cart'}
@@ -767,7 +767,7 @@ function DesktopSideRail({
   onRemoveFromCart: (cardId: string) => void;
 }) {
   return (
-    <aside className="sticky top-2 hidden h-[calc(100dvh-172px)] min-h-0 overflow-y-auto rounded-2xl border border-white/10 bg-bg-card/85 p-3 lg:block">
+    <aside className="hidden h-full min-h-0 overflow-y-auto rounded-2xl border border-white/10 bg-bg-card/85 p-3 lg:block">
       <div className="space-y-3" ref={cartRef}>
         <div className="rounded-xl border border-white/10 bg-black/25 p-3">
           <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">Checkout / Cart ({state.cart.length}/5)</div>
