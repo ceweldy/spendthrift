@@ -70,6 +70,10 @@ export type Card = {
 export type CartItem = Card & {
   paidPrice: number;
   finalDopamine: number;
+  originalPrice: number;
+  savings: number;
+  discountPercent: number;
+  discountTags: string[];
 };
 
 export type PendingRegret = {

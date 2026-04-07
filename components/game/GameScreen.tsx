@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { CheckoutModal } from './CheckoutModal';
 import { playSfx } from '@/lib/audio-manager';
+import { getCardPricing } from '@/lib/game-engine';
 import type { Card } from '@/types/game';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
@@ -23,9 +24,9 @@ type CheckoutConfettiPiece = {
 type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 const panelVariants = {
-  initial: { opacity: 0, y: 8, scale: 0.995 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -6, scale: 0.995 },
+  initial: { opacity: 0, y: 28, scale: 0.94, rotateX: 10, filter: 'blur(6px)' },
+  animate: { opacity: 1, y: 0, scale: 1, rotateX: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -18, scale: 0.95, rotateX: -8, filter: 'blur(4px)' },
 };
 
 const rarityLabel: Record<Rarity, string> = {
@@ -61,11 +62,11 @@ export function GameScreen() {
     if (reducedMotion) return;
     const burst = { id: Date.now() + Math.floor(Math.random() * 1000), text, tone };
     setImpactBursts((v) => [...v, burst]);
-    setTimeout(() => setImpactBursts((v) => v.filter((b) => b.id !== burst.id)), 760);
+    setTimeout(() => setImpactBursts((v) => v.filter((b) => b.id !== burst.id)), 1150);
   }, [reducedMotion]);
 
   const buildCheckoutConfetti = useCallback((): CheckoutConfettiPiece[] => {
-    const count = typeof window !== 'undefined' && window.innerWidth < 640 ? 32 : 52;
+    const count = typeof window !== 'undefined' && window.innerWidth < 640 ? 64 : 110;
     return Array.from({ length: count }, (_, i) => {
       const hue = [36, 172, 262, 12, 206][i % 5];
       const spread = (i / count) * Math.PI - Math.PI / 2;
@@ -75,10 +76,10 @@ export function GameScreen() {
         size: 4 + (i % 5),
         rotate: -220 + Math.random() * 440,
         color: `hsl(${hue} 92% ${56 + (i % 3) * 8}%)`,
-        driftX: Math.cos(spread) * (90 + Math.random() * 140),
-        driftY: 95 + Math.random() * 120,
-        duration: 0.95 + (i % 7) * 0.09,
-        delay: (i % 9) * 0.014,
+        driftX: Math.cos(spread) * (180 + Math.random() * 260),
+        driftY: 130 + Math.random() * 200,
+        duration: 1.15 + (i % 7) * 0.13,
+        delay: (i % 9) * 0.01,
       };
     });
   }, []);
@@ -218,9 +219,9 @@ export function GameScreen() {
                   return (
                     <motion.div
                       key={card.id}
-                      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015, rotateX: 3, rotateY: -3 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                      style={reducedMotion ? undefined : { transformStyle: 'preserve-3d', perspective: 900 }}
+                      whileHover={reducedMotion ? undefined : { y: -14, scale: 1.08, rotateX: 13, rotateY: -12, rotateZ: -1.4 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 18 }}
+                      style={reducedMotion ? undefined : { transformStyle: 'preserve-3d', perspective: 1200 }}
                       className={`tcg-card rarity-${rarity}`}
                     >
                       <div className={`tcg-foil ${isFoil ? 'opacity-100' : 'opacity-0'}`} />
@@ -276,8 +277,8 @@ export function GameScreen() {
               <motion.div
                 key={cartPulse}
                 ref={cartRef}
-                animate={reducedMotion ? undefined : { boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 2px rgba(83,74,183,0.35)', '0 0 0 rgba(83,74,183,0)'] }}
-                transition={{ duration: 0.42, ease: [0.2, 0.9, 0.2, 1] }}
+                animate={reducedMotion ? undefined : { scale: [1, 1.035, 0.995, 1.02, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 5px rgba(83,74,183,0.65)', '0 0 0 0 rgba(83,74,183,0)', '0 0 0 7px rgba(29,158,117,0.5)', '0 0 0 rgba(29,158,117,0)'] }}
+                transition={{ duration: 0.9, ease: [0.2, 0.9, 0.2, 1] }}
                 className="rounded-2xl border border-white/10 bg-bg-card p-4"
               >
                 <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
@@ -350,10 +351,10 @@ export function GameScreen() {
             className={`pointer-events-none fixed left-1/2 top-28 z-[65] -translate-x-1/2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
               burst.tone === 'good' ? 'bg-teal/20 text-teal' : burst.tone === 'warn' ? 'bg-[#e07050]/20 text-[#ff9f84]' : 'bg-purple/25 text-purple-light'
             }`}
-            initial={{ y: 6, opacity: 0, scale: 0.85 }}
-            animate={{ y: -24, opacity: [0, 1, 0.85, 0], scale: [0.85, 1.04, 1] }}
+            initial={{ y: 20, opacity: 0, scale: 0.7, rotate: -6 }}
+            animate={{ y: -80, opacity: [0, 1, 1, 0], scale: [0.7, 1.25, 1.08, 0.95], rotate: [-6, 4, -3, 2], filter: ['blur(2px)', 'blur(0px)', 'blur(0px)', 'blur(2px)'] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.75, ease: [0.18, 0.9, 0.3, 1] }}
+            transition={{ duration: 1.1, ease: [0.18, 0.9, 0.3, 1] }}
           >
             {burst.text}
           </motion.div>
@@ -369,9 +370,9 @@ export function GameScreen() {
             <motion.div
               key={chip.id}
               className="pointer-events-none fixed z-[60] rounded-full border border-purple/40 bg-[#2b284d] px-3 py-1 text-xs text-purple-light"
-              initial={{ x: chip.x, y: chip.y, scale: 0.95 }}
-              animate={{ x: toX, y: toY, opacity: 0.2, scale: 0.72 }}
-              transition={{ duration: 0.6, ease: [0.18, 0.9, 0.3, 1] }}
+              initial={{ x: chip.x, y: chip.y, scale: 0.75, rotate: -10, opacity: 0.95 }}
+              animate={{ x: toX, y: toY, opacity: [1, 1, 0.25], scale: [0.75, 1.2, 0.62], rotate: [0, 16, -8] }}
+              transition={{ duration: 0.82, ease: [0.18, 0.9, 0.3, 1] }}
               exit={{ opacity: 0 }}
             >
               {chip.emoji} {chip.label}

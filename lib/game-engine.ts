@@ -28,6 +28,8 @@ export type EngineState = {
   activityLog: string[];
   history: ActivityEntry[];
   flashSaleSecondsLeft: number;
+  randomDiscounts: Record<string, number>;
+  randomDiscountSecondsLeft: number;
   nextDiscount: number;
   shippingDiscount: number;
   fomoBoost: boolean;
@@ -53,6 +55,9 @@ export type EngineState = {
 const STARTING_BUDGET = 500;
 const PAYDAY_EVERY_ROUNDS = 3;
 const PAYDAY_AMOUNT = 180;
+const RANDOM_DISCOUNT_SECONDS = 25;
+const RANDOM_DISCOUNT_MIN_PRODUCTS = 1;
+const RANDOM_DISCOUNT_MAX_PRODUCTS = 3;
 const logCap = 30;
 
 export type CheckoutTotals = {
@@ -87,12 +92,59 @@ const pushHistory = (state: EngineState, kind: ActivityEntry['kind'], text: stri
   };
 };
 
-const effectivePrice = (state: EngineState, card: Card) => {
-  let price = card.price ?? 0;
-  if (state.flashSaleSecondsLeft > 0) price *= 0.7;
-  if (state.nextDiscount > 0) price *= 1 - state.nextDiscount;
-  if (state.techDiscountRate > 0 && card.store === 'Tech') price *= 1 - state.techDiscountRate;
-  return Math.max(0, Math.round(price));
+type PricingBreakdown = {
+  basePrice: number;
+  finalPrice: number;
+  savings: number;
+  discountPercent: number;
+  applied: string[];
+};
+
+export const getCardPricing = (state: EngineState, card: Card): PricingBreakdown => {
+  const basePrice = card.price ?? 0;
+  const modifiers: Array<{ label: string; rate: number }> = [];
+
+  const randomRate = state.randomDiscountSecondsLeft > 0 ? state.randomDiscounts[card.id] ?? 0 : 0;
+  if (randomRate > 0) modifiers.push({ label: `Round SALE ${Math.round(randomRate * 100)}%`, rate: randomRate });
+  if (state.flashSaleSecondsLeft > 0) modifiers.push({ label: 'Flash Sale 30%', rate: 0.3 });
+  if (state.nextDiscount > 0) modifiers.push({ label: `Price Match ${Math.round(state.nextDiscount * 100)}%`, rate: state.nextDiscount });
+  if (state.techDiscountRate > 0 && card.store === 'Tech') modifiers.push({ label: `Tech Drop ${Math.round(state.techDiscountRate * 100)}%`, rate: state.techDiscountRate });
+
+  const multiplier = modifiers.reduce((acc, mod) => acc * (1 - mod.rate), 1);
+  const finalPrice = Math.max(0, Math.round(basePrice * multiplier));
+  const savings = Math.max(0, basePrice - finalPrice);
+  const discountPercent = basePrice > 0 ? Math.round((savings / basePrice) * 100) : 0;
+
+  return {
+    basePrice,
+    finalPrice,
+    savings,
+    discountPercent,
+    applied: modifiers.map((mod) => mod.label),
+  };
+};
+
+const effectivePrice = (state: EngineState, card: Card) => getCardPricing(state, card).finalPrice;
+
+const applyRandomRoundDiscounts = (state: EngineState, hand: Card[]): EngineState => {
+  const products = hand.filter((card) => card.type === 'product');
+  if (!products.length) return { ...state, randomDiscounts: {}, randomDiscountSecondsLeft: 0 };
+
+  const maxDiscounted = Math.max(1, Math.ceil(products.length * 0.5));
+  const discountedCount = Math.max(1, Math.floor(Math.random() * maxDiscounted) + 1);
+  const shuffled = [...products].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, discountedCount);
+  const rates = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35];
+
+  const randomDiscounts = picked.reduce<Record<string, number>>((acc, card) => {
+    acc[card.id] = rates[Math.floor(Math.random() * rates.length)];
+    return acc;
+  }, {});
+
+  let next = { ...state, randomDiscounts, randomDiscountSecondsLeft: RANDOM_DISCOUNT_SECONDS };
+  const label = picked.map((card) => `${card.name} ${Math.round((randomDiscounts[card.id] ?? 0) * 100)}% off`).join(', ');
+  next = pushHistory(next, 'effect', `Round SALE live (${RANDOM_DISCOUNT_SECONDS}s): ${label}.`);
+  return next;
 };
 
 const applyDelayedRegret = (state: EngineState): EngineState => {
@@ -129,6 +181,8 @@ export const createInitialEngineState = (archetype: ArchetypeKey, premiumEnabled
     },
   ],
   flashSaleSecondsLeft: 0,
+  randomDiscounts: {},
+  randomDiscountSecondsLeft: 0,
   nextDiscount: 0,
   shippingDiscount: 0,
   fomoBoost: false,
@@ -175,6 +229,7 @@ export const drawHandForRound = (state: EngineState): EngineState => {
   const hand = event ? [event, ...products] : products;
   let next: EngineState = { ...state, hand };
   next = applyDelayedRegret(next);
+  next = applyRandomRoundDiscounts(next, hand);
   return pushHistory(next, 'draw', `Round ${next.round} dealt: ${hand.map((c) => c.name).join(', ')}`);
 };
 
@@ -193,7 +248,8 @@ export const addCardToCart = (state: EngineState, cardId: string): EngineState =
   if (!card || card.type !== 'product') return state;
   if (state.cart.some((c) => c.id === cardId)) return state;
 
-  const paidPrice = effectivePrice(state, card);
+  const pricing = getCardPricing(state, card);
+  const paidPrice = pricing.finalPrice;
   if (paidPrice > state.budget) return pushHistory(state, 'cart', `${card.name} skipped: insufficient budget.`);
 
   let finalDopamine = (card.dopamine ?? 0) + state.roundDopamineBoost;
@@ -201,7 +257,15 @@ export const addCardToCart = (state: EngineState, cardId: string): EngineState =
   if (state.quickBuy) finalDopamine += 5;
   finalDopamine = applyProductArchetypeBonuses(state, card, finalDopamine);
 
-  const cartItem: CartItem = { ...card, paidPrice, finalDopamine };
+  const cartItem: CartItem = {
+    ...card,
+    paidPrice,
+    finalDopamine,
+    originalPrice: pricing.basePrice,
+    savings: pricing.savings,
+    discountPercent: pricing.discountPercent,
+    discountTags: pricing.applied,
+  };
 
   const next = {
     ...state,
@@ -211,7 +275,8 @@ export const addCardToCart = (state: EngineState, cardId: string): EngineState =
     fomoBoost: false,
   };
 
-  return pushHistory(next, 'cart', `Added ${card.name} ($${paidPrice}) to cart.`);
+  const savingsNote = pricing.savings > 0 ? ` (saved $${pricing.savings}${pricing.applied.length ? ` via ${pricing.applied.join(' + ')}` : ''})` : '';
+  return pushHistory(next, 'cart', `Added ${card.name} ($${paidPrice}) to cart.${savingsNote}`);
 };
 
 const scheduleRegret = (state: EngineState, source: string, amount: number, delayRounds: number): EngineState => {
@@ -330,11 +395,22 @@ export const removeFromCart = (state: EngineState, cardId: string): EngineState 
 export const clearCart = (state: EngineState): EngineState => pushHistory({ ...state, cart: [] }, 'cart', 'Cart cleared.');
 
 export const tickTimers = (state: EngineState): EngineState => {
-  if (state.flashSaleSecondsLeft <= 0) return state;
-  const next = { ...state, flashSaleSecondsLeft: state.flashSaleSecondsLeft - 1 };
-  if (next.flashSaleSecondsLeft === 0) {
-    return pushHistory(next, 'effect', 'Flash sale ended.');
+  let next = state;
+
+  if (state.flashSaleSecondsLeft > 0) {
+    next = { ...next, flashSaleSecondsLeft: state.flashSaleSecondsLeft - 1 };
+    if (next.flashSaleSecondsLeft === 0) {
+      next = pushHistory(next, 'effect', 'Flash sale ended.');
+    }
   }
+
+  if (state.randomDiscountSecondsLeft > 0) {
+    next = { ...next, randomDiscountSecondsLeft: state.randomDiscountSecondsLeft - 1 };
+    if (next.randomDiscountSecondsLeft === 0) {
+      next = pushHistory({ ...next, randomDiscounts: {} }, 'effect', 'Round SALE ended.');
+    }
+  }
+
   return next;
 };
 
@@ -346,6 +422,8 @@ export const skipRound = (state: EngineState): { next: EngineState; ended: boole
     round: nextRound,
     cart: [],
     flashSaleSecondsLeft: 0,
+    randomDiscounts: {},
+    randomDiscountSecondsLeft: 0,
     nextDiscount: 0,
     shippingDiscount: 0,
     fomoBoost: false,
@@ -387,9 +465,9 @@ const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: 
         category: item.type,
         quantity: 1,
         lastPurchasePrice: item.paidPrice,
-        lastOriginalPrice: item.price ?? item.paidPrice,
+        lastOriginalPrice: item.originalPrice,
         totalSpent: item.paidPrice,
-        totalOriginalSpent: item.price ?? item.paidPrice,
+        totalOriginalSpent: item.originalPrice,
         firstPurchasedAt: timestamp,
         lastPurchasedAt: timestamp,
       },
@@ -403,9 +481,9 @@ const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: 
             ...inv,
             quantity: inv.quantity + 1,
             lastPurchasePrice: item.paidPrice,
-            lastOriginalPrice: item.price ?? item.paidPrice,
+            lastOriginalPrice: item.originalPrice,
             totalSpent: inv.totalSpent + item.paidPrice,
-            totalOriginalSpent: inv.totalOriginalSpent + (item.price ?? item.paidPrice),
+            totalOriginalSpent: inv.totalOriginalSpent + item.originalPrice,
             lastPurchasedAt: timestamp,
           },
     );
@@ -417,9 +495,9 @@ const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: 
     itemName: item.name,
     emoji: item.emoji,
     quantity: 1,
-    unitOriginalPrice: item.price ?? item.paidPrice,
+    unitOriginalPrice: item.originalPrice,
     unitPaidPrice: item.paidPrice,
-    lineOriginalTotal: item.price ?? item.paidPrice,
+    lineOriginalTotal: item.originalPrice,
     linePaidTotal: item.paidPrice,
     timestamp,
     source: 'game-checkout',
@@ -467,6 +545,8 @@ export const checkout = (state: EngineState): { next: EngineState; ended: boolea
     round: nextRound,
     cart: [],
     flashSaleSecondsLeft: 0,
+    randomDiscounts: {},
+    randomDiscountSecondsLeft: 0,
     shippingDiscount: 0,
     cashbackRate: 0,
     roundDopamineBoost: 0,

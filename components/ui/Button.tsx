@@ -13,9 +13,9 @@ export function Button({ variant = 'primary', className = '', ...props }: Props)
 
   return (
     <motion.button
-      whileHover={reducedMotion || props.disabled ? undefined : { y: -1, scale: 1.01 }}
-      whileTap={reducedMotion || props.disabled ? undefined : { y: 0, scale: 0.975 }}
-      transition={{ type: 'spring', stiffness: 520, damping: 30, mass: 0.45 }}
+      whileHover={reducedMotion || props.disabled ? undefined : { y: -4, scale: 1.06, rotate: -1.2 }}
+      whileTap={reducedMotion || props.disabled ? undefined : { y: 1, scale: 0.92, rotate: 0.8 }}
+      transition={{ type: 'spring', stiffness: 700, damping: 20, mass: 0.4 }}
       className={`btn ${variant === 'primary' ? 'btn-primary' : 'btn-ghost'} ${className}`}
       {...motionProps}
     />
