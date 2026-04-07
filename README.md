@@ -1,5 +1,7 @@
 # Spendthrift
 
+> Built for **Applied Strategy and Business Policy** as an MBA project at **UCF**.
+
 A fast, card-driven shopping simulation game built with Next.js.
 
 Spendthrift mixes personality-based onboarding, timed discount mechanics, and a risk/reward economy where every checkout can improve your score *or* increase regret.
