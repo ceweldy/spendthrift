@@ -1,4 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { calculateCheckoutTotals } from '@/lib/game-engine';
@@ -15,6 +16,22 @@ export function CheckoutModal() {
   const state = useGameStore();
   const { paymentMode, checkoutOpen, checkoutStep, cart, nextCheckoutStep, closeCheckout, completeCheckout } = state;
   const reducedMotion = useReducedMotion();
+  const [confettiSeed, setConfettiSeed] = useState(0);
+  const prevStepRef = useRef(checkoutStep);
+
+  useEffect(() => {
+    if (!checkoutOpen) {
+      prevStepRef.current = checkoutStep;
+      return;
+    }
+
+    const justCompletedOrder = checkoutStep === 2 && prevStepRef.current !== 2;
+    if (!reducedMotion && justCompletedOrder) {
+      setConfettiSeed((v) => v + 1);
+    }
+
+    prevStepRef.current = checkoutStep;
+  }, [checkoutOpen, checkoutStep, reducedMotion]);
 
   const totals = calculateCheckoutTotals(state);
   const chargedTotal = totals.chargedTotal;
@@ -101,7 +118,8 @@ export function CheckoutModal() {
               )}
 
               {checkoutStep === 2 && (
-                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="text-center">
+                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="relative text-center">
+                  <ConfettiBurst seed={confettiSeed} enabled={!reducedMotion} />
                   <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-teal text-3xl text-black">✓
                     {!reducedMotion && [...Array(12)].map((_, i) => (
                       <motion.span
@@ -128,5 +146,56 @@ export function CheckoutModal() {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+type ConfettiBurstProps = {
+  seed: number;
+  enabled: boolean;
+};
+
+function ConfettiBurst({ seed, enabled }: ConfettiBurstProps) {
+  const pieces = useMemo(() => {
+    const count = 42;
+    return Array.from({ length: count }, (_, i) => {
+      const hue = [36, 172, 262, 12, 206][i % 5];
+      const spread = (i / count) * Math.PI - Math.PI / 2;
+      const driftX = Math.cos(spread) * (120 + Math.random() * 120);
+      const driftY = 90 + Math.random() * 110;
+      return {
+        id: `${seed}-${i}`,
+        left: `${8 + ((i * 17) % 84)}%`,
+        size: 5 + (i % 5),
+        rotate: -180 + Math.random() * 360,
+        color: `hsl(${hue} 92% ${58 + (i % 3) * 6}%)`,
+        driftX,
+        driftY,
+        duration: 0.9 + (i % 6) * 0.1,
+        delay: (i % 8) * 0.018,
+      };
+    });
+  }, [seed]);
+
+  if (!enabled || seed === 0) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden" aria-hidden>
+      {pieces.map((piece) => (
+        <motion.span
+          key={piece.id}
+          className="absolute top-1 block rounded-[2px]"
+          style={{
+            left: piece.left,
+            width: piece.size,
+            height: Math.max(4, piece.size * 0.66),
+            backgroundColor: piece.color,
+            boxShadow: '0 0 10px rgba(255,255,255,0.16)',
+          }}
+          initial={{ y: -20, x: 0, rotate: 0, opacity: 0 }}
+          animate={{ y: piece.driftY, x: piece.driftX, rotate: piece.rotate, opacity: [0, 1, 1, 0] }}
+          transition={{ duration: piece.duration, ease: 'easeOut', delay: piece.delay }}
+        />
+      ))}
+    </div>
   );
 }
