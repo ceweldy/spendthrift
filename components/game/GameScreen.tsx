@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 import { useGameStore } from '@/store/useGameStore';
-import { getCardPricing } from '@/lib/game-engine';
+import { calculateCheckoutTotals, getCardPricing } from '@/lib/game-engine';
 import { CheckoutModal } from './CheckoutModal';
 import { playSfx } from '@/lib/audio-manager';
 import { getAnimationDurationMultiplier, getUxSettings } from '@/lib/ux-settings';
@@ -68,6 +68,7 @@ export function GameScreen() {
   const cannotAffordAny = s.paymentMode !== 'demo-free' && minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
   const roundSaleCount = Object.keys(s.randomDiscounts ?? {}).length;
   const comboSaleActive = s.randomDiscountSecondsLeft > 0 && roundSaleCount >= 2;
+  const checkoutTotals = useMemo(() => calculateCheckoutTotals(s), [s]);
 
   const pushImpact = useCallback((text: string, tone: ImpactBurst['tone']) => {
     if (reducedMotion) return;
@@ -296,14 +297,14 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
-        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-3">
+      <div className="mx-auto flex w-full max-w-[1500px] min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
+        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4">
           <div className="min-h-0 overflow-hidden">
             {s.activeMenu === 'shop' ? <MobileStatusStack announcement={s.announcement} comboSaleActive={comboSaleActive} roundSaleCount={roundSaleCount} state={s} /> : null}
             <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-4 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))] 2xl:[grid-template-columns:repeat(auto-fit,minmax(225px,1fr))]">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
                   const rarity = getCardRarity(card);
@@ -396,7 +397,7 @@ export function GameScreen() {
                 ref={cartRef}
                 animate={reducedMotion ? { scale: [1, 1.02, 1] } : { scale: [1, 1.06, 1.015, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 8px rgba(83,74,183,0.42)', '0 0 0 3px rgba(83,74,183,0.26)', '0 0 0 rgba(83,74,183,0)'] }}
                 transition={{ duration: reducedMotion ? 0.25 : 1.05, ease: [0.2, 0.9, 0.2, 1] }}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3 lg:hidden"
               >
                 <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
                 <div className="mb-2 flex min-h-9 flex-wrap gap-2">
@@ -487,7 +488,31 @@ export function GameScreen() {
           )}
             </AnimatePresence>
           </div>
-          {s.activeMenu === 'shop' ? <DesktopStatusRail announcement={s.announcement} comboSaleActive={comboSaleActive} roundSaleCount={roundSaleCount} state={s} /> : null}
+          {s.activeMenu === 'shop' ? (
+            <DesktopSideRail
+              state={s}
+              announcement={s.announcement}
+              comboSaleActive={comboSaleActive}
+              roundSaleCount={roundSaleCount}
+              cannotAffordAny={cannotAffordAny}
+              cartD={cartD}
+              cartRef={cartRef}
+              totals={checkoutTotals}
+              onCheckout={s.openCheckout}
+              onClearCart={() => {
+                s.clearCart();
+                pushImpact('cart cleared', 'warn');
+              }}
+              onSkipRound={() => {
+                s.skipCurrentRound();
+                pushImpact('round skipped', 'neutral');
+              }}
+              onRemoveFromCart={(cardId) => {
+                s.removeFromCart(cardId);
+                pushImpact('removed', 'warn');
+              }}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -663,12 +688,66 @@ function MobileStatusStack({ announcement, comboSaleActive, roundSaleCount, stat
   );
 }
 
-function DesktopStatusRail({ announcement, comboSaleActive, roundSaleCount, state }: { announcement: string | null; comboSaleActive: boolean; roundSaleCount: number; state: EffectPanelState }) {
+function DesktopSideRail({
+  state,
+  announcement,
+  comboSaleActive,
+  roundSaleCount,
+  cannotAffordAny,
+  cartD,
+  cartRef,
+  totals,
+  onCheckout,
+  onClearCart,
+  onSkipRound,
+  onRemoveFromCart,
+}: {
+  state: EffectPanelState;
+  announcement: string | null;
+  comboSaleActive: boolean;
+  roundSaleCount: number;
+  cannotAffordAny: boolean;
+  cartD: number;
+  cartRef: React.MutableRefObject<HTMLDivElement | null>;
+  totals: ReturnType<typeof calculateCheckoutTotals>;
+  onCheckout: () => void;
+  onClearCart: () => void;
+  onSkipRound: () => void;
+  onRemoveFromCart: (cardId: string) => void;
+}) {
   return (
-    <aside className="sticky top-0 hidden h-fit max-h-full space-y-2 overflow-y-auto pb-1 pl-1 lg:block">
-      {announcement ? <div aria-live="polite" className="announcement-pulse rounded-lg border border-teal/40 bg-teal/15 p-2 text-xs font-semibold text-teal">{announcement}</div> : null}
-      {comboSaleActive ? <div className="combo-sale-alert px-3 py-1.5 text-xs">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
-      <EffectStatePanel state={state} compact className="bg-[#171716]/90" />
+    <aside className="sticky top-2 hidden h-[calc(100dvh-172px)] min-h-0 overflow-y-auto rounded-2xl border border-white/10 bg-bg-card/85 p-3 lg:block">
+      <div className="space-y-3" ref={cartRef}>
+        <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+          <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">Checkout / Cart ({state.cart.length}/5)</div>
+          <div className="mb-2 max-h-40 space-y-1 overflow-y-auto pr-1">
+            {state.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : state.cart.map((c) => (
+              <div key={c.id} className="flex items-center justify-between gap-2 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-200">
+                <span className="truncate">{c.emoji} {c.name} (${c.paidPrice})</span>
+                <button aria-label={`Remove ${c.name} from cart`} className="rounded-sm opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light" onClick={() => onRemoveFromCart(c.id)}>×</button>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-1 text-xs text-zinc-300">
+            <div className="flex items-center justify-between"><span>Base total</span><span>${totals.subtotal}</span></div>
+            <div className="flex items-center justify-between"><span>Discounts</span><span className="text-teal">-${totals.shippingCut}</span></div>
+            <div className="flex items-center justify-between font-semibold text-zinc-100"><span>Charged now</span><span>${totals.total}</span></div>
+            <div className="flex items-center justify-between"><span>Checkout dopamine</span><span className="text-purple-light">+{cartD}</span></div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button onClick={onCheckout} disabled={state.cart.length === 0}>Checkout →</Button>
+            <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={onClearCart}>Clear</button>
+            <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={onSkipRound}>Skip</button>
+          </div>
+          {cannotAffordAny ? <div className="mt-2 text-xs text-amber">No affordable products in hand. Use Skip Round to cycle cards until payday.</div> : null}
+        </div>
+
+        {announcement ? <div aria-live="polite" className="announcement-pulse rounded-lg border border-teal/40 bg-teal/15 p-2 text-xs font-semibold text-teal">{announcement}</div> : null}
+        {comboSaleActive ? <div className="combo-sale-alert px-3 py-1.5 text-xs">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
+        <EffectStatePanel state={state} compact className="bg-[#171716]/90" />
+      </div>
     </aside>
   );
 }
