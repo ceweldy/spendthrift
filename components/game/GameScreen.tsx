@@ -48,7 +48,7 @@ export function GameScreen() {
   const [checkoutConfetti, setCheckoutConfetti] = useState<CheckoutConfettiPiece[]>([]);
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
-  const prevCheckoutFxRef = useRef(s.checkoutSuccessFxTick);
+  const prevActivityHeadRef = useRef<string | undefined>(s.activityLog[0]);
   const mountedRef = useRef(false);
 
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
@@ -93,7 +93,7 @@ export function GameScreen() {
       mountedRef.current = true;
       prevRoundRef.current = s.round;
       prevAnnouncementRef.current = s.announcement;
-      prevCheckoutFxRef.current = s.checkoutSuccessFxTick;
+      prevActivityHeadRef.current = s.activityLog[0];
       return;
     }
 
@@ -111,16 +111,19 @@ export function GameScreen() {
       prevAnnouncementRef.current = s.announcement;
     }
 
-    if (s.checkoutSuccessFxTick !== prevCheckoutFxRef.current) {
+    const newestActivity = s.activityLog[0];
+    const checkoutJustCompleted = newestActivity !== prevActivityHeadRef.current && /checkout complete:/i.test(newestActivity ?? '');
+    if (checkoutJustCompleted) {
       playSfx('checkoutConfirm');
       if (!reducedMotion) {
         setCheckoutConfetti(buildCheckoutConfetti());
         pushImpact('ORDER PLACED! 🎉', 'good');
         setTimeout(() => setCheckoutConfetti([]), 1900);
       }
-      prevCheckoutFxRef.current = s.checkoutSuccessFxTick;
     }
-  }, [s.round, s.announcement, s.checkoutSuccessFxTick, reducedMotion, pushImpact, buildCheckoutConfetti]);
+
+    prevActivityHeadRef.current = newestActivity;
+  }, [s.round, s.announcement, s.activityLog, reducedMotion, pushImpact, buildCheckoutConfetti]);
 
   const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string) => {
     if (!reducedMotion) {
