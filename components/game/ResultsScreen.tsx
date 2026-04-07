@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { motion, useMotionValue, animate, useTransform, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
+import { playSfx } from '@/lib/audio-manager';
 
 export function ResultsScreen() {
   const s = useGameStore();
@@ -20,6 +21,10 @@ export function ResultsScreen() {
   const dopamineText = useTransform(dopamineMV, (v) => Math.round(v));
   const penaltyText = useTransform(penaltyMV, (v) => Math.round(v));
   const bonusText = useTransform(bonusMV, (v) => Math.round(v));
+
+  useEffect(() => {
+    playSfx('resultsReveal');
+  }, []);
 
   useEffect(() => {
     if (reducedMotion) return;

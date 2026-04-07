@@ -527,9 +527,11 @@ const recordInventoryPurchase = (state: EngineState, item: CartItem, timestamp: 
 
 export const calculateCheckoutTotals = (state: EngineState): CheckoutTotals & { originalTotal: number; chargedTotal: number } => {
   const subtotal = state.cart.reduce((sum, item) => sum + item.paidPrice, 0);
+  const originalSubtotal = state.cart.reduce((sum, item) => sum + (item.originalPrice ?? item.paidPrice), 0);
   const shippingCut = Math.min(subtotal, state.shippingDiscount);
-  const originalTotal = Math.max(0, subtotal - shippingCut);
-  const chargedTotal = applyPaymentMode(originalTotal, state.paymentMode);
+  const discountedTotal = Math.max(0, subtotal - shippingCut);
+  const originalTotal = Math.max(0, originalSubtotal);
+  const chargedTotal = applyPaymentMode(discountedTotal, state.paymentMode);
   const cashback = Math.round(chargedTotal * state.cashbackRate);
   const dopamineGain = state.cart.reduce((sum, item) => sum + item.finalDopamine, 0);
 

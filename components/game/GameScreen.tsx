@@ -99,7 +99,8 @@ export function GameScreen() {
       return;
     }
 
-    if (s.round > prevRoundRef.current) {
+    const previousRound = prevRoundRef.current;
+    if (s.round > previousRound) {
       const isPayday = Boolean(s.announcement && /payday/i.test(s.announcement));
       playSfx(isPayday ? 'payday' : 'roundTransition');
       if (!reducedMotion) pushImpact(isPayday ? 'PAYDAY +BUDGET' : 'NEXT ROUND', 'good');
@@ -107,7 +108,7 @@ export function GameScreen() {
     }
 
     if (s.announcement !== prevAnnouncementRef.current) {
-      if (s.announcement && /payday/i.test(s.announcement) && s.round === prevRoundRef.current) {
+      if (s.announcement && /payday/i.test(s.announcement) && s.round === previousRound) {
         playSfx('payday');
       }
       prevAnnouncementRef.current = s.announcement;

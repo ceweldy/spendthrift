@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { calculateCheckoutTotals } from '@/lib/game-engine';
+import { playSfx } from '@/lib/audio-manager';
 
 const stepTitle = ['Review', 'Shipping', 'Confirm'];
 
@@ -18,14 +19,24 @@ export function CheckoutModal() {
   const reducedMotion = useReducedMotion();
   const [confettiSeed, setConfettiSeed] = useState(0);
   const prevStepRef = useRef(checkoutStep);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     if (!checkoutOpen) {
+      wasOpenRef.current = false;
       prevStepRef.current = checkoutStep;
       return;
     }
 
-    const justCompletedOrder = checkoutStep === 2 && prevStepRef.current !== 2;
+    const previousStep = prevStepRef.current;
+    if (!wasOpenRef.current) {
+      playSfx('checkoutOpen');
+      wasOpenRef.current = true;
+    } else if (checkoutStep !== previousStep) {
+      playSfx('checkoutStep');
+    }
+
+    const justCompletedOrder = checkoutStep === 2 && previousStep !== 2;
     if (!reducedMotion && justCompletedOrder) {
       setConfettiSeed((v) => v + 1);
     }
