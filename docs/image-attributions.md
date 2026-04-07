@@ -51,3 +51,11 @@ Some previously mismatched card art was replaced with in-house generated local i
 | Water-Resistant Utility Jacket | `public/images/cards/p3-water-resistant-utility-jacket.jpg` | `https://commons.wikimedia.org/wiki/File:330-ps-7519-usn-680565_16635856986_o.jpg` | U.S. Navy photo (via Wikimedia Commons) | Public domain |
 | Weighted Throw Blanket | `public/images/cards/p17-weighted-throw-blanket.jpg` | `https://commons.wikimedia.org/wiki/File:DIY_knitted_weighted_blanket.jpg` | Timesoup | CC BY-SA 4.0 |
 | Woven Storage Basket 3-Pack | `public/images/cards/p18-woven-storage-basket-3-pack.jpg` | `https://commons.wikimedia.org/wiki/File:Grain_storage_basket,_Apache_people,_c._1880s,_woven_rush,_Dayton_Art_Institute.JPG` | Wmpearl | CC0 |
+
+
+## 2026-04-06 requested overrides
+
+| Card | Local file | Source | Author | License |
+|---|---|---|---|---|
+| Lorax Costume | `public/images/cards/p36-lorax-costume.jpg` | User-provided image (`c77ad269-2e06-4275-b96c-e045e72444db.png`) | User upload | Used by request |
+| Costco Executive Membership | `public/images/cards/p37-costco-executive-membership.jpg` | In-house card-style artwork | Spendthrift project | Internal generated art |
