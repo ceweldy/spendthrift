@@ -297,8 +297,8 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="flex w-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-4 xl:px-5">
-        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="flex w-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-3 xl:px-4">
+        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_270px] lg:gap-3 xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-4">
           <div className="min-h-0 overflow-hidden">
             {s.activeMenu === 'shop' ? (
               <MobileStatusStack
@@ -320,7 +320,7 @@ export function GameScreen() {
             <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-4 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
-              <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))] 2xl:[grid-template-columns:repeat(auto-fit,minmax(225px,1fr))]">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
                   const rarity = getCardRarity(card);
