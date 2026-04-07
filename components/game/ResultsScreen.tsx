@@ -34,6 +34,12 @@ export function ResultsScreen() {
 
   const demoSavings = Math.max(0, s.stats.totalOriginalSpent - s.stats.totalSpent);
   const purchasedItems = s.inventory.reduce((acc, item) => acc + item.quantity, 0);
+  const runSpent = s.history
+    .filter((entry) => entry.kind === 'checkout')
+    .reduce((total, entry) => {
+      const match = entry.text.match(/paid \$([0-9]+(?:\.[0-9]+)?)/i);
+      return total + (match ? Number(match[1]) : 0);
+    }, 0);
 
   const onShare = async () => {
     await navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`);
@@ -76,7 +82,7 @@ export function ResultsScreen() {
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: reducedMotion ? 0 : 0.2 }} className="flex flex-wrap justify-center gap-8">
         <Metric label="Rounds" value={`${Math.min(s.round - 1, s.maxRounds)}`} />
-        <Metric label="Run Spent" value={`$${500 - s.budget}`} />
+        <Metric label="Run Spent" value={`$${runSpent.toFixed(2)}`} />
         <Metric label="Lifetime Spent" value={`$${s.stats.totalSpent.toFixed(2)}`} />
         <Metric label="Original Value" value={`$${s.stats.totalOriginalSpent.toFixed(2)}`} />
         <Metric label="Demo Savings" value={`$${demoSavings.toFixed(2)}`} />
