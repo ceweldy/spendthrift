@@ -56,8 +56,6 @@ const STARTING_BUDGET = 500;
 const PAYDAY_EVERY_ROUNDS = 3;
 const PAYDAY_AMOUNT = 180;
 const RANDOM_DISCOUNT_SECONDS = 25;
-const RANDOM_DISCOUNT_MIN_PRODUCTS = 1;
-const RANDOM_DISCOUNT_MAX_PRODUCTS = 3;
 const logCap = 30;
 
 export type CheckoutTotals = {
@@ -250,7 +248,12 @@ export const addCardToCart = (state: EngineState, cardId: string): EngineState =
 
   const pricing = getCardPricing(state, card);
   const paidPrice = pricing.finalPrice;
-  if (paidPrice > state.budget) return pushHistory(state, 'cart', `${card.name} skipped: insufficient budget.`);
+  if (state.paymentMode !== 'demo-free') {
+    const projectedSubtotal = state.cart.reduce((sum, item) => sum + item.paidPrice, 0) + paidPrice;
+    const projectedShippingCut = Math.min(projectedSubtotal, state.shippingDiscount);
+    const projectedTotal = Math.max(0, projectedSubtotal - projectedShippingCut);
+    if (projectedTotal > state.budget) return pushHistory(state, 'cart', `${card.name} skipped: insufficient budget.`);
+  }
 
   let finalDopamine = (card.dopamine ?? 0) + state.roundDopamineBoost;
   if (state.fomoBoost) finalDopamine += 4;
@@ -528,6 +531,13 @@ export const calculateCheckoutTotals = (state: EngineState): CheckoutTotals & { 
 
 export const checkout = (state: EngineState): { next: EngineState; ended: boolean } => {
   const { originalTotal, chargedTotal, cashback, dopamineGain, regretGain } = calculateCheckoutTotals(state);
+
+  if (state.paymentMode !== 'demo-free' && chargedTotal > state.budget) {
+    return {
+      next: pushHistory(state, 'checkout', 'Checkout blocked: total exceeds current budget.'),
+      ended: false,
+    };
+  }
 
   let nextBudget = Math.max(0, state.budget - chargedTotal + cashback);
   const nextDopamine = state.dopamine + dopamineGain;

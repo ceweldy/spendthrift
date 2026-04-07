@@ -3,9 +3,9 @@ import type React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
+import { getCardPricing } from '@/lib/game-engine';
 import { CheckoutModal } from './CheckoutModal';
 import { playSfx } from '@/lib/audio-manager';
-import { getCardPricing } from '@/lib/game-engine';
 import type { Card } from '@/types/game';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
@@ -55,7 +55,7 @@ export function GameScreen() {
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
   const cartD = s.cart.reduce((a, c) => a + c.finalDopamine, 0);
   const spendPct = Math.min(100, ((500 - s.budget) / 500) * 100);
-  const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => c.price ?? 0), Number.POSITIVE_INFINITY);
+  const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => getCardPricing(s, c).finalPrice), Number.POSITIVE_INFINITY);
   const cannotAffordAny = minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
 
   const pushImpact = useCallback((text: string, tone: ImpactBurst['tone']) => {
@@ -243,14 +243,31 @@ export function GameScreen() {
                           <p className="mt-1 line-clamp-2 text-[11px] text-zinc-300">{card.description ?? card.desc ?? 'No description provided.'}</p>
 
                           {card.type === 'product' ? (
-                            <>
-                              <div className="mt-1 text-lg font-bold text-[#ffb18d]">${card.price}</div>
-                              <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-zinc-300">
-                                <span className="tcg-mini-pill">⚡ {card.dopamine ?? 0}</span>
-                                <span className="tcg-mini-pill">😬 {card.risk ?? 0}</span>
-                                {card.premiumOnly && <span className="tcg-mini-pill">👑 Premium</span>}
-                              </div>
-                            </>
+                            (() => {
+                              const pricing = getCardPricing(s, card);
+                              const isOnSale = pricing.savings > 0;
+                              const roundSaleRate = s.randomDiscountSecondsLeft > 0 ? s.randomDiscounts[card.id] : 0;
+
+                              return (
+                                <>
+                                  {isOnSale ? (
+                                    <div className="mt-1 inline-flex rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">SALE -{pricing.discountPercent}%</div>
+                                  ) : null}
+                                  <div className="mt-1 flex items-baseline gap-2">
+                                    {isOnSale ? <span className="text-xs text-zinc-500 line-through">${pricing.basePrice}</span> : null}
+                                    <div className="text-lg font-bold text-[#ffb18d]">${pricing.finalPrice}</div>
+                                  </div>
+                                  {!!pricing.applied.length && <div className="text-[10px] text-red-300">{pricing.applied.join(' • ')}</div>}
+                                  <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-zinc-300">
+                                    <span className="tcg-mini-pill">⚡ {card.dopamine ?? 0}</span>
+                                    <span className="tcg-mini-pill">😬 {card.risk ?? 0}</span>
+                                    {isOnSale && <span className="tcg-mini-pill">Save ${pricing.savings}</span>}
+                                    {roundSaleRate ? <span className="tcg-mini-pill">⏳ {s.randomDiscountSecondsLeft}s</span> : null}
+                                    {card.premiumOnly && <span className="tcg-mini-pill">👑 Premium</span>}
+                                  </div>
+                                </>
+                              );
+                            })()
                           ) : (
                             <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-coral">{card.type}</div>
                           )}
@@ -493,6 +510,10 @@ function EffectStatePanel({ state }: { state: EffectPanelState }) {
 function getActiveEffectStates(state: EffectPanelState): Array<{ label: string; active: boolean }> {
   const out: Array<{ label: string; active: boolean }> = [];
   if (state.flashSaleSecondsLeft > 0) out.push({ label: `Flash Sale (${state.flashSaleSecondsLeft}s left)`, active: true });
+  if (state.randomDiscountSecondsLeft > 0) {
+    const saleCount = Object.keys(state.randomDiscounts ?? {}).length;
+    out.push({ label: `Round SALE (${saleCount} item${saleCount === 1 ? '' : 's'} · ${state.randomDiscountSecondsLeft}s left)`, active: true });
+  }
   if (state.nextDiscount > 0) out.push({ label: `Price Match (${Math.round(state.nextDiscount * 100)}% off next product)`, active: false });
   if (state.shippingDiscount > 0) out.push({ label: `Checkout discount -$${state.shippingDiscount}`, active: false });
   if (state.fomoBoost) out.push({ label: 'FOMO (+4 dopamine on next product)', active: false });

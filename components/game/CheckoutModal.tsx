@@ -86,7 +86,14 @@ export function CheckoutModal() {
                         transition={{ delay: idx * 0.04 }}
                         className="flex justify-between border-b border-white/10 py-2 text-sm"
                       >
-                        <span>{c.emoji} {c.name}</span><span className="text-[#e07050]">${c.paidPrice}</span>
+                        <span>
+                          {c.emoji} {c.name}
+                          {c.discountPercent > 0 ? <span className="ml-2 rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">SALE -{c.discountPercent}%</span> : null}
+                        </span>
+                        <span className="text-right">
+                          {c.discountPercent > 0 ? <span className="mr-2 text-xs text-zinc-500 line-through">${c.originalPrice}</span> : null}
+                          <span className="text-[#e07050]">${c.paidPrice}</span>
+                        </span>
                       </motion.div>
                     ))}
                     {totals.shippingCut > 0 && <div className="flex justify-between py-2 text-sm"><span>🚚 Shipping Discount</span><span className="text-[#e07050]">-${totals.shippingCut}</span></div>}
@@ -120,22 +127,26 @@ export function CheckoutModal() {
               {checkoutStep === 2 && (
                 <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="relative text-center">
                   <ConfettiBurst seed={confettiSeed} enabled={!reducedMotion} />
-                  <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-teal text-3xl text-black">✓
-                    {!reducedMotion && [...Array(12)].map((_, i) => (
+                  <motion.div
+                    className="relative mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-teal text-4xl text-black shadow-[0_0_0_0_rgba(29,158,117,0.7)]"
+                    animate={reducedMotion ? undefined : { scale: [0.8, 1.22, 0.98, 1.1, 1], rotate: [-10, 8, -4, 0], boxShadow: ['0 0 0 0 rgba(29,158,117,0.7)', '0 0 0 18px rgba(29,158,117,0)', '0 0 0 36px rgba(29,158,117,0)'] }}
+                    transition={{ duration: reducedMotion ? 0 : 1.1, ease: [0.16, 1, 0.3, 1] }}
+                  >✓
+                    {!reducedMotion && [...Array(18)].map((_, i) => (
                       <motion.span
                         key={i}
                         className="absolute h-1.5 w-1.5 rounded-full bg-amber"
                         initial={{ x: 0, y: 0, opacity: 0.95, scale: 1.2 }}
                         animate={{
-                          x: Math.cos((i / 12) * Math.PI * 2) * 50,
-                          y: Math.sin((i / 12) * Math.PI * 2) * 50,
+                          x: Math.cos((i / 18) * Math.PI * 2) * 88,
+                          y: Math.sin((i / 18) * Math.PI * 2) * 88,
                           opacity: 0,
-                          scale: 0.3,
+                          scale: 0.15,
                         }}
-                        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: i * 0.01 }}
+                        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: i * 0.008 }}
                       />
                     ))}
-                  </div>
+                  </motion.div>
                   <h3 className="text-2xl font-bold">Order Placed! 🎉</h3>
                   <p className="mt-1 text-sm text-zinc-400">Charged ${chargedTotal}. Original tracked total: ${totals.originalTotal}</p>
                   <Button className="mt-5 w-full" onClick={completeCheckout}>Next Round →</Button>
@@ -156,12 +167,12 @@ type ConfettiBurstProps = {
 
 function ConfettiBurst({ seed, enabled }: ConfettiBurstProps) {
   const pieces = useMemo(() => {
-    const count = 42;
+    const count = 96;
     return Array.from({ length: count }, (_, i) => {
       const hue = [36, 172, 262, 12, 206][i % 5];
       const spread = (i / count) * Math.PI - Math.PI / 2;
-      const driftX = Math.cos(spread) * (120 + Math.random() * 120);
-      const driftY = 90 + Math.random() * 110;
+      const driftX = Math.cos(spread) * (220 + Math.random() * 260);
+      const driftY = 140 + Math.random() * 200;
       return {
         id: `${seed}-${i}`,
         left: `${8 + ((i * 17) % 84)}%`,
@@ -170,8 +181,8 @@ function ConfettiBurst({ seed, enabled }: ConfettiBurstProps) {
         color: `hsl(${hue} 92% ${58 + (i % 3) * 6}%)`,
         driftX,
         driftY,
-        duration: 0.9 + (i % 6) * 0.1,
-        delay: (i % 8) * 0.018,
+        duration: 1.2 + (i % 6) * 0.14,
+        delay: (i % 8) * 0.012,
       };
     });
   }, [seed]);
