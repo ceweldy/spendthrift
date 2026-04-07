@@ -641,41 +641,45 @@
   },
   {
     "id": "p34",
-    "emoji": "\ud83e\ude9e",
-    "name": "LED Vanity Mirror",
-    "brand": "GlowHaus",
-    "category": "Beauty Tools",
-    "store": "Beauty",
-    "price": 63,
-    "dopamine": 10,
-    "risk": 15,
+    "emoji": "\ud83d\uded2",
+    "name": "Costco Executive Membership",
+    "brand": "Costco",
+    "category": "Membership",
+    "store": "Home",
+    "price": 130,
+    "dopamine": 18,
+    "risk": 8,
     "type": "product",
     "tags": [
-      "beauty"
+      "membership",
+      "warehouse",
+      "rare"
     ],
-    "description": "Tri-tone lighting mirror with touch dimmer and USB recharge.",
-    "stock": 24,
-    "sku": "GH-LVM-063",
-    "imageUrl": "/images/cards/p34-led-vanity-mirror.jpg"
+    "description": "Executive tier membership card with 2% annual rewards and extra warehouse perks.",
+    "stock": 999,
+    "sku": "COSTCO-EXEC-ANNUAL",
+    "imageUrl": "/images/cards/p37-costco-executive-membership.jpg"
   },
   {
     "id": "p35",
-    "emoji": "\ud83d\udc85",
-    "name": "Gel Nail Starter Kit",
-    "brand": "Polish Lab",
-    "category": "Nail Care",
-    "store": "Beauty",
-    "price": 58,
-    "dopamine": 9,
-    "risk": 13,
+    "emoji": "\ud83e\udde1",
+    "name": "Lorax Costume",
+    "brand": "Forest Fables Co.",
+    "category": "Costume",
+    "store": "Fashion",
+    "price": 89,
+    "dopamine": 16,
+    "risk": 14,
     "type": "product",
     "tags": [
-      "beauty"
+      "costume",
+      "rare",
+      "party"
     ],
-    "description": "UV lamp, base/top coat, and six gel colors included.",
-    "stock": 38,
-    "sku": "PL-GNS-058",
-    "imageUrl": "/images/cards/p35-gel-nail-starter-kit.jpg"
+    "description": "Full orange faux-fur costume with mustache kit, made for loud party energy.",
+    "stock": 42,
+    "sku": "FF-LORAX-001",
+    "imageUrl": "/images/cards/p36-lorax-costume.jpg"
   },
   {
     "id": "e1",

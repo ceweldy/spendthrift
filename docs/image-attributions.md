@@ -41,3 +41,13 @@ Some previously mismatched card art was replaced with in-house generated local i
 | Salon Blowout Appointment | `/images/cards/p33-salon-blowout-appointment.jpg` | In-house generated replacement (2026-04-06) | Spendthrift project team | CC0 (internal generated art) |
 | LED Vanity Mirror | `/images/cards/p34-led-vanity-mirror.jpg` | In-house generated replacement (2026-04-06) | Spendthrift project team | CC0 (internal generated art) |
 | Gel Nail Starter Kit | `/images/cards/p35-gel-nail-starter-kit.jpg` | In-house generated replacement (2026-04-06) | Spendthrift project team | CC0 (internal generated art) |
+
+
+## 2026-04-06 additional replacements
+
+| Card | Local file | Source URL | Author | License |
+|---|---|---|---|---|
+| Ceramic Planter Pot Set | `public/images/cards/p16-ceramic-planter-pot-set.jpg` | `https://loremflickr.com/900/700/ceramic,planter,pot` | loremflickr feed | See source terms |
+| Artisan Chocolate Gift Box | `public/images/cards/p24-artisan-chocolate-gift-box.jpg` | `https://loremflickr.com/900/700/chocolate,gift,box` | loremflickr feed | See source terms |
+| Lorax Costume | `public/images/cards/p36-lorax-costume.jpg` | `https://loremflickr.com/900/700/orange,costume,mascot` | loremflickr feed | See source terms |
+| Costco Executive Membership | `public/images/cards/p37-costco-executive-membership.jpg` | `https://loremflickr.com/900/700/membership,card` | loremflickr feed | See source terms |
