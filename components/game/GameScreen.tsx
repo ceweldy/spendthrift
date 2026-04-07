@@ -56,7 +56,7 @@ export function GameScreen() {
   const cartD = s.cart.reduce((a, c) => a + c.finalDopamine, 0);
   const spendPct = Math.min(100, ((500 - s.budget) / 500) * 100);
   const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => getCardPricing(s, c).finalPrice), Number.POSITIVE_INFINITY);
-  const cannotAffordAny = minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
+  const cannotAffordAny = s.paymentMode !== 'demo-free' && minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
 
   const pushImpact = useCallback((text: string, tone: ImpactBurst['tone']) => {
     if (reducedMotion) return;
