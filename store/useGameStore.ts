@@ -39,6 +39,7 @@ type GameState = EngineState & {
   membershipTiers: MembershipTier[];
   achievements: AchievementState;
   badgeToasts: BadgeToast[];
+  badgeModalOpen: boolean;
 
   toLanding: () => void;
   startQuiz: () => void;
@@ -64,6 +65,7 @@ type GameState = EngineState & {
   chooseMembership: (tier: MembershipTierId) => void;
   removeBadgeToast: (toastId: string) => void;
   openBadgesView: () => void;
+  closeBadgesView: () => void;
 
   resetAll: () => void;
 };
@@ -227,13 +229,15 @@ export const useGameStore = create<GameState>()(
       membershipTiers,
       achievements: initialAchievementState(),
       badgeToasts: [],
+      badgeModalOpen: false,
 
-      toLanding: () => set({ screen: 'landing' }),
+      toLanding: () => set({ screen: 'landing', badgeModalOpen: false }),
 
       startQuiz: () =>
         set((state) => ({
           ...createInitialEngineState('impulse_king', state.subscription.currentPlanId === 'paid'),
           screen: 'quiz',
+          badgeModalOpen: false,
           questionIndex: 0,
           quizScores: { ...initialScores },
           archetype: null,
@@ -276,6 +280,7 @@ export const useGameStore = create<GameState>()(
           premium: state.premium,
           stats: state.stats,
           screen: 'game',
+          badgeModalOpen: false,
           checkoutOpen: false,
           checkoutStep: 0,
           checkoutSuccessFxTick: state.checkoutSuccessFxTick,
@@ -353,24 +358,20 @@ export const useGameStore = create<GameState>()(
 
       tick: () => set((s) => tickTimers(s)),
 
-      endGame: () => set({ screen: 'results' }),
+      endGame: () => set({ screen: 'results', badgeModalOpen: false }),
 
       setActiveMenu: (menu) => set({ activeMenu: validMenus.includes(menu) ? menu : 'shop' }),
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
       chooseMembership: (tier) => set((s) => setMembershipTier(s, tier)),
       removeBadgeToast: (toastId) => set((s) => ({ badgeToasts: s.badgeToasts.filter((toast) => toast.toastId !== toastId) })),
-      openBadgesView: () =>
-        set({
-          screen: 'game',
-          activeMenu: 'badges',
-          checkoutOpen: false,
-          checkoutStep: 0,
-        }),
+      openBadgesView: () => set({ badgeModalOpen: true }),
+      closeBadgesView: () => set({ badgeModalOpen: false }),
 
       resetAll: () =>
         set((state) => ({
           ...createInitialEngineState('impulse_king', state.subscription.currentPlanId === 'paid'),
           screen: 'landing',
+          badgeModalOpen: false,
           questionIndex: 0,
           quizScores: { ...initialScores },
           archetype: null,

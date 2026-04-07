@@ -8,6 +8,7 @@ import { QuizScreen } from '@/components/onboarding/QuizScreen';
 import { GameScreen } from '@/components/game/GameScreen';
 import { ResultsScreen } from '@/components/game/ResultsScreen';
 import { BadgeToasts } from '@/components/game/BadgeToasts';
+import { BadgesModal } from '@/components/game/BadgesModal';
 import { ScreenIndicator } from '@/components/ui/ScreenIndicator';
 import { AudioControls } from '@/components/ui/AudioControls';
 import { useGameStore } from '@/store/useGameStore';
@@ -55,6 +56,7 @@ export default function HomePage() {
       </AnimatePresence>
       <AudioControls />
       <BadgeToasts />
+      <BadgesModal />
       <ScreenIndicator screen={screen} />
     </main>
   );
