@@ -306,6 +306,82 @@ body {
   animation: softPulse 1.8s ease-in-out infinite;
 }
 
+.combo-sale-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 177, 76, 0.62);
+  background: rgba(90, 57, 14, 0.55);
+  color: #ffdca8;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combo-sale-alert {
+  border-radius: 12px;
+  border: 1px solid rgba(250, 186, 89, 0.42);
+  background: linear-gradient(90deg, rgba(122, 73, 20, 0.3), rgba(56, 31, 14, 0.25));
+  color: #ffdca8;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: softPulse 1.2s ease-in-out infinite;
+}
+
+.pull-ceremony {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.pull-ceremony-card {
+  min-width: min(520px, 94vw);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(14, 14, 18, 0.8);
+  text-align: center;
+  padding: 14px 18px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 44px rgba(115, 94, 255, 0.32);
+}
+
+.pull-ceremony-card.is-rare {
+  background: radial-gradient(circle at 20% 0%, rgba(74, 120, 242, 0.44), rgba(16, 18, 30, 0.86));
+}
+
+.pull-ceremony-card.is-legendary {
+  background: radial-gradient(circle at 20% 0%, rgba(255, 179, 88, 0.56), rgba(38, 25, 10, 0.9));
+  box-shadow: 0 0 0 1px rgba(255, 223, 176, 0.34), 0 0 60px rgba(255, 183, 77, 0.48);
+}
+
+.pull-ceremony-title {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.pull-ceremony-name {
+  margin-top: 6px;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.pull-ceremony-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 245, 224, 0.86);
+}
+
 .score-grid-glow {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -345,5 +421,11 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .combo-sale-alert,
+  .pull-ceremony-card {
+    animation: none !important;
+    box-shadow: none;
   }
 }
