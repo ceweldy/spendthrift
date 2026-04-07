@@ -44,7 +44,7 @@ const rarityLabel: Record<Rarity, string> = {
 export function GameScreen() {
   const s = useGameStore();
   const reducedMotion = useReducedMotion();
-  const cartRef = useRef<HTMLDivElement | null>(null);
+  const cartRef = useRef<HTMLDivElement>(null);
   const [flyChips, setFlyChips] = useState<FlyChip[]>([]);
   const [impactBursts, setImpactBursts] = useState<ImpactBurst[]>([]);
   const [addBursts, setAddBursts] = useState<AddBurst[]>([]);
@@ -297,10 +297,26 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1500px] min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-4">
-        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4">
+      <div className="flex w-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-3 sm:px-3 lg:px-4 xl:px-5">
+        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-h-0 overflow-hidden">
-            {s.activeMenu === 'shop' ? <MobileStatusStack announcement={s.announcement} comboSaleActive={comboSaleActive} roundSaleCount={roundSaleCount} state={s} /> : null}
+            {s.activeMenu === 'shop' ? (
+              <MobileStatusStack
+                announcement={s.announcement}
+                comboSaleActive={comboSaleActive}
+                roundSaleCount={roundSaleCount}
+                state={s}
+                cartRef={cartRef}
+                cartPulse={cartPulse}
+                reducedMotion={!!reducedMotion}
+                cartD={cartD}
+                cannotAffordAny={cannotAffordAny}
+                onRemoveFromCart={(id) => { s.removeFromCart(id); pushImpact('removed', 'warn'); }}
+                onOpenCheckout={s.openCheckout}
+                onClearCart={() => { s.clearCart(); pushImpact('cart cleared', 'warn'); }}
+                onSkipRound={() => { s.skipCurrentRound(); pushImpact('round skipped', 'neutral'); }}
+              />
+            ) : null}
             <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-4 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
@@ -392,30 +408,6 @@ export function GameScreen() {
                 })}
               </div>
 
-              <motion.div
-                key={cartPulse}
-                ref={cartRef}
-                animate={reducedMotion ? { scale: [1, 1.02, 1] } : { scale: [1, 1.06, 1.015, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 8px rgba(83,74,183,0.42)', '0 0 0 3px rgba(83,74,183,0.26)', '0 0 0 rgba(83,74,183,0)'] }}
-                transition={{ duration: reducedMotion ? 0.25 : 1.05, ease: [0.2, 0.9, 0.2, 1] }}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3 lg:hidden"
-              >
-                <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
-                <div className="mb-2 flex min-h-9 flex-wrap gap-2">
-                  {s.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : s.cart.map((c) => (
-                    <motion.span layout key={c.id} className="pill border border-purple/40 bg-purple/20 text-purple-light">
-                      {c.emoji} {c.name} (${c.paidPrice})
-                      <button aria-label={`Remove ${c.name} from cart`} className="ml-1 rounded-sm opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light" onClick={() => { s.removeFromCart(c.id); pushImpact('removed', 'warn'); }}>×</button>
-                    </motion.span>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button onClick={s.openCheckout} disabled={s.cart.length === 0}>Checkout →</Button>
-                  <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={() => { s.clearCart(); pushImpact('cart cleared', 'warn'); }}>Clear Cart</button>
-                  <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={() => { s.skipCurrentRound(); pushImpact('round skipped', 'neutral'); }}>Skip Round</button>
-                  {s.cart.length > 0 && <span className="pill bg-purple/20 text-purple-light">+{cartD} dopamine</span>}
-                </div>
-                {cannotAffordAny && <div className="mt-2 text-xs text-amber">No affordable products in hand. Use Skip Round to cycle cards until payday.</div>}
-              </motion.div>
             </motion.div>
           )}
 
@@ -678,9 +670,68 @@ function MenuPill({ active, label, onClick }: { active: boolean; label: string; 
 
 type EffectPanelState = ReturnType<typeof useGameStore.getState>;
 
-function MobileStatusStack({ announcement, comboSaleActive, roundSaleCount, state }: { announcement: string | null; comboSaleActive: boolean; roundSaleCount: number; state: EffectPanelState }) {
+function MobileStatusStack({
+  announcement,
+  comboSaleActive,
+  roundSaleCount,
+  state,
+  cartRef,
+  cartPulse,
+  reducedMotion,
+  cartD,
+  cannotAffordAny,
+  onRemoveFromCart,
+  onOpenCheckout,
+  onClearCart,
+  onSkipRound,
+}: {
+  announcement: string | null;
+  comboSaleActive: boolean;
+  roundSaleCount: number;
+  state: EffectPanelState;
+  cartRef: React.RefObject<HTMLDivElement>;
+  cartPulse: number;
+  reducedMotion: boolean;
+  cartD: number;
+  cannotAffordAny: boolean;
+  onRemoveFromCart: (cardId: string) => void;
+  onOpenCheckout: () => void;
+  onClearCart: () => void;
+  onSkipRound: () => void;
+}) {
+  const totals = calculateCheckoutTotals(state);
+
   return (
     <div className="mb-2 space-y-2 lg:hidden">
+      <motion.div
+        key={cartPulse}
+        ref={cartRef}
+        animate={reducedMotion ? { scale: [1, 1.02, 1] } : { scale: [1, 1.06, 1.015, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 8px rgba(83,74,183,0.42)', '0 0 0 3px rgba(83,74,183,0.26)', '0 0 0 rgba(83,74,183,0)'] }}
+        transition={{ duration: reducedMotion ? 0.25 : 1.05, ease: [0.2, 0.9, 0.2, 1] }}
+        className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3"
+      >
+        <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">Checkout / Cart ({state.cart.length}/5)</div>
+        <div className="mb-2 flex min-h-9 flex-wrap gap-2">
+          {state.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : state.cart.map((c) => (
+            <motion.span layout key={c.id} className="pill border border-purple/40 bg-purple/20 text-purple-light">
+              {c.emoji} {c.name} (${c.paidPrice})
+              <button aria-label={`Remove ${c.name} from cart`} className="ml-1 rounded-sm opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light" onClick={() => onRemoveFromCart(c.id)}>×</button>
+            </motion.span>
+          ))}
+        </div>
+        <div className="mb-2 space-y-1 text-xs text-zinc-300">
+          <div className="flex items-center justify-between"><span>Charged now</span><span>${totals.total}</span></div>
+          <div className="flex items-center justify-between"><span>Discounts</span><span className="text-teal">-${totals.shippingCut}</span></div>
+          <div className="flex items-center justify-between"><span>Checkout dopamine</span><span className="text-purple-light">+{cartD}</span></div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={onOpenCheckout} disabled={state.cart.length === 0}>Checkout →</Button>
+          <button className="text-sm text-zinc-500 transition hover:text-zinc-300" onClick={onClearCart}>Clear Cart</button>
+          <button className="text-sm text-zinc-400 transition hover:text-zinc-200" onClick={onSkipRound}>Skip Round</button>
+        </div>
+        {cannotAffordAny ? <div className="mt-2 text-xs text-amber">No affordable products in hand. Use Skip Round to cycle cards until payday.</div> : null}
+      </motion.div>
+
       {announcement ? <div aria-live="polite" className="announcement-pulse rounded-lg border border-teal/40 bg-teal/15 p-2 text-xs font-semibold text-teal sm:text-sm">{announcement}</div> : null}
       {comboSaleActive ? <div className="combo-sale-alert px-3 py-1.5 text-xs">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
       <EffectStatePanel state={state} compact />
