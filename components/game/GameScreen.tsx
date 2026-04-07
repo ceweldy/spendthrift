@@ -255,7 +255,7 @@ export function GameScreen() {
 
   return (
     <section className="screen-wrap relative flex h-dvh min-h-dvh flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#222220] px-4 py-3 sm:px-6 sm:py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#222220] px-3 py-2 sm:px-5 sm:py-2">
         <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
         <div className="flex flex-wrap gap-3 text-center text-xs sm:gap-4">
           <Stat label="💰 Budget" help="Money available to spend in this run." value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
@@ -266,15 +266,15 @@ export function GameScreen() {
         <Button variant="ghost" onClick={s.endGame}>End Game</Button>
       </div>
 
-      <div className="border-b border-white/10 bg-[#222220] px-4 py-3 sm:px-6 sm:py-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="border-b border-white/10 bg-[#222220] px-3 py-2 sm:px-5 sm:py-2">
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
           <MenuPill active={s.activeMenu === 'activity'} onClick={() => s.setActiveMenu('activity')} label="Activity" />
           <MenuPill active={s.activeMenu === 'badges'} onClick={() => s.setActiveMenu('badges')} label="Badges" />
           <span className="text-[11px] text-zinc-300">Shortcuts: 1-4 tabs · C checkout · K skip · X clear · Shift+E end</span>
         </div>
-        <div className="mb-2">
+        <div className="mb-1.5">
           <div className="mb-1 flex items-center justify-between text-[11px] text-zinc-300"><span>Mood Meter</span><span>{Math.round(mood)}%</span></div>
           <div title="Higher mood means your run is trending better." className="h-3 overflow-hidden rounded border border-white/20 bg-black/40">
             <motion.div
@@ -296,13 +296,13 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-4 sm:p-6">
-        {s.announcement && <div aria-live="polite" className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
-        {comboSaleActive ? <div className="combo-sale-alert mb-3">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
-        {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
-        <AnimatePresence mode="sync" initial={false}>
+      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+        <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-3">
+          <div className="min-h-0 overflow-hidden">
+            {s.activeMenu === 'shop' ? <MobileStatusStack announcement={s.announcement} comboSaleActive={comboSaleActive} roundSaleCount={roundSaleCount} state={s} /> : null}
+            <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-4 overflow-y-scroll overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
@@ -396,10 +396,10 @@ export function GameScreen() {
                 ref={cartRef}
                 animate={reducedMotion ? { scale: [1, 1.02, 1] } : { scale: [1, 1.06, 1.015, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 8px rgba(83,74,183,0.42)', '0 0 0 3px rgba(83,74,183,0.26)', '0 0 0 rgba(83,74,183,0)'] }}
                 transition={{ duration: reducedMotion ? 0.25 : 1.05, ease: [0.2, 0.9, 0.2, 1] }}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3"
               >
                 <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
-                <div className="mb-3 flex min-h-10 flex-wrap gap-2">
+                <div className="mb-2 flex min-h-9 flex-wrap gap-2">
                   {s.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : s.cart.map((c) => (
                     <motion.span layout key={c.id} className="pill border border-purple/40 bg-purple/20 text-purple-light">
                       {c.emoji} {c.name} (${c.paidPrice})
@@ -419,7 +419,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'inventory' && (
-            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3">
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
               <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
@@ -444,7 +444,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'activity' && (
-            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3">
               <div className="text-sm font-semibold">Activity & Payment Settings</div>
               <div className="flex flex-wrap gap-2">
                 <button className={`pill ${s.paymentMode === 'real-display' ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('real-display')}>Real pricing (display only)</button>
@@ -462,7 +462,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'badges' && (
-            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-3">
               <div className="mb-1 text-sm font-semibold">Badges & Milestones</div>
               <div className="mb-3 text-xs text-zinc-400">Unlocked {s.achievements.unlocked.length}/{ACHIEVEMENTS.length} • Bonus dopamine earned: +{s.achievements.totalRewardDopamine}</div>
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
@@ -485,7 +485,10 @@ export function GameScreen() {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+          {s.activeMenu === 'shop' ? <DesktopStatusRail announcement={s.announcement} comboSaleActive={comboSaleActive} roundSaleCount={roundSaleCount} state={s} /> : null}
+        </div>
       </div>
 
       <AnimatePresence>
@@ -650,16 +653,36 @@ function MenuPill({ active, label, onClick }: { active: boolean; label: string; 
 
 type EffectPanelState = ReturnType<typeof useGameStore.getState>;
 
-function EffectStatePanel({ state }: { state: EffectPanelState }) {
+function MobileStatusStack({ announcement, comboSaleActive, roundSaleCount, state }: { announcement: string | null; comboSaleActive: boolean; roundSaleCount: number; state: EffectPanelState }) {
+  return (
+    <div className="mb-2 space-y-2 lg:hidden">
+      {announcement ? <div aria-live="polite" className="announcement-pulse rounded-lg border border-teal/40 bg-teal/15 p-2 text-xs font-semibold text-teal sm:text-sm">{announcement}</div> : null}
+      {comboSaleActive ? <div className="combo-sale-alert px-3 py-1.5 text-xs">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
+      <EffectStatePanel state={state} compact />
+    </div>
+  );
+}
+
+function DesktopStatusRail({ announcement, comboSaleActive, roundSaleCount, state }: { announcement: string | null; comboSaleActive: boolean; roundSaleCount: number; state: EffectPanelState }) {
+  return (
+    <aside className="sticky top-0 hidden h-fit max-h-full space-y-2 overflow-y-auto pb-1 pl-1 lg:block">
+      {announcement ? <div aria-live="polite" className="announcement-pulse rounded-lg border border-teal/40 bg-teal/15 p-2 text-xs font-semibold text-teal">{announcement}</div> : null}
+      {comboSaleActive ? <div className="combo-sale-alert px-3 py-1.5 text-xs">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
+      <EffectStatePanel state={state} compact className="bg-[#171716]/90" />
+    </aside>
+  );
+}
+
+function EffectStatePanel({ state, className = '', compact = false }: { state: EffectPanelState; className?: string; compact?: boolean }) {
   const effects = getActiveEffectStates(state);
 
   return (
-    <div className="mb-4 rounded-xl border border-white/10 bg-black/20 p-3">
-      <div className="mb-2 text-xs uppercase tracking-[0.16em] text-zinc-400">Armed / Active Effects</div>
+    <div className={`rounded-xl border border-white/10 bg-black/20 ${compact ? 'p-2.5' : 'p-3'} ${className}`}>
+      <div className={`uppercase tracking-[0.16em] text-zinc-400 ${compact ? 'mb-1 text-[10px]' : 'mb-2 text-xs'}`}>Armed / Active Effects</div>
       {effects.length === 0 ? (
         <div className="text-xs text-zinc-500">No temporary effects armed right now.</div>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex flex-wrap ${compact ? 'gap-1.5' : 'gap-2'}`}>
           {effects.map((effect) => (
             <span key={effect.label} className={`pill border ${effect.active ? 'border-teal/60 bg-teal/20 text-teal' : 'border-amber/50 bg-amber/20 text-amber'}`}>
               {effect.active ? '🟢 Active' : '🟡 Armed'} · {effect.label}
