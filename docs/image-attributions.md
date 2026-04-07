@@ -47,7 +47,7 @@ Some previously mismatched card art was replaced with in-house generated local i
 
 | Card | Local file | Source URL | Author | License |
 |---|---|---|---|---|
-| Ceramic Planter Pot Set | `public/images/cards/p16-ceramic-planter-pot-set.jpg` | `https://loremflickr.com/900/700/ceramic,planter,pot` | loremflickr feed | See source terms |
-| Artisan Chocolate Gift Box | `public/images/cards/p24-artisan-chocolate-gift-box.jpg` | `https://loremflickr.com/900/700/chocolate,gift,box` | loremflickr feed | See source terms |
-| Lorax Costume | `public/images/cards/p36-lorax-costume.jpg` | `https://loremflickr.com/900/700/orange,costume,mascot` | loremflickr feed | See source terms |
-| Costco Executive Membership | `public/images/cards/p37-costco-executive-membership.jpg` | `https://loremflickr.com/900/700/membership,card` | loremflickr feed | See source terms |
+| Ceramic Planter Pot Set | `public/images/cards/p16-ceramic-planter-pot-set.jpg` | `https://commons.wikimedia.org/wiki/File:Border_pot_plants_in_Victorian_garden_Quex_House_Birchington_Kent_England.jpg` | Acabashi | CC BY-SA 4.0 |
+| Water-Resistant Utility Jacket | `public/images/cards/p3-water-resistant-utility-jacket.jpg` | `https://commons.wikimedia.org/wiki/File:330-ps-7519-usn-680565_16635856986_o.jpg` | U.S. Navy photo (via Wikimedia Commons) | Public domain |
+| Weighted Throw Blanket | `public/images/cards/p17-weighted-throw-blanket.jpg` | `https://commons.wikimedia.org/wiki/File:DIY_knitted_weighted_blanket.jpg` | Timesoup | CC BY-SA 4.0 |
+| Woven Storage Basket 3-Pack | `public/images/cards/p18-woven-storage-basket-3-pack.jpg` | `https://commons.wikimedia.org/wiki/File:Grain_storage_basket,_Apache_people,_c._1880s,_woven_rush,_Dayton_Art_Institute.JPG` | Wmpearl | CC0 |
