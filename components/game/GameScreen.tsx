@@ -219,7 +219,7 @@ export function GameScreen() {
                   return (
                     <motion.div
                       key={card.id}
-                      whileHover={reducedMotion ? undefined : { y: -14, scale: 1.08, rotateX: 13, rotateY: -12, rotateZ: -1.4 }}
+                      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.02, rotateX: 4, rotateY: -4, rotateZ: -0.3 }}
                       transition={{ type: 'spring', stiffness: 420, damping: 18 }}
                       style={reducedMotion ? undefined : { transformStyle: 'preserve-3d', perspective: 1200 }}
                       className={`tcg-card rarity-${rarity}`}
