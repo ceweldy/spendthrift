@@ -155,6 +155,33 @@ export type PremiumState = {
   };
 };
 
-export type GameMenu = 'shop' | 'inventory' | 'activity';
+export type AchievementId =
+  | 'first_checkout'
+  | 'shopping_spree'
+  | 'dopamine_50'
+  | 'dopamine_150'
+  | 'dopamine_300'
+  | 'discount_hunter'
+  | 'mega_saver'
+  | 'rare_operator'
+  | 'payday_survivor'
+  | 'checkout_streak_3';
+
+export type AchievementUnlock = {
+  id: AchievementId;
+  unlockedAt: number;
+  reward: number;
+};
+
+export type AchievementState = {
+  unlocked: AchievementUnlock[];
+  totalRewardDopamine: number;
+  rareCardsPlayed: number;
+  currentCheckoutStreak: number;
+  bestCheckoutStreak: number;
+  paydaysHit: number;
+};
+
+export type GameMenu = 'shop' | 'inventory' | 'activity' | 'badges';
 
 export type Screen = 'landing' | 'quiz' | 'archetype' | 'game' | 'checkout' | 'results';

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ARCHETYPES, QUIZ_QUESTIONS } from '@/lib/game-data';
+import { ACHIEVEMENTS, initialAchievementState, isRareSpecialCard } from '@/lib/achievements';
 import {
   EngineState,
   addCardToCart,
@@ -18,9 +19,11 @@ import {
   skipRound,
   tickTimers,
 } from '@/lib/game-engine';
-import { ArchetypeKey, GameMenu, InventoryItem, MembershipTier, MembershipTierId, PaymentMode, PurchaseLine, Screen } from '@/types/game';
+import { AchievementId, AchievementState, ArchetypeKey, GameMenu, InventoryItem, MembershipTier, MembershipTierId, PaymentMode, PurchaseLine, Screen } from '@/types/game';
 
 type CheckoutStep = 0 | 1 | 2;
+
+type BadgeToast = { toastId: string; achievementId: AchievementId; createdAt: number };
 
 type GameState = EngineState & {
   screen: Screen;
@@ -34,6 +37,8 @@ type GameState = EngineState & {
 
   activeMenu: GameMenu;
   membershipTiers: MembershipTier[];
+  achievements: AchievementState;
+  badgeToasts: BadgeToast[];
 
   toLanding: () => void;
   startQuiz: () => void;
@@ -57,6 +62,7 @@ type GameState = EngineState & {
   setActiveMenu: (menu: GameMenu) => void;
   setCheckoutMode: (mode: PaymentMode) => void;
   chooseMembership: (tier: MembershipTierId) => void;
+  removeBadgeToast: (toastId: string) => void;
 
   resetAll: () => void;
 };
@@ -75,7 +81,7 @@ const membershipTiers: MembershipTier[] = [
 
 const baseEngine = createInitialEngineState('impulse_king');
 
-const validMenus: GameMenu[] = ['shop', 'inventory', 'activity'];
+const validMenus: GameMenu[] = ['shop', 'inventory', 'activity', 'badges'];
 
 const reconstructInventoryFromHistory = (purchaseHistory: PurchaseLine[]): InventoryItem[] => {
   const byCard = new Map<string, InventoryItem>();
@@ -123,6 +129,81 @@ const normalizePersistentState = (state: Partial<GameState>): Partial<GameState>
     activeMenu: safeMenu,
     inventory: inventory.length ? inventory : reconstructInventoryFromHistory(purchaseHistory),
     activityLog: Array.isArray(state.activityLog) && state.activityLog.length ? state.activityLog : ['Activity feed ready.'],
+    achievements: {
+      ...initialAchievementState(),
+      ...(state.achievements ?? {}),
+      unlocked: Array.isArray(state.achievements?.unlocked) ? state.achievements?.unlocked : [],
+    },
+  };
+};
+
+const refreshAchievementTrackers = (prev: GameState, next: GameState, didCheckout: boolean): AchievementState => {
+  const currentCheckoutStreak = didCheckout ? prev.achievements.currentCheckoutStreak + 1 : 0;
+  const bestCheckoutStreak = Math.max(prev.achievements.bestCheckoutStreak, currentCheckoutStreak);
+  const paydayIncrement = next.lastPaydayRound && next.lastPaydayRound !== prev.lastPaydayRound ? 1 : 0;
+
+  return {
+    ...prev.achievements,
+    currentCheckoutStreak,
+    bestCheckoutStreak,
+    paydaysHit: prev.achievements.paydaysHit + paydayIncrement,
+  };
+};
+
+const evaluateAchievements = (next: GameState): { achievements: AchievementState; unlocked: AchievementId[] } => {
+  const unlockedSet = new Set(next.achievements.unlocked.map((badge) => badge.id));
+  const newlyUnlocked: AchievementId[] = [];
+  const unlockEntries = [...next.achievements.unlocked];
+  let totalRewardDopamine = next.achievements.totalRewardDopamine;
+
+  ACHIEVEMENTS.forEach((achievement) => {
+    if (unlockedSet.has(achievement.id)) return;
+    const value = achievement.target(next, next.achievements);
+    if (value < achievement.goal) return;
+
+    unlockEntries.push({ id: achievement.id, unlockedAt: Date.now(), reward: achievement.reward });
+    unlockedSet.add(achievement.id);
+    newlyUnlocked.push(achievement.id);
+    totalRewardDopamine += achievement.reward;
+  });
+
+  if (!newlyUnlocked.length) return { achievements: next.achievements, unlocked: [] };
+
+  const rewardDopamine = ACHIEVEMENTS.filter((badge) => newlyUnlocked.includes(badge.id)).reduce((sum, badge) => sum + badge.reward, 0);
+  return {
+    unlocked: newlyUnlocked,
+    achievements: {
+      ...next.achievements,
+      unlocked: unlockEntries,
+      totalRewardDopamine,
+    },
+  };
+};
+
+const applyAchievementEffects = (prev: GameState, next: GameState, didCheckout: boolean): GameState => {
+  const tracked = {
+    ...next,
+    achievements: refreshAchievementTrackers(prev, next, didCheckout),
+  };
+  const evaluated = evaluateAchievements(tracked);
+  if (!evaluated.unlocked.length) return tracked;
+
+  const bonus = ACHIEVEMENTS.filter((item) => evaluated.unlocked.includes(item.id)).reduce((sum, item) => sum + item.reward, 0);
+  const toasts = evaluated.unlocked.map((achievementId) => ({
+    toastId: `${Date.now()}-${achievementId}-${Math.random().toString(36).slice(2, 7)}`,
+    achievementId,
+    createdAt: Date.now(),
+  }));
+
+  return {
+    ...tracked,
+    dopamine: tracked.dopamine + bonus,
+    achievements: evaluated.achievements,
+    badgeToasts: [...tracked.badgeToasts, ...toasts],
+    activityLog: [
+      `🏅 Badge unlocked: ${evaluated.unlocked.length} new${bonus ? ` (+${bonus} dopamine)` : ''}.`,
+      ...tracked.activityLog,
+    ].slice(0, 40),
   };
 };
 
@@ -139,6 +220,8 @@ export const useGameStore = create<GameState>()(
       checkoutSuccessFxTick: 0,
       activeMenu: 'shop',
       membershipTiers,
+      achievements: initialAchievementState(),
+      badgeToasts: [],
 
       toLanding: () => set({ screen: 'landing' }),
 
@@ -200,7 +283,21 @@ export const useGameStore = create<GameState>()(
       addToCart: (cardId) => set((s) => addCardToCart(s, cardId)),
       removeFromCart: (cardId) => set((s) => removeFromCart(s, cardId)),
       clearCart: () => set((s) => clearCart(s)),
-      playSpecial: (cardId) => set((s) => playSpecialCard(s, cardId)),
+      playSpecial: (cardId) =>
+        set((s) => {
+          const played = s.hand.find((card) => card.id === cardId);
+          let next = playSpecialCard(s, cardId) as GameState;
+          if (played && isRareSpecialCard(played)) {
+            next = {
+              ...next,
+              achievements: {
+                ...next.achievements,
+                rareCardsPlayed: next.achievements.rareCardsPlayed + 1,
+              },
+            };
+          }
+          return applyAchievementEffects(s, next, false);
+        }),
 
       openCheckout: () => set((s) => (s.cart.length ? { checkoutOpen: true, checkoutStep: 0 } : s)),
       closeCheckout: () => set({ checkoutOpen: false }),
@@ -216,24 +313,37 @@ export const useGameStore = create<GameState>()(
         const repaired = next.inventory.length ? next.inventory : reconstructInventoryFromHistory(next.purchaseHistory);
         const didPlaceOrder = next.stats.ordersCompleted > before.stats.ordersCompleted;
 
-        set({
-          ...next,
-          inventory: repaired,
-          checkoutOpen: false,
-          checkoutStep: 0,
-          checkoutSuccessFxTick: didPlaceOrder ? before.checkoutSuccessFxTick + 1 : before.checkoutSuccessFxTick,
-          screen: ended ? 'results' : 'game',
-          activeMenu: 'shop',
-        });
+        const withAchievements = applyAchievementEffects(
+          before,
+          {
+            ...(next as GameState),
+            inventory: repaired,
+            checkoutOpen: false,
+            checkoutStep: 0,
+            checkoutSuccessFxTick: didPlaceOrder ? before.checkoutSuccessFxTick + 1 : before.checkoutSuccessFxTick,
+            screen: ended ? 'results' : 'game',
+            activeMenu: 'shop',
+          },
+          didPlaceOrder,
+        );
+
+        set(withAchievements);
       },
 
       skipCurrentRound: () => {
-        const { next, ended } = skipRound(get());
-        set({
-          ...next,
-          screen: ended ? 'results' : 'game',
-          activeMenu: 'shop',
-        });
+        const before = get();
+        const { next, ended } = skipRound(before);
+        set(
+          applyAchievementEffects(
+            before,
+            {
+              ...(next as GameState),
+              screen: ended ? 'results' : 'game',
+              activeMenu: 'shop',
+            },
+            false,
+          ),
+        );
       },
 
       tick: () => set((s) => tickTimers(s)),
@@ -243,6 +353,7 @@ export const useGameStore = create<GameState>()(
       setActiveMenu: (menu) => set({ activeMenu: validMenus.includes(menu) ? menu : 'shop' }),
       setCheckoutMode: (mode) => set((s) => setPaymentMode(s, mode)),
       chooseMembership: (tier) => set((s) => setMembershipTier(s, tier)),
+      removeBadgeToast: (toastId) => set((s) => ({ badgeToasts: s.badgeToasts.filter((toast) => toast.toastId !== toastId) })),
 
       resetAll: () =>
         set((state) => ({
@@ -274,6 +385,7 @@ export const useGameStore = create<GameState>()(
         premium: state.premium,
         stats: state.stats,
         activeMenu: state.activeMenu,
+        achievements: state.achievements,
       }),
       migrate: (persisted) => normalizePersistentState((persisted ?? {}) as Partial<GameState>) as GameState,
       merge: (persisted, current) => {

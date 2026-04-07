@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { ACHIEVEMENTS } from '@/lib/achievements';
 import { useGameStore } from '@/store/useGameStore';
 import { getCardPricing } from '@/lib/game-engine';
 import { CheckoutModal } from './CheckoutModal';
@@ -163,8 +164,22 @@ export function GameScreen() {
     return ['No activity yet. Play a card or complete checkout to populate this feed.'];
   }, [s.activityLog, s.history]);
 
+  const unlockedBadgeIds = useMemo(() => new Set(s.achievements.unlocked.map((b) => b.id)), [s.achievements.unlocked]);
+  const badgeCards = useMemo(() => {
+    return ACHIEVEMENTS.map((badge) => {
+      const progressRaw = badge.target(s, s.achievements);
+      const progress = Math.min(1, progressRaw / badge.goal);
+      return {
+        ...badge,
+        progressRaw,
+        progress,
+        unlocked: unlockedBadgeIds.has(badge.id),
+      };
+    });
+  }, [s, unlockedBadgeIds]);
+
   return (
-    <section className="screen-wrap relative overflow-hidden">
+    <section className="screen-wrap relative flex h-screen min-h-screen flex-col overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
         <div className="flex flex-wrap gap-4 text-center text-xs sm:gap-5">
@@ -181,6 +196,7 @@ export function GameScreen() {
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
           <MenuPill active={s.activeMenu === 'activity'} onClick={() => s.setActiveMenu('activity')} label="Activity" />
+          <MenuPill active={s.activeMenu === 'badges'} onClick={() => s.setActiveMenu('badges')} label="Badges" />
         </div>
         <div className="mb-2">
           <div className="mb-1 flex items-center justify-between text-[11px] text-zinc-300"><span>Mood Meter</span><span>{Math.round(mood)}%</span></div>
@@ -204,12 +220,12 @@ export function GameScreen() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
+      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col p-4 sm:p-6">
         {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
-            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
+            <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="min-h-0 space-y-6 overflow-y-auto pr-1">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {s.hand.map((card) => {
                   const inCart = s.cart.some((c) => c.id === card.id);
@@ -319,7 +335,7 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'inventory' && (
-            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-inventory" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
               <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
@@ -328,7 +344,7 @@ export function GameScreen() {
                   {stores.map((store) => <option key={store} value={store}>{store === 'all' ? 'All stores' : store}</option>)}
                 </select>
               </div>
-              <div className="space-y-2">
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {filteredInventory.length === 0 && <div className="text-sm text-zinc-500">No inventory matches this filter.</div>}
                 {filteredInventory.map((item) => (
                   <motion.div key={item.id} layout className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm">
@@ -342,19 +358,41 @@ export function GameScreen() {
           )}
 
           {s.activeMenu === 'activity' && (
-            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="space-y-4 rounded-2xl border border-white/10 bg-bg-card p-4">
+            <motion.div key="menu-activity" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col space-y-4 rounded-2xl border border-white/10 bg-bg-card p-4">
               <div className="text-sm font-semibold">Activity & Payment Settings</div>
               <div className="flex flex-wrap gap-2">
                 <button className={`pill ${s.paymentMode === 'real-display' ? 'bg-purple text-white' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('real-display')}>Real pricing (display only)</button>
                 <button className={`pill ${s.paymentMode === 'demo-free' ? 'bg-teal text-black' : 'bg-white/10 text-zinc-300 hover:bg-white/15'}`} onClick={() => s.setCheckoutMode('demo-free')}>Demo free checkout</button>
               </div>
-              <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+              <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-black/20 p-3">
                 <div className="mb-2 text-xs uppercase tracking-widest text-zinc-500">Recent Activity</div>
-                <div className="max-h-60 space-y-2 overflow-auto text-sm">
+                <div className="min-h-0 flex-1 space-y-2 overflow-auto text-sm">
                   {activityLines.slice(0, 12).map((line, idx) => (
                     <div key={`${line}-${idx}`} className="border-b border-white/5 pb-1 text-zinc-300">• {line}</div>
                   ))}
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {s.activeMenu === 'badges' && (
+            <motion.div key="menu-badges" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-bg-card p-4">
+              <div className="mb-1 text-sm font-semibold">Badges & Milestones</div>
+              <div className="mb-3 text-xs text-zinc-400">Unlocked {s.achievements.unlocked.length}/{ACHIEVEMENTS.length} • Bonus dopamine earned: +{s.achievements.totalRewardDopamine}</div>
+              <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+                {badgeCards.map((badge) => (
+                  <div key={badge.id} className={`rounded-xl border p-3 ${badge.unlocked ? 'border-amber/50 bg-amber/10' : 'border-white/10 bg-black/20'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-semibold">{badge.icon} {badge.title}</div>
+                      <span className={`pill ${badge.unlocked ? 'bg-teal/25 text-teal' : 'bg-white/10 text-zinc-400'}`}>{badge.unlocked ? 'Unlocked' : 'Locked'}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-zinc-300">{badge.description}</div>
+                    <div className="mt-2 h-2 overflow-hidden rounded bg-black/40">
+                      <motion.div className={`h-full ${badge.unlocked ? 'bg-teal' : 'bg-purple'}`} animate={{ width: `${Math.max(4, badge.progress * 100)}%` }} transition={{ duration: reducedMotion ? 0 : 0.35 }} />
+                    </div>
+                    <div className="mt-1 text-[11px] text-zinc-400">Progress: {Math.min(badge.goal, Math.round(badge.progressRaw))}/{badge.goal} • Reward +{badge.reward} dopamine</div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           )}
