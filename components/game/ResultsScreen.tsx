@@ -22,6 +22,10 @@ export function ResultsScreen() {
 
   useEffect(() => {
     playSfx('resultsReveal');
+
+    const shell = document.querySelector<HTMLElement>('.app-shell');
+    shell?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
 
   useEffect(() => {
@@ -85,7 +89,7 @@ export function ResultsScreen() {
   };
 
   return (
-    <section className="screen-wrap relative flex flex-col items-center justify-center gap-7 px-6 py-10 text-center">
+    <section className="screen-wrap relative flex flex-col items-center justify-start gap-7 px-6 py-10 text-center">
       <div className="pointer-events-none absolute top-0 h-64 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
       {!reducedMotion && <div className="pointer-events-none absolute inset-0 score-grid-glow opacity-40" />}
 
