@@ -1,7 +1,7 @@
 [
   {
     "id": "p1",
-    "emoji": "\ud83d\udc5f",
+    "emoji": "👟",
     "name": "CloudRun Everyday Sneakers",
     "brand": "StrideLab",
     "category": "Footwear",
@@ -20,7 +20,7 @@
   },
   {
     "id": "p2",
-    "emoji": "\ud83e\udde2",
+    "emoji": "🧢",
     "name": "Vintage Logo Baseball Cap",
     "brand": "Northline",
     "category": "Accessories",
@@ -39,7 +39,7 @@
   },
   {
     "id": "p3",
-    "emoji": "\ud83e\udde5",
+    "emoji": "🧥",
     "name": "Water-Resistant Utility Jacket",
     "brand": "Harbor & Field",
     "category": "Outerwear",
@@ -58,7 +58,7 @@
   },
   {
     "id": "p4",
-    "emoji": "\ud83d\udc57",
+    "emoji": "👗",
     "name": "Satin Slip Midi Dress",
     "brand": "Rue Atelier",
     "category": "Dresses",
@@ -77,7 +77,7 @@
   },
   {
     "id": "p5",
-    "emoji": "\ud83d\udc62",
+    "emoji": "👢",
     "name": "Lug Sole Chelsea Boots",
     "brand": "Marlow",
     "category": "Footwear",
@@ -96,7 +96,7 @@
   },
   {
     "id": "p6",
-    "emoji": "\ud83d\udd76\ufe0f",
+    "emoji": "🕶️",
     "name": "Polarized Aviator Sunglasses",
     "brand": "Helio",
     "category": "Accessories",
@@ -116,7 +116,7 @@
   },
   {
     "id": "p7",
-    "emoji": "\ud83c\udfa7",
+    "emoji": "🎧",
     "name": "True Wireless Earbuds",
     "brand": "SoundArc",
     "category": "Audio",
@@ -135,7 +135,7 @@
   },
   {
     "id": "p8",
-    "emoji": "\u231a",
+    "emoji": "⌚",
     "name": "FitTrack Smartwatch 2",
     "brand": "CorePulse",
     "category": "Wearables",
@@ -154,7 +154,7 @@
   },
   {
     "id": "p9",
-    "emoji": "\ud83c\udfa7",
+    "emoji": "🎧",
     "name": "Noise-Canceling Over-Ear Headphones",
     "brand": "Auralis",
     "category": "Audio",
@@ -173,7 +173,7 @@
   },
   {
     "id": "p10",
-    "emoji": "\ud83d\udcf1",
+    "emoji": "📱",
     "name": "3-Axis Smartphone Gimbal",
     "brand": "MotionRig",
     "category": "Creator Gear",
@@ -192,7 +192,7 @@
   },
   {
     "id": "p11",
-    "emoji": "\ud83c\udfae",
+    "emoji": "🎮",
     "name": "Retro Mini Game Console",
     "brand": "PixelDock",
     "category": "Gaming",
@@ -211,7 +211,7 @@
   },
   {
     "id": "p12",
-    "emoji": "\ud83d\udda5\ufe0f",
+    "emoji": "🖥️",
     "name": "1080p Portable Projector",
     "brand": "LumenBox",
     "category": "Home Tech",
@@ -230,7 +230,7 @@
   },
   {
     "id": "p13",
-    "emoji": "\ud83d\udd6f\ufe0f",
+    "emoji": "🕯️",
     "name": "Soy Candle Discovery Set",
     "brand": "Wick & Pine",
     "category": "Home Fragrance",
@@ -250,7 +250,7 @@
   },
   {
     "id": "p14",
-    "emoji": "\ud83d\udecf\ufe0f",
+    "emoji": "🛏️",
     "name": "Memory Foam Side Sleeper Pillow",
     "brand": "NestRest",
     "category": "Bedding",
@@ -270,7 +270,7 @@
   },
   {
     "id": "p15",
-    "emoji": "\u2615",
+    "emoji": "☕",
     "name": "12-Cup Drip Coffee Maker",
     "brand": "Brewline",
     "category": "Kitchen Appliances",
@@ -290,7 +290,7 @@
   },
   {
     "id": "p16",
-    "emoji": "\ud83e\udeb4",
+    "emoji": "🪴",
     "name": "Ceramic Planter Pot Set",
     "brand": "TerraHaus",
     "category": "Decor",
@@ -309,7 +309,7 @@
   },
   {
     "id": "p17",
-    "emoji": "\ud83d\udecb\ufe0f",
+    "emoji": "🛋️",
     "name": "Weighted Throw Blanket",
     "brand": "CozyThread",
     "category": "Living Room",
@@ -329,7 +329,7 @@
   },
   {
     "id": "p18",
-    "emoji": "\ud83e\uddfa",
+    "emoji": "🧺",
     "name": "Woven Storage Basket 3-Pack",
     "brand": "CasaFold",
     "category": "Storage",
@@ -348,7 +348,7 @@
   },
   {
     "id": "p19",
-    "emoji": "\ud83c\udf55",
+    "emoji": "🍕",
     "name": "Wood-Fired Pizza Night Kit",
     "brand": "Table & Thyme",
     "category": "Meal Kits",
@@ -368,7 +368,7 @@
   },
   {
     "id": "p20",
-    "emoji": "\ud83c\udf63",
+    "emoji": "🍣",
     "name": "Sushi Date Box (2 Servings)",
     "brand": "Kumo Kitchen",
     "category": "Prepared Meals",
@@ -387,7 +387,7 @@
   },
   {
     "id": "p21",
-    "emoji": "\ud83c\udf70",
+    "emoji": "🍰",
     "name": "Mini Dessert Variety Box",
     "brand": "Sugarline",
     "category": "Bakery",
@@ -407,7 +407,7 @@
   },
   {
     "id": "p22",
-    "emoji": "\ud83c\udf75",
+    "emoji": "🍵",
     "name": "Matcha Latte Starter Set",
     "brand": "GreenWhisk",
     "category": "Beverages",
@@ -426,7 +426,7 @@
   },
   {
     "id": "p23",
-    "emoji": "\ud83c\udf77",
+    "emoji": "🍷",
     "name": "Red Wine Tasting Flight",
     "brand": "Oak & Vine",
     "category": "Beverages",
@@ -445,7 +445,7 @@
   },
   {
     "id": "p24",
-    "emoji": "\ud83c\udf6b",
+    "emoji": "🍫",
     "name": "Artisan Chocolate Gift Box",
     "brand": "Cocoa Atelier",
     "category": "Confectionery",
@@ -464,7 +464,7 @@
   },
   {
     "id": "p25",
-    "emoji": "\ud83d\udc5c",
+    "emoji": "👜",
     "name": "Pebbled Leather Tote Bag",
     "brand": "Valmont",
     "category": "Handbags",
@@ -484,9 +484,9 @@
   },
   {
     "id": "p26",
-    "emoji": "\u231a",
+    "emoji": "⌚",
     "name": "Automatic Stainless Steel Watch",
-    "brand": "Ravelle Gen\u00e8ve",
+    "brand": "Ravelle Genève",
     "category": "Watches",
     "store": "Luxury",
     "price": 620,
@@ -504,7 +504,7 @@
   },
   {
     "id": "p27",
-    "emoji": "\ud83d\udc8d",
+    "emoji": "💍",
     "name": "14K Gold Statement Ring",
     "brand": "Aureline",
     "category": "Jewelry",
@@ -524,7 +524,7 @@
   },
   {
     "id": "p28",
-    "emoji": "\ud83e\uddf4",
+    "emoji": "🧴",
     "name": "Eau de Parfum 100ml",
     "brand": "Maison de Lune",
     "category": "Fragrance",
@@ -544,7 +544,7 @@
   },
   {
     "id": "p29",
-    "emoji": "\ud83d\udc60",
+    "emoji": "👠",
     "name": "Leather Stiletto Heels",
     "brand": "Vetra",
     "category": "Footwear",
@@ -564,7 +564,7 @@
   },
   {
     "id": "p30",
-    "emoji": "\ud83e\udde5",
+    "emoji": "🧥",
     "name": "Tailored Wool Blazer",
     "brand": "Crown Row",
     "category": "Apparel",
@@ -584,7 +584,7 @@
   },
   {
     "id": "p31",
-    "emoji": "\ud83d\udc84",
+    "emoji": "💄",
     "name": "Professional Makeup Brush Set",
     "brand": "Luma Beauty",
     "category": "Cosmetics",
@@ -603,7 +603,7 @@
   },
   {
     "id": "p32",
-    "emoji": "\ud83e\uddf4",
+    "emoji": "🧴",
     "name": "Hydration Skincare Bundle",
     "brand": "Dermaloom",
     "category": "Skincare",
@@ -622,7 +622,7 @@
   },
   {
     "id": "p33",
-    "emoji": "\ud83d\udc87",
+    "emoji": "💇",
     "name": "Salon Blowout Appointment",
     "brand": "Blow & Co.",
     "category": "Services",
@@ -641,7 +641,7 @@
   },
   {
     "id": "p34",
-    "emoji": "\ud83d\uded2",
+    "emoji": "🛒",
     "name": "Costco Executive Membership",
     "brand": "Costco",
     "category": "Membership",
@@ -662,7 +662,7 @@
   },
   {
     "id": "p35",
-    "emoji": "\ud83e\udde1",
+    "emoji": "🧡",
     "name": "Lorax Costume",
     "brand": "Forest Fables Co.",
     "category": "Costume",
@@ -683,134 +683,134 @@
   },
   {
     "id": "e1",
-    "emoji": "\u26a1",
+    "emoji": "⚡",
     "name": "Flash Sale",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Start a Flash Sale. For 20 seconds, all product prices are 30% off this round.",
+    "desc": "Now: Start Flash Sale. This round only, all products are 30% off for 20s.",
     "effect": "flash-sale"
   },
   {
     "id": "e2",
-    "emoji": "\u26d4",
+    "emoji": "⛔",
     "name": "Card Declined",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Lose 10 dopamine.",
+    "desc": "Now: Lose 10 dopamine instantly.",
     "effect": "declined"
   },
   {
     "id": "e3",
-    "emoji": "\ud83d\udcb8",
+    "emoji": "💸",
     "name": "Refund Hit",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain $40 budget.",
+    "desc": "Now: Gain $40 budget instantly.",
     "effect": "refund"
   },
   {
     "id": "e4",
-    "emoji": "\ud83e\udde0",
+    "emoji": "🧠",
     "name": "FOMO Trigger",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Arm FOMO. Your next product this round gets +4 dopamine.",
+    "desc": "Now: Arm FOMO. Next product added this round gets +4 dopamine.",
     "effect": "fomo"
   },
   {
     "id": "e5",
-    "emoji": "\ud83c\udf81",
+    "emoji": "🎁",
     "name": "Mystery Gift",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain +8 dopamine.",
+    "desc": "Now: Gain +8 dopamine instantly.",
     "effect": "gift"
   },
   {
     "id": "e6",
-    "emoji": "\ud83d\udcb3",
+    "emoji": "💳",
     "name": "Cashback Weekend",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Arm cashback. Your next checkout returns 10% of what you pay.",
+    "desc": "Now: Arm cashback. Next checkout returns 10% of charged total.",
     "effect": "cashback"
   },
   {
     "id": "e7",
-    "emoji": "\ud83d\udce3",
+    "emoji": "📣",
     "name": "Influencer Hype",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Hype this round. Products added this round get +2 dopamine.",
+    "desc": "Now: Apply hype. Products added this round get +2 dopamine.",
     "effect": "influencer-hype"
   },
   {
     "id": "e8",
-    "emoji": "\ud83d\udcc9",
+    "emoji": "📉",
     "name": "Market Stock Drop",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Mark down Tech. Tech products are 15% off this round.",
+    "desc": "Now: Apply markdown. Tech products are 15% off this round.",
     "effect": "stock-drop"
   },
   {
     "id": "e9",
-    "emoji": "\ud83d\uded2",
+    "emoji": "🛒",
     "name": "Cart Abandon Nudge",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Arm penalty. Your next checkout adds +5 regret.",
+    "desc": "Now: Arm penalty. Next checkout adds +5 regret.",
     "effect": "cart-abandon"
   },
   {
     "id": "e10",
-    "emoji": "\ud83c\udfc5",
+    "emoji": "🏅",
     "name": "Loyalty Points",
     "store": "Event",
     "type": "event",
-    "desc": "Now: Gain +6 dopamine. Your next checkout also gets -$10.",
+    "desc": "Now: Gain +6 dopamine instantly. Next checkout gets an extra -$10.",
     "effect": "loyalty-points"
   },
   {
     "id": "pw1",
-    "emoji": "\ud83d\udce6",
+    "emoji": "📦",
     "name": "Free Shipping",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm shipping discount. Your next checkout gets -$15.",
+    "desc": "Now: Arm discount. Next checkout gets -$15 total.",
     "effect": "ship15"
   },
   {
     "id": "pw2",
-    "emoji": "\ud83c\udff7\ufe0f",
+    "emoji": "🏷️",
     "name": "Price Match",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm price match. Your next product added is 40% off.",
+    "desc": "Now: Arm price match. Next product added is 40% off.",
     "effect": "price-match"
   },
   {
     "id": "pw3",
-    "emoji": "\ud83d\uded2",
+    "emoji": "🛒",
     "name": "One Click Buy",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Arm quick-buy. Your next product added gets +5 dopamine.",
+    "desc": "Now: Arm quick buy. Next product added gets +5 dopamine.",
     "effect": "quick-buy"
   },
   {
     "id": "pw4",
-    "emoji": "\ud83e\uddea",
+    "emoji": "🧪",
     "name": "Designer Card",
     "store": "Power",
     "type": "power",
-    "desc": "Now: Gain +60 dopamine.",
+    "desc": "Now: Gain +60 dopamine instantly.",
     "effect": "designer",
     "premiumOnly": true
   },
   {
     "id": "pw5",
-    "emoji": "\ud83e\uddef",
+    "emoji": "🧯",
     "name": "Calm Mode",
     "store": "Power",
     "type": "power",
@@ -819,47 +819,47 @@
   },
   {
     "id": "t1",
-    "emoji": "\ud83d\udd73\ufe0f",
+    "emoji": "🕳️",
     "name": "Subscription Trap",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Arm trap. Your next checkout adds +8 regret.",
+    "desc": "Now: Arm trap. Next checkout adds +8 regret.",
     "effect": "sub-trap"
   },
   {
     "id": "t2",
-    "emoji": "\ud83d\ude2c",
+    "emoji": "😬",
     "name": "Buyer Remorse",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. At next hand deal, gain +10 regret.",
+    "desc": "Now: Queue delayed regret. Next round, gain +10 regret when hand is dealt.",
     "effect": "future-remorse"
   },
   {
     "id": "t3",
-    "emoji": "\ud83d\udce3",
+    "emoji": "📣",
     "name": "Impulse Buy",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Auto-buy. Add the cheapest product in hand to cart immediately.",
+    "desc": "Now: Trigger auto-buy. Cheapest product in hand is added to cart.",
     "effect": "impulse-auto"
   },
   {
     "id": "t4",
-    "emoji": "\ud83d\udcf1",
+    "emoji": "📱",
     "name": "Doom Scroll",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. In 2 rounds, gain +12 regret at hand deal.",
+    "desc": "Now: Queue delayed regret. In 2 rounds, gain +12 regret when hand is dealt.",
     "effect": "doom-scroll"
   },
   {
     "id": "t5",
-    "emoji": "\ud83d\udce6",
+    "emoji": "📦",
     "name": "Missed Return Window",
     "store": "Trap",
     "type": "trap",
-    "desc": "Now: Queue delayed regret. In 2 rounds, gain +8 regret at hand deal.",
+    "desc": "Now: Queue delayed regret. In 2 rounds, gain +8 regret when hand is dealt.",
     "effect": "return-window"
   }
 ]

@@ -267,11 +267,12 @@ export function GameScreen() {
       </div>
 
       <div className="border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
           <MenuPill active={s.activeMenu === 'activity'} onClick={() => s.setActiveMenu('activity')} label="Activity" />
           <MenuPill active={s.activeMenu === 'badges'} onClick={() => s.setActiveMenu('badges')} label="Badges" />
+          <span className="text-[11px] text-zinc-300">Shortcuts: 1-4 tabs · C checkout · K skip · X clear · Shift+E end</span>
         </div>
         <div className="mb-2">
           <div className="mb-1 flex items-center justify-between text-[11px] text-zinc-300"><span>Mood Meter</span><span>{Math.round(mood)}%</span></div>
@@ -296,7 +297,7 @@ export function GameScreen() {
       </div>
 
       <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-4 sm:p-6">
-        {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
+        {s.announcement && <div aria-live="polite" className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         {comboSaleActive ? <div className="combo-sale-alert mb-3">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
@@ -402,7 +403,7 @@ export function GameScreen() {
                   {s.cart.length === 0 ? <span className="text-sm italic text-zinc-500">No items yet</span> : s.cart.map((c) => (
                     <motion.span layout key={c.id} className="pill border border-purple/40 bg-purple/20 text-purple-light">
                       {c.emoji} {c.name} (${c.paidPrice})
-                      <button className="ml-1 opacity-80 hover:opacity-100" onClick={() => { s.removeFromCart(c.id); pushImpact('removed', 'warn'); }}>×</button>
+                      <button aria-label={`Remove ${c.name} from cart`} className="ml-1 rounded-sm opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light" onClick={() => { s.removeFromCart(c.id); pushImpact('removed', 'warn'); }}>×</button>
                     </motion.span>
                   ))}
                 </div>
@@ -422,8 +423,10 @@ export function GameScreen() {
               <div className="mb-2 text-sm font-semibold">Purchased Inventory (persistent)</div>
               <div className="mb-3 text-xs text-zinc-400">Items: {s.inventory.reduce((a, i) => a + i.quantity, 0)} • Paid Total: ${s.inventory.reduce((a, i) => a + i.totalSpent, 0).toFixed(2)} • Original Total: ${s.inventory.reduce((a, i) => a + i.totalOriginalSpent, 0).toFixed(2)}</div>
               <div className="mb-3 flex flex-col gap-2 sm:flex-row">
-                <input className="rounded-md border border-white/10 bg-bg p-2 text-sm" placeholder="Search item" value={query} onChange={(e) => setQuery(e.target.value)} />
-                <select className="rounded-md border border-white/10 bg-bg p-2 text-sm" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}>
+                <label className="sr-only" htmlFor="inventory-search">Search inventory item</label>
+                <input id="inventory-search" aria-label="Search inventory item" className="rounded-md border border-white/20 bg-bg p-2 text-sm text-zinc-100" placeholder="Search item" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <label className="sr-only" htmlFor="inventory-store-filter">Filter by store</label>
+                <select id="inventory-store-filter" aria-label="Filter inventory by store" className="rounded-md border border-white/20 bg-bg p-2 text-sm text-zinc-100" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}>
                   {stores.map((store) => <option key={store} value={store}>{store === 'all' ? 'All stores' : store}</option>)}
                 </select>
               </div>
@@ -633,9 +636,12 @@ function Stat({ label, help, value, color, pulseKey }: { label: string; help?: s
 function MenuPill({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return (
     <motion.button
+      type="button"
       whileTap={{ scale: 0.97 }}
-      className={`pill ${active ? 'bg-purple text-white glow-pulse' : 'bg-white/10 text-zinc-300 hover:bg-white/15 hover:text-zinc-100'}`}
+      className={`pill ${active ? 'bg-purple text-white glow-pulse' : 'bg-white/10 text-zinc-200 hover:bg-white/15 hover:text-zinc-100'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light`}
       onClick={onClick}
+      aria-pressed={active}
+      aria-label={`Open ${label} tab`}
     >
       {label}
     </motion.button>
