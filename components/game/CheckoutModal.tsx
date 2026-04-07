@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
 import { calculateCheckoutTotals } from '@/lib/game-engine';
 import { playSfx } from '@/lib/audio-manager';
+import { getAnimationDurationMultiplier, getUxSettings } from '@/lib/ux-settings';
 
 const stepTitle = ['Review', 'Shipping', 'Confirm'];
 
@@ -18,8 +19,20 @@ export function CheckoutModal() {
   const { paymentMode, checkoutOpen, checkoutStep, cart, nextCheckoutStep, closeCheckout, completeCheckout } = state;
   const reducedMotion = useReducedMotion();
   const [confettiSeed, setConfettiSeed] = useState(0);
+  const [animationPreset, setAnimationPreset] = useState(() => getUxSettings().animationPreset);
+  const animationDuration = getAnimationDurationMultiplier(animationPreset, !!reducedMotion);
   const prevStepRef = useRef(checkoutStep);
   const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    const syncSettings = (event: Event) => {
+      const detail = (event as CustomEvent<{ animationPreset?: 'full' | 'balanced' | 'reduced' }>).detail;
+      if (detail?.animationPreset) setAnimationPreset(detail.animationPreset);
+    };
+
+    window.addEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+    return () => window.removeEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+  }, []);
 
   useEffect(() => {
     if (!checkoutOpen) {
@@ -44,6 +57,18 @@ export function CheckoutModal() {
     prevStepRef.current = checkoutStep;
   }, [checkoutOpen, checkoutStep, reducedMotion]);
 
+  useEffect(() => {
+    if (!checkoutOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeCheckout();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [checkoutOpen, closeCheckout]);
+
   const totals = calculateCheckoutTotals(state);
   const chargedTotal = totals.chargedTotal;
   const totalD = cart.reduce((a, c) => a + c.finalDopamine, 0);
@@ -61,12 +86,12 @@ export function CheckoutModal() {
             initial={{ y: 84, opacity: 0, scale: 0.84, rotateX: 18, filter: 'blur(8px)' }}
             animate={{ y: 0, opacity: 1, scale: 1, rotateX: 0, filter: 'blur(0px)' }}
             exit={{ y: 70, opacity: 0, scale: 0.86, rotateX: 14, filter: 'blur(6px)' }}
-            transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45 * animationDuration, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#2f2e2c] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-7"
           >
             <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-purple/30 blur-2xl" />
             <div className="pointer-events-none absolute -bottom-12 left-10 h-24 w-24 rounded-full bg-teal/20 blur-2xl" />
-            <button className="absolute right-4 top-3 text-xl text-zinc-500 transition hover:text-zinc-300" onClick={closeCheckout}>✕</button>
+            <button type="button" aria-label="Close checkout" className="absolute right-4 top-3 rounded-sm text-xl text-zinc-300 transition hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-light" onClick={closeCheckout}>✕</button>
 
             <div className="mb-2 text-xs uppercase tracking-widest text-zinc-500">Checkout · {stepTitle[checkoutStep]}</div>
             <div className="mb-2 text-xs text-zinc-400">{paymentMode === 'demo-free' ? 'Demo free checkout enabled (original prices still tracked)' : 'Real pricing (display only)'}</div>
@@ -78,7 +103,7 @@ export function CheckoutModal() {
                     initial={false}
                     animate={{ scaleX: checkoutStep >= n ? 1 : 0.06, opacity: checkoutStep >= n ? 1 : 0.35, boxShadow: checkoutStep >= n ? '0 0 20px rgba(83,74,183,0.9)' : '0 0 0 rgba(83,74,183,0)' }}
                     style={{ transformOrigin: 'left center' }}
-                    transition={{ duration: reducedMotion ? 0 : 0.34 }}
+                    transition={{ duration: 0.34 * animationDuration }}
                   />
                 </span>
               ))}
@@ -86,7 +111,7 @@ export function CheckoutModal() {
 
             <AnimatePresence mode="wait">
               {checkoutStep === 0 && (
-                <motion.div key="step-0" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24 }}>
+                <motion.div key="step-0" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.24 * animationDuration }}>
                   <h3 className="mb-4 text-xl font-bold">🛒 Your Cart</h3>
                   <div className="space-y-2">
                     {cart.map((c, idx) => (
@@ -125,23 +150,26 @@ export function CheckoutModal() {
               )}
 
               {checkoutStep === 1 && (
-                <motion.div key="step-1" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }}>
+                <motion.div key="step-1" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }}>
                   <h3 className="mb-2 text-xl font-bold">📦 Where should we ship?</h3>
                   <div className="mb-4 rounded-md border border-teal/30 bg-teal/10 p-3 text-sm text-teal">Virtual shipping only — no real address needed.</div>
-                  <input className="mb-2 w-full rounded-md border border-white/10 bg-bg p-2 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/30" defaultValue="Shopaholic" />
-                  <input className="mb-2 w-full rounded-md border border-white/10 bg-bg p-2 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/30" defaultValue="123 Shopping Lane" />
-                  <input className="w-full rounded-md border border-white/10 bg-bg p-2 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/30" placeholder="Retail City" />
+                  <label className="sr-only" htmlFor="checkout-name">Recipient name</label>
+                  <input id="checkout-name" aria-label="Recipient name" className="mb-2 w-full rounded-md border border-white/20 bg-bg p-2 text-zinc-100 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/40" defaultValue="Shopaholic" />
+                  <label className="sr-only" htmlFor="checkout-address">Street address</label>
+                  <input id="checkout-address" aria-label="Street address" className="mb-2 w-full rounded-md border border-white/20 bg-bg p-2 text-zinc-100 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/40" defaultValue="123 Shopping Lane" />
+                  <label className="sr-only" htmlFor="checkout-city">City</label>
+                  <input id="checkout-city" aria-label="City" className="w-full rounded-md border border-white/20 bg-bg p-2 text-zinc-100 outline-none transition focus:border-purple/60 focus:ring-2 focus:ring-purple/40" placeholder="Retail City" />
                   <Button className="mt-5 w-full" onClick={nextCheckoutStep}>Place Order →</Button>
                 </motion.div>
               )}
 
               {checkoutStep === 2 && (
-                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.22 }} className="relative text-center">
+                <motion.div key="step-2" variants={slide} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.22 * animationDuration }} className="relative text-center">
                   <ConfettiBurst seed={confettiSeed} enabled={!reducedMotion} />
                   <motion.div
                     className="relative mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-teal text-4xl text-black shadow-[0_0_0_0_rgba(29,158,117,0.7)]"
                     animate={reducedMotion ? undefined : { scale: [0.8, 1.22, 0.98, 1.1, 1], rotate: [-10, 8, -4, 0], boxShadow: ['0 0 0 0 rgba(29,158,117,0.7)', '0 0 0 18px rgba(29,158,117,0)', '0 0 0 36px rgba(29,158,117,0)'] }}
-                    transition={{ duration: reducedMotion ? 0 : 1.1, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 1.1 * animationDuration, ease: [0.16, 1, 0.3, 1] }}
                   >✓
                     {!reducedMotion && [...Array(18)].map((_, i) => (
                       <motion.span

@@ -15,8 +15,8 @@
   --bg-card: #363533;
   --bg-card-hover: #3f3d3b;
   --text-primary: #f1efe8;
-  --text-mid: #a09d97;
-  --text-dim: #5f5e5a;
+  --text-mid: #b8b4ad;
+  --text-dim: #8d8a84;
   --border: rgba(255, 255, 255, 0.08);
 }
 
@@ -28,6 +28,12 @@ body {
   color: var(--text-primary);
   font-family: Inter, system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+}
+
+:where(button, [role='button'], a, input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(238, 237, 254, 0.35), 0 0 0 4px rgba(83, 74, 183, 0.7);
+  border-radius: 8px;
 }
 
 .btn {

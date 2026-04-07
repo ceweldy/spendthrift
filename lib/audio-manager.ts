@@ -15,9 +15,12 @@ type SfxName =
   | 'payday'
   | 'resultsReveal';
 
+type SfxProfile = 'subtle' | 'default' | 'hype';
+
 type AudioSettings = {
   muted: boolean;
   volume: number;
+  profile: SfxProfile;
 };
 
 type AudioSettingsListener = (settings: AudioSettings) => void;
@@ -30,12 +33,18 @@ type Tone = {
   detune?: number;
 };
 
-const SETTINGS_KEY = 'spendthrift-audio-settings-v1';
+const SETTINGS_KEY = 'spendthrift-audio-settings-v2';
+
+const PROFILE_GAIN: Record<SfxProfile, number> = {
+  subtle: 0.72,
+  default: 1,
+  hype: 1.2,
+};
 
 class AudioManager {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private settings: AudioSettings = { muted: false, volume: 0.45 };
+  private settings: AudioSettings = { muted: false, volume: 0.45, profile: 'default' };
   private ready = false;
   private lastUiClickAt = 0;
   private listeners = new Set<AudioSettingsListener>();
@@ -51,9 +60,11 @@ class AudioManager {
       const raw = window.localStorage.getItem(SETTINGS_KEY);
       if (!raw) return this.settings;
       const parsed = JSON.parse(raw);
+      const profile: SfxProfile = parsed?.profile === 'subtle' || parsed?.profile === 'hype' ? parsed.profile : 'default';
       return {
         muted: Boolean(parsed?.muted),
         volume: Math.max(0, Math.min(1, Number(parsed?.volume ?? 0.45))),
+        profile,
       };
     } catch {
       return this.settings;
@@ -84,7 +95,7 @@ class AudioManager {
 
     this.ctx = new Ctx();
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.settings.muted ? 0 : this.settings.volume;
+    this.master.gain.value = this.settings.muted ? 0 : this.getEffectiveVolume();
     this.master.connect(this.ctx.destination);
   }
 
@@ -125,16 +136,44 @@ class AudioManager {
     };
   }
 
+  private getEffectiveVolume() {
+    return this.settings.volume * PROFILE_GAIN[this.settings.profile];
+  }
+
+  private syncMasterGain() {
+    if (!this.master) return;
+    this.master.gain.value = this.settings.muted ? 0 : this.getEffectiveVolume();
+  }
+
   setMuted(muted: boolean) {
     this.settings.muted = muted;
-    if (this.master) this.master.gain.value = muted ? 0 : this.settings.volume;
+    this.syncMasterGain();
     this.saveSettings();
   }
 
   setVolume(volume: number) {
     const normalized = Math.max(0, Math.min(1, volume));
     this.settings.volume = normalized;
-    if (this.master && !this.settings.muted) this.master.gain.value = normalized;
+    this.syncMasterGain();
+    this.saveSettings();
+  }
+
+  setProfile(profile: SfxProfile) {
+    this.settings.profile = profile;
+    this.syncMasterGain();
+    this.saveSettings();
+  }
+
+  applyProfilePreset(preset: 'silent' | 'balanced' | 'immersive') {
+    if (preset === 'silent') {
+      this.settings = { ...this.settings, muted: true, volume: 0, profile: 'subtle' };
+    } else if (preset === 'immersive') {
+      this.settings = { ...this.settings, muted: false, volume: 0.65, profile: 'hype' };
+    } else {
+      this.settings = { ...this.settings, muted: false, volume: 0.45, profile: 'default' };
+    }
+
+    this.syncMasterGain();
     this.saveSettings();
   }
 
@@ -251,4 +290,4 @@ class AudioManager {
 export const audioManager = new AudioManager();
 
 export const playSfx = (name: SfxName) => audioManager.play(name);
-export type { SfxName, AudioSettings };
+export type { SfxName, AudioSettings, SfxProfile };

@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { ArchetypeScreen } from '@/components/onboarding/ArchetypeScreen';
 import { LandingScreen } from '@/components/onboarding/LandingScreen';
 import { QuizScreen } from '@/components/onboarding/QuizScreen';
@@ -10,6 +11,7 @@ import { BadgeToasts } from '@/components/game/BadgeToasts';
 import { ScreenIndicator } from '@/components/ui/ScreenIndicator';
 import { AudioControls } from '@/components/ui/AudioControls';
 import { useGameStore } from '@/store/useGameStore';
+import { getAnimationDurationMultiplier, getUxSettings } from '@/lib/ux-settings';
 
 const variants = {
   initial: { opacity: 0, y: 16, filter: 'blur(6px)' },
@@ -20,6 +22,18 @@ const variants = {
 export default function HomePage() {
   const screen = useGameStore((s) => s.screen);
   const reducedMotion = useReducedMotion();
+  const [animationPreset, setAnimationPreset] = useState(() => getUxSettings().animationPreset);
+  const animationDuration = getAnimationDurationMultiplier(animationPreset, !!reducedMotion);
+
+  useEffect(() => {
+    const syncSettings = (event: Event) => {
+      const detail = (event as CustomEvent<{ animationPreset?: 'full' | 'balanced' | 'reduced' }>).detail;
+      if (detail?.animationPreset) setAnimationPreset(detail.animationPreset);
+    };
+
+    window.addEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+    return () => window.removeEventListener('spendthrift-ux-settings', syncSettings as EventListener);
+  }, []);
 
   return (
     <main className="min-h-screen bg-bg text-[#F1EFE8]">
@@ -30,7 +44,7 @@ export default function HomePage() {
           initial={reducedMotion ? undefined : 'initial'}
           animate={reducedMotion ? undefined : 'animate'}
           exit={reducedMotion ? undefined : 'exit'}
-          transition={{ duration: 0.28, ease: 'easeOut' }}
+          transition={{ duration: 0.28 * animationDuration, ease: 'easeOut' }}
         >
           {screen === 'landing' && <LandingScreen />}
           {screen === 'quiz' && <QuizScreen />}
