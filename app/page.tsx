@@ -36,8 +36,25 @@ export default function HomePage() {
     return () => window.removeEventListener('spendthrift-ux-settings', syncSettings as EventListener);
   }, []);
 
+  useEffect(() => {
+    const syncViewportHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+
+    syncViewportHeight();
+    window.addEventListener('resize', syncViewportHeight);
+    window.addEventListener('orientationchange', syncViewportHeight);
+    window.addEventListener('pageshow', syncViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', syncViewportHeight);
+      window.removeEventListener('orientationchange', syncViewportHeight);
+      window.removeEventListener('pageshow', syncViewportHeight);
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen bg-bg text-[#F1EFE8]">
+    <main className={`app-shell ${screen === 'game' ? 'app-shell--game' : 'app-shell--flow'} bg-bg text-[#F1EFE8]`}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={screen}

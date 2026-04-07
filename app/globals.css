@@ -115,7 +115,16 @@ body {
 .app-shell {
   height: var(--app-height, 100svh);
   min-height: var(--app-height, 100svh);
-  overflow: hidden;
+}
+
+.app-shell--flow {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--game {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @supports (height: 100dvh) {
