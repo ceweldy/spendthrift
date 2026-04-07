@@ -9,6 +9,17 @@ import type { Card } from '@/types/game';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
 type ImpactBurst = { id: number; text: string; tone: 'good' | 'warn' | 'neutral' };
+type CheckoutConfettiPiece = {
+  id: string;
+  left: string;
+  size: number;
+  rotate: number;
+  color: string;
+  driftX: number;
+  driftY: number;
+  duration: number;
+  delay: number;
+};
 type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 const panelVariants = {
@@ -34,8 +45,10 @@ export function GameScreen() {
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
+  const [checkoutConfetti, setCheckoutConfetti] = useState<CheckoutConfettiPiece[]>([]);
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
+  const prevCheckoutFxRef = useRef(s.checkoutSuccessFxTick);
   const mountedRef = useRef(false);
 
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
@@ -51,6 +64,25 @@ export function GameScreen() {
     setTimeout(() => setImpactBursts((v) => v.filter((b) => b.id !== burst.id)), 760);
   }, [reducedMotion]);
 
+  const buildCheckoutConfetti = useCallback((): CheckoutConfettiPiece[] => {
+    const count = typeof window !== 'undefined' && window.innerWidth < 640 ? 32 : 52;
+    return Array.from({ length: count }, (_, i) => {
+      const hue = [36, 172, 262, 12, 206][i % 5];
+      const spread = (i / count) * Math.PI - Math.PI / 2;
+      return {
+        id: `${Date.now()}-${i}`,
+        left: `${5 + ((i * 13) % 90)}%`,
+        size: 4 + (i % 5),
+        rotate: -220 + Math.random() * 440,
+        color: `hsl(${hue} 92% ${56 + (i % 3) * 8}%)`,
+        driftX: Math.cos(spread) * (90 + Math.random() * 140),
+        driftY: 95 + Math.random() * 120,
+        duration: 0.95 + (i % 7) * 0.09,
+        delay: (i % 9) * 0.014,
+      };
+    });
+  }, []);
+
   useEffect(() => {
     const id = setInterval(() => useGameStore.getState().tick(), 1000);
     return () => clearInterval(id);
@@ -61,6 +93,7 @@ export function GameScreen() {
       mountedRef.current = true;
       prevRoundRef.current = s.round;
       prevAnnouncementRef.current = s.announcement;
+      prevCheckoutFxRef.current = s.checkoutSuccessFxTick;
       return;
     }
 
@@ -77,7 +110,17 @@ export function GameScreen() {
       }
       prevAnnouncementRef.current = s.announcement;
     }
-  }, [s.round, s.announcement, reducedMotion, pushImpact]);
+
+    if (s.checkoutSuccessFxTick !== prevCheckoutFxRef.current) {
+      playSfx('checkoutConfirm');
+      if (!reducedMotion) {
+        setCheckoutConfetti(buildCheckoutConfetti());
+        pushImpact('ORDER PLACED! 🎉', 'good');
+        setTimeout(() => setCheckoutConfetti([]), 1900);
+      }
+      prevCheckoutFxRef.current = s.checkoutSuccessFxTick;
+    }
+  }, [s.round, s.announcement, s.checkoutSuccessFxTick, reducedMotion, pushImpact, buildCheckoutConfetti]);
 
   const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string) => {
     if (!reducedMotion) {
@@ -110,10 +153,16 @@ export function GameScreen() {
     [s.inventory, query, storeFilter],
   );
 
+  const activityLines = useMemo(() => {
+    if (s.activityLog.length > 0) return s.activityLog;
+    if (s.history.length > 0) return s.history.map((entry) => entry.text);
+    return ['No activity yet. Play a card or complete checkout to populate this feed.'];
+  }, [s.activityLog, s.history]);
+
   return (
     <section className="screen-wrap relative overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
-        <div className="font-extrabold tracking-wide text-purple-light">SPENDTHRIFT</div>
+        <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
         <div className="flex flex-wrap gap-4 text-center text-xs sm:gap-5">
           <Stat label="💰 Budget" help="Money available to spend in this run." value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
           <Stat label="⚡ Dopamine" help="Your score driver from purchases/events." value={`${s.dopamine}`} color="text-purple-light" pulseKey={s.dopamine} />
@@ -154,7 +203,7 @@ export function GameScreen() {
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
         {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
             <motion.div key="menu-shop" variants={panelVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -281,7 +330,7 @@ export function GameScreen() {
               <div className="rounded-lg border border-white/10 bg-black/20 p-3">
                 <div className="mb-2 text-xs uppercase tracking-widest text-zinc-500">Recent Activity</div>
                 <div className="max-h-60 space-y-2 overflow-auto text-sm">
-                  {s.activityLog.slice(0, 12).map((line, idx) => (
+                  {activityLines.slice(0, 12).map((line, idx) => (
                     <div key={`${line}-${idx}`} className="border-b border-white/5 pb-1 text-zinc-300">• {line}</div>
                   ))}
                 </div>

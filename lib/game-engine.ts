@@ -173,7 +173,7 @@ export const drawHandForRound = (state: EngineState): EngineState => {
   const products = drawUniqueWeighted(productsPool(state), 4, (card) => getProductWeight(card, archetype));
   const event = drawWeighted(eventPool(state), (card) => getEventWeight(card, archetype));
   const hand = event ? [event, ...products] : products;
-  let next: EngineState = { ...state, hand, announcement: null };
+  let next: EngineState = { ...state, hand };
   next = applyDelayedRegret(next);
   return pushHistory(next, 'draw', `Round ${next.round} dealt: ${hand.map((c) => c.name).join(', ')}`);
 };
