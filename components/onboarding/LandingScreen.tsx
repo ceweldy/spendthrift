@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useGameStore } from '@/store/useGameStore';
@@ -14,14 +15,21 @@ export function LandingScreen() {
       <div className="pointer-events-none absolute top-0 h-72 w-full bg-[radial-gradient(circle_at_top,rgba(83,74,183,0.35),transparent_70%)]" />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-16">
         <motion.div
-          initial={{ rotate: -5, scale: 0.9 }}
-          animate={{ rotate: 0, scale: 1 }}
-          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-purple text-5xl font-black text-white shadow-[0_0_40px_rgba(83,74,183,0.4)]"
-          aria-label="Spendthrift logo"
-          role="img"
+          initial={{ rotate: -2, scale: 0.96, opacity: 0.9 }}
+          animate={{ rotate: 0, scale: 1, opacity: 1 }}
+          className="w-full max-w-[280px] sm:max-w-[340px]"
         >
-          🛍️
+          <Image
+            src="/branding/asi-logo.png"
+            alt="Applied Strategy Inc. logo"
+            width={1306}
+            height={703}
+            priority
+            className="h-auto w-full drop-shadow-[0_10px_24px_rgba(0,0,0,0.45)]"
+          />
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">An Applied Strategy Inc. game</p>
         </motion.div>
+
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple/40 bg-purple/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-purple-light">
             <span aria-hidden>🛍️</span>
