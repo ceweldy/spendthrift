@@ -36,7 +36,7 @@ export function AudioControls() {
   }, []);
 
   return (
-    <div className="fixed right-4 top-4 z-[70] flex items-center gap-2 rounded-xl border border-white/10 bg-black/55 px-3 py-2 text-xs backdrop-blur">
+    <div className="fixed left-4 top-4 z-[70] flex items-center gap-2 rounded-xl border border-white/10 bg-black/55 px-3 py-2 text-xs backdrop-blur">
       <button
         type="button"
         className="pill border border-white/10 bg-white/5 text-zinc-200"
