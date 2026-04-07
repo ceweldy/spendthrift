@@ -1,7 +1,7 @@
 [
   {
     "id": "p1",
-    "emoji": "👟",
+    "emoji": "\ud83d\udc5f",
     "name": "CloudRun Everyday Sneakers",
     "brand": "StrideLab",
     "category": "Footwear",
@@ -16,11 +16,11 @@
     "description": "Breathable knit sneakers for daily wear with cushioned foam sole.",
     "stock": 37,
     "sku": "SL-CRS-089",
-    "imageUrl": "https://picsum.photos/seed/sneaker1/900/700"
+    "imageUrl": "/images/cards/p1-cloudrun-everyday-sneakers.jpg"
   },
   {
     "id": "p2",
-    "emoji": "🧢",
+    "emoji": "\ud83e\udde2",
     "name": "Vintage Logo Baseball Cap",
     "brand": "Northline",
     "category": "Accessories",
@@ -35,11 +35,11 @@
     "description": "Cotton twill cap with adjustable back strap and embroidered logo.",
     "stock": 62,
     "sku": "NL-CAP-032",
-    "imageUrl": "https://picsum.photos/seed/cap2/900/700"
+    "imageUrl": "/images/cards/p2-vintage-logo-baseball-cap.jpg"
   },
   {
     "id": "p3",
-    "emoji": "🧥",
+    "emoji": "\ud83e\udde5",
     "name": "Water-Resistant Utility Jacket",
     "brand": "Harbor & Field",
     "category": "Outerwear",
@@ -54,11 +54,11 @@
     "description": "Lightweight shell jacket with zip pockets and hidden hood.",
     "stock": 18,
     "sku": "HF-UJ-118",
-    "imageUrl": "https://picsum.photos/seed/jacket3/900/700"
+    "imageUrl": "/images/cards/p3-water-resistant-utility-jacket.jpg"
   },
   {
     "id": "p4",
-    "emoji": "👗",
+    "emoji": "\ud83d\udc57",
     "name": "Satin Slip Midi Dress",
     "brand": "Rue Atelier",
     "category": "Dresses",
@@ -73,11 +73,11 @@
     "description": "Soft satin midi dress with adjustable straps and bias-cut fit.",
     "stock": 14,
     "sku": "RA-SMD-097",
-    "imageUrl": "https://picsum.photos/seed/dress4/900/700"
+    "imageUrl": "/images/cards/p4-satin-slip-midi-dress.jpg"
   },
   {
     "id": "p5",
-    "emoji": "👢",
+    "emoji": "\ud83d\udc62",
     "name": "Lug Sole Chelsea Boots",
     "brand": "Marlow",
     "category": "Footwear",
@@ -92,11 +92,11 @@
     "description": "Pull-on leather Chelsea boots with durable lug outsole.",
     "stock": 23,
     "sku": "MW-LSCB-104",
-    "imageUrl": "https://picsum.photos/seed/boots5/900/700"
+    "imageUrl": "/images/cards/p5-lug-sole-chelsea-boots.jpg"
   },
   {
     "id": "p6",
-    "emoji": "🕶️",
+    "emoji": "\ud83d\udd76\ufe0f",
     "name": "Polarized Aviator Sunglasses",
     "brand": "Helio",
     "category": "Accessories",
@@ -112,11 +112,11 @@
     "description": "Metal-frame polarized shades with UV400 protection.",
     "stock": 29,
     "sku": "HE-AVP-132",
-    "imageUrl": "https://picsum.photos/seed/shades6/900/700"
+    "imageUrl": "/images/cards/p6-polarized-aviator-sunglasses.jpg"
   },
   {
     "id": "p7",
-    "emoji": "🎧",
+    "emoji": "\ud83c\udfa7",
     "name": "True Wireless Earbuds",
     "brand": "SoundArc",
     "category": "Audio",
@@ -131,11 +131,11 @@
     "description": "Bluetooth 5.3 earbuds with charging case and touch controls.",
     "stock": 54,
     "sku": "SA-TWE-059",
-    "imageUrl": "https://picsum.photos/seed/earbuds7/900/700"
+    "imageUrl": "/images/cards/p7-true-wireless-earbuds.jpg"
   },
   {
     "id": "p8",
-    "emoji": "⌚",
+    "emoji": "\u231a",
     "name": "FitTrack Smartwatch 2",
     "brand": "CorePulse",
     "category": "Wearables",
@@ -150,11 +150,11 @@
     "description": "Fitness smartwatch with GPS, heart-rate monitor, and 7-day battery.",
     "stock": 31,
     "sku": "CP-FT2-139",
-    "imageUrl": "https://picsum.photos/seed/watch8/900/700"
+    "imageUrl": "/images/cards/p8-fittrack-smartwatch-2.jpg"
   },
   {
     "id": "p9",
-    "emoji": "🎧",
+    "emoji": "\ud83c\udfa7",
     "name": "Noise-Canceling Over-Ear Headphones",
     "brand": "Auralis",
     "category": "Audio",
@@ -169,11 +169,11 @@
     "description": "Wireless over-ear headphones with active noise cancellation.",
     "stock": 17,
     "sku": "AU-NCO-167",
-    "imageUrl": "https://picsum.photos/seed/headphones9/900/700"
+    "imageUrl": "/images/cards/p9-noise-canceling-over-ear-headphones.jpg"
   },
   {
     "id": "p10",
-    "emoji": "📱",
+    "emoji": "\ud83d\udcf1",
     "name": "3-Axis Smartphone Gimbal",
     "brand": "MotionRig",
     "category": "Creator Gear",
@@ -188,11 +188,11 @@
     "description": "Handheld stabilizer for smooth video and auto-tracking shots.",
     "stock": 26,
     "sku": "MR-GMB-064",
-    "imageUrl": "https://picsum.photos/seed/gimbal10/900/700"
+    "imageUrl": "/images/cards/p10-3-axis-smartphone-gimbal.jpg"
   },
   {
     "id": "p11",
-    "emoji": "🎮",
+    "emoji": "\ud83c\udfae",
     "name": "Retro Mini Game Console",
     "brand": "PixelDock",
     "category": "Gaming",
@@ -207,11 +207,11 @@
     "description": "Plug-and-play mini console loaded with classic arcade titles.",
     "stock": 11,
     "sku": "PD-RMC-152",
-    "imageUrl": "https://picsum.photos/seed/console11/900/700"
+    "imageUrl": "/images/cards/p11-retro-mini-game-console.jpg"
   },
   {
     "id": "p12",
-    "emoji": "🖥️",
+    "emoji": "\ud83d\udda5\ufe0f",
     "name": "1080p Portable Projector",
     "brand": "LumenBox",
     "category": "Home Tech",
@@ -226,11 +226,11 @@
     "description": "Compact projector with HDMI input and auto keystone correction.",
     "stock": 22,
     "sku": "LB-PPJ-129",
-    "imageUrl": "https://picsum.photos/seed/projector12/900/700"
+    "imageUrl": "/images/cards/p12-1080p-portable-projector.jpg"
   },
   {
     "id": "p13",
-    "emoji": "🕯️",
+    "emoji": "\ud83d\udd6f\ufe0f",
     "name": "Soy Candle Discovery Set",
     "brand": "Wick & Pine",
     "category": "Home Fragrance",
@@ -246,11 +246,11 @@
     "description": "Set of three hand-poured soy candles in warm seasonal scents.",
     "stock": 73,
     "sku": "WP-SCD-028",
-    "imageUrl": "https://picsum.photos/seed/candle13/900/700"
+    "imageUrl": "/images/cards/p13-soy-candle-discovery-set.jpg"
   },
   {
     "id": "p14",
-    "emoji": "🛏️",
+    "emoji": "\ud83d\udecf\ufe0f",
     "name": "Memory Foam Side Sleeper Pillow",
     "brand": "NestRest",
     "category": "Bedding",
@@ -266,11 +266,11 @@
     "description": "Contour support pillow designed for neck alignment and cooling.",
     "stock": 40,
     "sku": "NR-MFP-039",
-    "imageUrl": "https://picsum.photos/seed/pillow14/900/700"
+    "imageUrl": "/images/cards/p14-memory-foam-side-sleeper-pillow.jpg"
   },
   {
     "id": "p15",
-    "emoji": "☕",
+    "emoji": "\u2615",
     "name": "12-Cup Drip Coffee Maker",
     "brand": "Brewline",
     "category": "Kitchen Appliances",
@@ -286,11 +286,11 @@
     "description": "Programmable coffee maker with keep-warm plate and timer.",
     "stock": 21,
     "sku": "BL-DCM-086",
-    "imageUrl": "https://picsum.photos/seed/coffeemaker15/900/700"
+    "imageUrl": "/images/cards/p15-12-cup-drip-coffee-maker.jpg"
   },
   {
     "id": "p16",
-    "emoji": "🪴",
+    "emoji": "\ud83e\udeb4",
     "name": "Ceramic Planter Pot Set",
     "brand": "TerraHaus",
     "category": "Decor",
@@ -305,11 +305,11 @@
     "description": "Two-piece matte ceramic planter set with drainage trays.",
     "stock": 35,
     "sku": "TH-CPS-034",
-    "imageUrl": "https://picsum.photos/seed/planter16/900/700"
+    "imageUrl": "/images/cards/p16-ceramic-planter-pot-set.jpg"
   },
   {
     "id": "p17",
-    "emoji": "🛋️",
+    "emoji": "\ud83d\udecb\ufe0f",
     "name": "Weighted Throw Blanket",
     "brand": "CozyThread",
     "category": "Living Room",
@@ -325,11 +325,11 @@
     "description": "10 lb weighted knit blanket made for couch lounging.",
     "stock": 16,
     "sku": "CT-WTB-078",
-    "imageUrl": "https://picsum.photos/seed/blanket17/900/700"
+    "imageUrl": "/images/cards/p17-weighted-throw-blanket.jpg"
   },
   {
     "id": "p18",
-    "emoji": "🧺",
+    "emoji": "\ud83e\uddfa",
     "name": "Woven Storage Basket 3-Pack",
     "brand": "CasaFold",
     "category": "Storage",
@@ -344,11 +344,11 @@
     "description": "Stackable woven baskets for closet and shelf organization.",
     "stock": 47,
     "sku": "CF-WSB-049",
-    "imageUrl": "https://picsum.photos/seed/storage18/900/700"
+    "imageUrl": "/images/cards/p18-woven-storage-basket-3-pack.jpg"
   },
   {
     "id": "p19",
-    "emoji": "🍕",
+    "emoji": "\ud83c\udf55",
     "name": "Wood-Fired Pizza Night Kit",
     "brand": "Table & Thyme",
     "category": "Meal Kits",
@@ -364,11 +364,11 @@
     "description": "DIY pizza kit with dough, sauce, mozzarella, and toppings.",
     "stock": 33,
     "sku": "TT-PNK-038",
-    "imageUrl": "https://picsum.photos/seed/pizza19/900/700"
+    "imageUrl": "/images/cards/p19-wood-fired-pizza-night-kit.jpg"
   },
   {
     "id": "p20",
-    "emoji": "🍣",
+    "emoji": "\ud83c\udf63",
     "name": "Sushi Date Box (2 Servings)",
     "brand": "Kumo Kitchen",
     "category": "Prepared Meals",
@@ -383,11 +383,11 @@
     "description": "Chef-prepared nigiri and rolls delivered chilled same-day.",
     "stock": 12,
     "sku": "KK-SDB-046",
-    "imageUrl": "https://picsum.photos/seed/sushi20/900/700"
+    "imageUrl": "/images/cards/p20-sushi-date-box-2-servings.jpg"
   },
   {
     "id": "p21",
-    "emoji": "🍰",
+    "emoji": "\ud83c\udf70",
     "name": "Mini Dessert Variety Box",
     "brand": "Sugarline",
     "category": "Bakery",
@@ -403,11 +403,11 @@
     "description": "Selection of six mini pastries including tartlets and brownies.",
     "stock": 45,
     "sku": "SG-MDV-029",
-    "imageUrl": "https://picsum.photos/seed/dessert21/900/700"
+    "imageUrl": "/images/cards/p21-mini-dessert-variety-box.jpg"
   },
   {
     "id": "p22",
-    "emoji": "🍵",
+    "emoji": "\ud83c\udf75",
     "name": "Matcha Latte Starter Set",
     "brand": "GreenWhisk",
     "category": "Beverages",
@@ -422,11 +422,11 @@
     "description": "Ceremonial matcha, whisk, and bowl for cafe-style lattes.",
     "stock": 28,
     "sku": "GW-MLS-036",
-    "imageUrl": "https://picsum.photos/seed/matcha22/900/700"
+    "imageUrl": "/images/cards/p22-matcha-latte-starter-set.jpg"
   },
   {
     "id": "p23",
-    "emoji": "🍷",
+    "emoji": "\ud83c\udf77",
     "name": "Red Wine Tasting Flight",
     "brand": "Oak & Vine",
     "category": "Beverages",
@@ -441,11 +441,11 @@
     "description": "Three-bottle tasting set of curated dry red blends.",
     "stock": 9,
     "sku": "OV-RWF-074",
-    "imageUrl": "https://picsum.photos/seed/wine23/900/700"
+    "imageUrl": "/images/cards/p23-red-wine-tasting-flight.jpg"
   },
   {
     "id": "p24",
-    "emoji": "🍫",
+    "emoji": "\ud83c\udf6b",
     "name": "Artisan Chocolate Gift Box",
     "brand": "Cocoa Atelier",
     "category": "Confectionery",
@@ -460,11 +460,11 @@
     "description": "Handmade truffles and pralines in a 16-piece gift box.",
     "stock": 20,
     "sku": "CA-ACG-054",
-    "imageUrl": "https://picsum.photos/seed/chocolate24/900/700"
+    "imageUrl": "/images/cards/p24-artisan-chocolate-gift-box.jpg"
   },
   {
     "id": "p25",
-    "emoji": "👜",
+    "emoji": "\ud83d\udc5c",
     "name": "Pebbled Leather Tote Bag",
     "brand": "Valmont",
     "category": "Handbags",
@@ -480,13 +480,13 @@
     "description": "Structured leather tote with magnetic closure and suede lining.",
     "stock": 8,
     "sku": "VM-PLT-390",
-    "imageUrl": "https://picsum.photos/seed/tote25/900/700"
+    "imageUrl": "/images/cards/p25-pebbled-leather-tote-bag.jpg"
   },
   {
     "id": "p26",
-    "emoji": "⌚",
+    "emoji": "\u231a",
     "name": "Automatic Stainless Steel Watch",
-    "brand": "Ravelle Genève",
+    "brand": "Ravelle Gen\u00e8ve",
     "category": "Watches",
     "store": "Luxury",
     "price": 620,
@@ -500,11 +500,11 @@
     "description": "41mm automatic movement watch with sapphire crystal face.",
     "stock": 5,
     "sku": "RG-ASW-620",
-    "imageUrl": "https://picsum.photos/seed/luxwatch26/900/700"
+    "imageUrl": "/images/cards/p26-automatic-stainless-steel-watch.jpg"
   },
   {
     "id": "p27",
-    "emoji": "💍",
+    "emoji": "\ud83d\udc8d",
     "name": "14K Gold Statement Ring",
     "brand": "Aureline",
     "category": "Jewelry",
@@ -520,11 +520,11 @@
     "description": "Polished 14K gold ring with contemporary sculpted profile.",
     "stock": 7,
     "sku": "AU-GSR-450",
-    "imageUrl": "https://picsum.photos/seed/ring27/900/700"
+    "imageUrl": "/images/cards/p27-14k-gold-statement-ring.jpg"
   },
   {
     "id": "p28",
-    "emoji": "🧴",
+    "emoji": "\ud83e\uddf4",
     "name": "Eau de Parfum 100ml",
     "brand": "Maison de Lune",
     "category": "Fragrance",
@@ -540,11 +540,11 @@
     "description": "Layered notes of bergamot, amber, and cedar in glass flacon.",
     "stock": 15,
     "sku": "ML-EDP-185",
-    "imageUrl": "https://picsum.photos/seed/perfume28/900/700"
+    "imageUrl": "/images/cards/p28-eau-de-parfum-100ml.jpg"
   },
   {
     "id": "p29",
-    "emoji": "👠",
+    "emoji": "\ud83d\udc60",
     "name": "Leather Stiletto Heels",
     "brand": "Vetra",
     "category": "Footwear",
@@ -560,11 +560,11 @@
     "description": "Italian leather heels with cushioned insole and pointed toe.",
     "stock": 6,
     "sku": "VT-LSH-510",
-    "imageUrl": "https://picsum.photos/seed/heels29/900/700"
+    "imageUrl": "/images/cards/p29-leather-stiletto-heels.jpg"
   },
   {
     "id": "p30",
-    "emoji": "🧥",
+    "emoji": "\ud83e\udde5",
     "name": "Tailored Wool Blazer",
     "brand": "Crown Row",
     "category": "Apparel",
@@ -580,11 +580,11 @@
     "description": "Single-breasted wool blazer with satin lining and sharp lapels.",
     "stock": 4,
     "sku": "CR-TWB-680",
-    "imageUrl": "https://picsum.photos/seed/blazer30/900/700"
+    "imageUrl": "/images/cards/p30-tailored-wool-blazer.jpg"
   },
   {
     "id": "p31",
-    "emoji": "💄",
+    "emoji": "\ud83d\udc84",
     "name": "Professional Makeup Brush Set",
     "brand": "Luma Beauty",
     "category": "Cosmetics",
@@ -599,11 +599,11 @@
     "description": "12-piece vegan brush set for face, eyes, and blending.",
     "stock": 34,
     "sku": "LB-MBS-076",
-    "imageUrl": "https://picsum.photos/seed/makeup31/900/700"
+    "imageUrl": "/images/cards/p31-professional-makeup-brush-set.jpg"
   },
   {
     "id": "p32",
-    "emoji": "🧴",
+    "emoji": "\ud83e\uddf4",
     "name": "Hydration Skincare Bundle",
     "brand": "Dermaloom",
     "category": "Skincare",
@@ -618,11 +618,11 @@
     "description": "Cleanser, serum, and moisturizer bundle for dry skin.",
     "stock": 27,
     "sku": "DL-HSB-091",
-    "imageUrl": "https://picsum.photos/seed/skincare32/900/700"
+    "imageUrl": "/images/cards/p32-hydration-skincare-bundle.jpg"
   },
   {
     "id": "p33",
-    "emoji": "💇",
+    "emoji": "\ud83d\udc87",
     "name": "Salon Blowout Appointment",
     "brand": "Blow & Co.",
     "category": "Services",
@@ -637,11 +637,11 @@
     "description": "Single in-salon blowout voucher redeemable on weekdays.",
     "stock": 19,
     "sku": "BC-SBA-052",
-    "imageUrl": "https://picsum.photos/seed/blowout33/900/700"
+    "imageUrl": "/images/cards/p33-salon-blowout-appointment.jpg"
   },
   {
     "id": "p34",
-    "emoji": "🪞",
+    "emoji": "\ud83e\ude9e",
     "name": "LED Vanity Mirror",
     "brand": "GlowHaus",
     "category": "Beauty Tools",
@@ -656,11 +656,11 @@
     "description": "Tri-tone lighting mirror with touch dimmer and USB recharge.",
     "stock": 24,
     "sku": "GH-LVM-063",
-    "imageUrl": "https://picsum.photos/seed/mirror34/900/700"
+    "imageUrl": "/images/cards/p34-led-vanity-mirror.jpg"
   },
   {
     "id": "p35",
-    "emoji": "💅",
+    "emoji": "\ud83d\udc85",
     "name": "Gel Nail Starter Kit",
     "brand": "Polish Lab",
     "category": "Nail Care",
@@ -675,11 +675,11 @@
     "description": "UV lamp, base/top coat, and six gel colors included.",
     "stock": 38,
     "sku": "PL-GNS-058",
-    "imageUrl": "https://picsum.photos/seed/nails35/900/700"
+    "imageUrl": "/images/cards/p35-gel-nail-starter-kit.jpg"
   },
   {
     "id": "e1",
-    "emoji": "⚡",
+    "emoji": "\u26a1",
     "name": "Flash Sale",
     "store": "Event",
     "type": "event",
@@ -688,7 +688,7 @@
   },
   {
     "id": "e2",
-    "emoji": "⛔",
+    "emoji": "\u26d4",
     "name": "Card Declined",
     "store": "Event",
     "type": "event",
@@ -697,7 +697,7 @@
   },
   {
     "id": "e3",
-    "emoji": "💸",
+    "emoji": "\ud83d\udcb8",
     "name": "Refund Hit",
     "store": "Event",
     "type": "event",
@@ -706,7 +706,7 @@
   },
   {
     "id": "e4",
-    "emoji": "🧠",
+    "emoji": "\ud83e\udde0",
     "name": "FOMO Trigger",
     "store": "Event",
     "type": "event",
@@ -715,7 +715,7 @@
   },
   {
     "id": "e5",
-    "emoji": "🎁",
+    "emoji": "\ud83c\udf81",
     "name": "Mystery Gift",
     "store": "Event",
     "type": "event",
@@ -724,7 +724,7 @@
   },
   {
     "id": "e6",
-    "emoji": "💳",
+    "emoji": "\ud83d\udcb3",
     "name": "Cashback Weekend",
     "store": "Event",
     "type": "event",
@@ -733,7 +733,7 @@
   },
   {
     "id": "e7",
-    "emoji": "📣",
+    "emoji": "\ud83d\udce3",
     "name": "Influencer Hype",
     "store": "Event",
     "type": "event",
@@ -742,7 +742,7 @@
   },
   {
     "id": "e8",
-    "emoji": "📉",
+    "emoji": "\ud83d\udcc9",
     "name": "Market Stock Drop",
     "store": "Event",
     "type": "event",
@@ -751,7 +751,7 @@
   },
   {
     "id": "e9",
-    "emoji": "🛒",
+    "emoji": "\ud83d\uded2",
     "name": "Cart Abandon Nudge",
     "store": "Event",
     "type": "event",
@@ -760,7 +760,7 @@
   },
   {
     "id": "e10",
-    "emoji": "🏅",
+    "emoji": "\ud83c\udfc5",
     "name": "Loyalty Points",
     "store": "Event",
     "type": "event",
@@ -769,7 +769,7 @@
   },
   {
     "id": "pw1",
-    "emoji": "📦",
+    "emoji": "\ud83d\udce6",
     "name": "Free Shipping",
     "store": "Power",
     "type": "power",
@@ -778,7 +778,7 @@
   },
   {
     "id": "pw2",
-    "emoji": "🏷️",
+    "emoji": "\ud83c\udff7\ufe0f",
     "name": "Price Match",
     "store": "Power",
     "type": "power",
@@ -787,7 +787,7 @@
   },
   {
     "id": "pw3",
-    "emoji": "🛒",
+    "emoji": "\ud83d\uded2",
     "name": "One Click Buy",
     "store": "Power",
     "type": "power",
@@ -796,7 +796,7 @@
   },
   {
     "id": "pw4",
-    "emoji": "🧪",
+    "emoji": "\ud83e\uddea",
     "name": "Designer Card",
     "store": "Power",
     "type": "power",
@@ -806,7 +806,7 @@
   },
   {
     "id": "pw5",
-    "emoji": "🧯",
+    "emoji": "\ud83e\uddef",
     "name": "Calm Mode",
     "store": "Power",
     "type": "power",
@@ -815,7 +815,7 @@
   },
   {
     "id": "t1",
-    "emoji": "🕳️",
+    "emoji": "\ud83d\udd73\ufe0f",
     "name": "Subscription Trap",
     "store": "Trap",
     "type": "trap",
@@ -824,7 +824,7 @@
   },
   {
     "id": "t2",
-    "emoji": "😬",
+    "emoji": "\ud83d\ude2c",
     "name": "Buyer Remorse",
     "store": "Trap",
     "type": "trap",
@@ -833,7 +833,7 @@
   },
   {
     "id": "t3",
-    "emoji": "📣",
+    "emoji": "\ud83d\udce3",
     "name": "Impulse Buy",
     "store": "Trap",
     "type": "trap",
@@ -842,7 +842,7 @@
   },
   {
     "id": "t4",
-    "emoji": "📱",
+    "emoji": "\ud83d\udcf1",
     "name": "Doom Scroll",
     "store": "Trap",
     "type": "trap",
@@ -851,7 +851,7 @@
   },
   {
     "id": "t5",
-    "emoji": "📦",
+    "emoji": "\ud83d\udce6",
     "name": "Missed Return Window",
     "store": "Trap",
     "type": "trap",
