@@ -17,10 +17,16 @@ export function LandingScreen() {
           initial={{ rotate: -5, scale: 0.9 }}
           animate={{ rotate: 0, scale: 1 }}
           className="flex h-20 w-20 items-center justify-center rounded-2xl bg-purple text-5xl font-black text-white shadow-[0_0_40px_rgba(83,74,183,0.4)]"
+          aria-label="Spendthrift logo"
+          role="img"
         >
-          S
+          🛍️
         </motion.div>
         <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple/40 bg-purple/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-purple-light">
+            <span aria-hidden>🛍️</span>
+            <span>Spendthrift</span>
+          </div>
           <h1 className="text-5xl font-black tracking-tight sm:text-7xl">SPENDTHRIFT</h1>
           <p className="mt-1 text-zinc-400">The Compulsive Shopping Card Game</p>
         </div>
