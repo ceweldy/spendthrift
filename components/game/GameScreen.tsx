@@ -255,9 +255,9 @@ export function GameScreen() {
 
   return (
     <section className="screen-wrap relative flex h-dvh min-h-dvh flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#222220] px-4 py-3 sm:px-6 sm:py-3">
         <div className="flex items-center gap-2 font-extrabold tracking-wide text-purple-light"><span aria-hidden>🛍️</span><span>SPENDTHRIFT</span></div>
-        <div className="flex flex-wrap gap-4 text-center text-xs sm:gap-5">
+        <div className="flex flex-wrap gap-3 text-center text-xs sm:gap-4">
           <Stat label="💰 Budget" help="Money available to spend in this run." value={`$${s.budget}`} color="text-teal" pulseKey={s.budget} />
           <Stat label="⚡ Dopamine" help="Your score driver from purchases/events." value={`${s.dopamine}`} color="text-purple-light" pulseKey={s.dopamine} />
           <Stat label="😬 Regret" help="Higher regret lowers final score." value={`${s.regret}%`} color="text-[#ff8d69]" pulseKey={s.regret} />
@@ -266,8 +266,8 @@ export function GameScreen() {
         <Button variant="ghost" onClick={s.endGame}>End Game</Button>
       </div>
 
-      <div className="border-b border-white/10 bg-[#222220] px-4 py-4 sm:px-6">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="border-b border-white/10 bg-[#222220] px-4 py-3 sm:px-6 sm:py-3">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
           <MenuPill active={s.activeMenu === 'shop'} onClick={() => s.setActiveMenu('shop')} label="Shop/Game" />
           <MenuPill active={s.activeMenu === 'inventory'} onClick={() => s.setActiveMenu('inventory')} label="Inventory" />
           <MenuPill active={s.activeMenu === 'activity'} onClick={() => s.setActiveMenu('activity')} label="Activity" />
