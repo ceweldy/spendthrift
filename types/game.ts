@@ -165,7 +165,13 @@ export type AchievementId =
   | 'mega_saver'
   | 'rare_operator'
   | 'payday_survivor'
-  | 'checkout_streak_3';
+  | 'checkout_streak_3'
+  | 'big_spender'
+  | 'collector_25'
+  | 'checkout_streak_5'
+  | 'secret_frugal_frenzy'
+  | 'secret_clean_run'
+  | 'secret_night_market';
 
 export type AchievementUnlock = {
   id: AchievementId;

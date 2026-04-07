@@ -3,11 +3,13 @@ import { motion, useMotionValue, animate, useTransform, useReducedMotion } from 
 import { Button } from '@/components/ui/Button';
 import { getArchetype, getFinalScore, getTitleFromScore, useGameStore } from '@/store/useGameStore';
 import { playSfx } from '@/lib/audio-manager';
+import { ACHIEVEMENTS } from '@/lib/achievements';
 
 export function ResultsScreen() {
   const s = useGameStore();
   const reducedMotion = useReducedMotion();
   const [copied, setCopied] = useState(false);
+  const [recapCopied, setRecapCopied] = useState(false);
   const { finalScore, regretPenalty, archetypeBonus } = getFinalScore(s.dopamine, s.regret, s.archetype);
   const title = getTitleFromScore(finalScore);
   const arch = getArchetype(s.archetype);
@@ -45,11 +47,38 @@ export function ResultsScreen() {
       const match = entry.text.match(/paid \$([0-9]+(?:\.[0-9]+)?)/i);
       return total + (match ? Number(match[1]) : 0);
     }, 0);
+  const runSavings = s.history
+    .filter((entry) => entry.kind === 'checkout' && /discount savings captured/i.test(entry.text))
+    .reduce((total, entry) => {
+      const match = entry.text.match(/\$([0-9]+(?:\.[0-9]+)?)/i);
+      return total + (match ? Number(match[1]) : 0);
+    }, 0);
+  const unlockedBadges = s.achievements.unlocked.length;
+  const roundsPlayed = Math.min(s.round - 1, s.maxRounds);
+
+  const recapText = [
+    '🧾 SPENDTHRIFT Run Recap',
+    `Score: ${finalScore} (${title})`,
+    `Archetype: ${arch.emoji} ${arch.title}`,
+    `Rounds: ${roundsPlayed}/${s.maxRounds}`,
+    `Run Spend: $${runSpent.toFixed(2)}`,
+    `Run Savings: $${runSavings.toFixed(2)}`,
+    `Dopamine / Regret: ${s.dopamine} / ${s.regret}%`,
+    `Items Purchased: ${purchasedItems} (${s.inventory.length} distinct)`,
+    `Badges Unlocked: ${unlockedBadges}/${ACHIEVEMENTS.length}`,
+  ].join('\n');
 
   const onShare = async () => {
-    await navigator.clipboard?.writeText(`I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`);
+    const message = `I scored ${finalScore} in SPENDTHRIFT as ${arch.title}. Can you beat my haul?`;
+    await navigator.clipboard?.writeText(message);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
+  };
+
+  const onExportRecap = async () => {
+    await navigator.clipboard?.writeText(recapText);
+    setRecapCopied(true);
+    setTimeout(() => setRecapCopied(false), 1600);
   };
 
   return (
@@ -115,18 +144,27 @@ export function ResultsScreen() {
       )}
 
       <div className="w-full max-w-xl rounded-xl border border-white/10 bg-black/20 p-4 text-left">
-        <div className="mb-2 text-[11px] uppercase tracking-widest text-zinc-500">Share Card Preview</div>
+        <div className="mb-2 text-[11px] uppercase tracking-widest text-zinc-500">Run Recap Card</div>
         <div className="rounded-lg border border-purple/30 bg-[#272532] p-4 text-sm text-zinc-200">
-          I scored <strong className="text-purple-light">{finalScore}</strong> in <strong>SPENDTHRIFT</strong> as <strong>{arch.title}</strong>. Can you beat my haul?
+          <div className="mb-2 text-xs uppercase tracking-wide text-zinc-400">{arch.emoji} {arch.title} • {title}</div>
+          <div className="grid gap-1 text-sm sm:grid-cols-2">
+            <div>Final Score: <strong className="text-purple-light">{finalScore}</strong></div>
+            <div>Rounds: <strong>{roundsPlayed}/{s.maxRounds}</strong></div>
+            <div>Run Spend: <strong>${runSpent.toFixed(2)}</strong></div>
+            <div>Run Savings: <strong>${runSavings.toFixed(2)}</strong></div>
+            <div>Dopamine/Regret: <strong>{s.dopamine}/{s.regret}%</strong></div>
+            <div>Badges: <strong>{unlockedBadges}/{ACHIEVEMENTS.length}</strong></div>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="ghost" className="px-4 py-2 text-xs" onClick={onShare}>{copied ? 'Score Copied ✓' : 'Share Score 📤'}</Button>
+          <Button variant="ghost" className="px-4 py-2 text-xs" onClick={onExportRecap}>{recapCopied ? 'Recap Copied ✓' : 'Export Recap Copy 🧾'}</Button>
         </div>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button className="px-7 py-3" onClick={s.startQuiz}>Play Again</Button>
         <Button variant="ghost" className="px-7 py-3" onClick={s.resetAll}>Back to Home</Button>
-        <Button variant="ghost" className="px-7 py-3" onClick={onShare}>
-          {copied ? 'Copied ✓' : 'Share Score 📤'}
-        </Button>
       </div>
     </section>
   );

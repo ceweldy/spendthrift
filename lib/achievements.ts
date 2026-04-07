@@ -7,6 +7,7 @@ export type AchievementDef = {
   title: string;
   description: string;
   reward: number;
+  hidden?: boolean;
   target: (state: EngineState, achievements: AchievementState) => number;
   goal: number;
 };
@@ -101,6 +102,66 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 15,
     target: (_state, achievements) => achievements.bestCheckoutStreak,
     goal: 3,
+  },
+  {
+    id: 'big_spender',
+    icon: '💳',
+    title: 'High Roller Cart',
+    description: 'Spend $1,000 total across all runs.',
+    reward: 20,
+    target: (state) => state.stats.totalSpent,
+    goal: 1000,
+  },
+  {
+    id: 'collector_25',
+    icon: '📦',
+    title: 'Shelf Control',
+    description: 'Purchase 25 total items.',
+    reward: 18,
+    target: (state) => state.stats.itemsPurchased,
+    goal: 25,
+  },
+  {
+    id: 'checkout_streak_5',
+    icon: '🌋',
+    title: 'Relentless Checkout',
+    description: 'Complete checkout in 5 rounds in a row.',
+    reward: 28,
+    target: (_state, achievements) => achievements.bestCheckoutStreak,
+    goal: 5,
+  },
+  {
+    id: 'secret_frugal_frenzy',
+    icon: '🕵️',
+    title: 'Secret: Frugal Frenzy',
+    description: 'Unlock by stacking huge savings and still finishing strong.',
+    reward: 32,
+    hidden: true,
+    target: (state) => {
+      const savings = Math.max(0, state.stats.totalOriginalSpent - state.stats.totalSpent);
+      return savings >= 350 && state.dopamine >= 220 ? 1 : 0;
+    },
+    goal: 1,
+  },
+  {
+    id: 'secret_clean_run',
+    icon: '🕵️',
+    title: 'Secret: Clean Run',
+    description: 'Unlock by ending a run with low regret and solid dopamine.',
+    reward: 24,
+    hidden: true,
+    target: (state) => (state.round > state.maxRounds && state.regret <= 15 && state.dopamine >= 140 ? 1 : 0),
+    goal: 1,
+  },
+  {
+    id: 'secret_night_market',
+    icon: '🕵️',
+    title: 'Secret: Night Market',
+    description: 'Unlock by mastering rare cards and surviving multiple paydays.',
+    reward: 30,
+    hidden: true,
+    target: (_state, achievements) => (achievements.rareCardsPlayed >= 6 && achievements.paydaysHit >= 5 ? 1 : 0),
+    goal: 1,
   },
 ];
 

@@ -7,10 +7,13 @@ import { useGameStore } from '@/store/useGameStore';
 import { getCardPricing } from '@/lib/game-engine';
 import { CheckoutModal } from './CheckoutModal';
 import { playSfx } from '@/lib/audio-manager';
+import { getAnimationDurationMultiplier, getUxSettings } from '@/lib/ux-settings';
 import type { Card } from '@/types/game';
 
 type FlyChip = { id: number; emoji: string; label: string; x: number; y: number };
 type ImpactBurst = { id: number; text: string; tone: 'good' | 'warn' | 'neutral' };
+type AddBurst = { id: number; x: number; y: number; emoji: string; dopamine: number };
+type PullCeremony = { id: number; rarity: Extract<Rarity, 'rare' | 'legendary'>; names: string[] };
 type CheckoutConfettiPiece = {
   id: string;
   left: string;
@@ -44,6 +47,8 @@ export function GameScreen() {
   const cartRef = useRef<HTMLDivElement | null>(null);
   const [flyChips, setFlyChips] = useState<FlyChip[]>([]);
   const [impactBursts, setImpactBursts] = useState<ImpactBurst[]>([]);
+  const [addBursts, setAddBursts] = useState<AddBurst[]>([]);
+  const [pullCeremony, setPullCeremony] = useState<PullCeremony | null>(null);
   const [storeFilter, setStoreFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [cartPulse, setCartPulse] = useState(0);
@@ -51,6 +56,7 @@ export function GameScreen() {
   const prevRoundRef = useRef(s.round);
   const prevAnnouncementRef = useRef<string | null>(s.announcement);
   const prevActivityHeadRef = useRef<string | undefined>(s.activityLog[0]);
+  const prevHandIdsRef = useRef<string[]>(s.hand.map((c) => c.id));
   const mountedRef = useRef(false);
 
   const mood = Math.max(5, Math.min(100, 50 + s.dopamine * 0.35 - s.regret * 0.5));
@@ -58,6 +64,8 @@ export function GameScreen() {
   const spendPct = Math.min(100, ((500 - s.budget) / 500) * 100);
   const minPriceInHand = Math.min(...s.hand.filter((c) => c.type === 'product').map((c) => getCardPricing(s, c).finalPrice), Number.POSITIVE_INFINITY);
   const cannotAffordAny = s.paymentMode !== 'demo-free' && minPriceInHand !== Number.POSITIVE_INFINITY && s.budget < minPriceInHand;
+  const roundSaleCount = Object.keys(s.randomDiscounts ?? {}).length;
+  const comboSaleActive = s.randomDiscountSecondsLeft > 0 && roundSaleCount >= 2;
 
   const pushImpact = useCallback((text: string, tone: ImpactBurst['tone']) => {
     if (reducedMotion) return;
@@ -96,6 +104,7 @@ export function GameScreen() {
       prevRoundRef.current = s.round;
       prevAnnouncementRef.current = s.announcement;
       prevActivityHeadRef.current = s.activityLog[0];
+      prevHandIdsRef.current = s.hand.map((c) => c.id);
       return;
     }
 
@@ -125,17 +134,42 @@ export function GameScreen() {
       }
     }
 
-    prevActivityHeadRef.current = newestActivity;
-  }, [s.round, s.announcement, s.activityLog, reducedMotion, pushImpact, buildCheckoutConfetti]);
-
-  const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string) => {
-    if (!reducedMotion) {
-      setCartPulse((v) => v + 1);
-      pushImpact(`${emoji} added`, 'good');
+    const previousHandIds = prevHandIdsRef.current;
+    const handChanged = previousHandIds.join('|') !== s.hand.map((card) => card.id).join('|');
+    if (handChanged) {
+      const pulled = s.hand.filter((card) => !previousHandIds.includes(card.id));
+      const legendary = pulled.filter((card) => getCardRarity(card) === 'legendary');
+      const rare = pulled.filter((card) => getCardRarity(card) === 'rare');
+      if (legendary.length || rare.length) {
+        const rarity = legendary.length ? 'legendary' : 'rare';
+        const names = (legendary.length ? legendary : rare).map((card) => card.name);
+        playSfx('rarePull');
+        if (reducedMotion) {
+          pushImpact(`${rarity.toUpperCase()} PULL: ${names[0]}`, 'good');
+        } else {
+          const ceremonyId = Date.now();
+          setPullCeremony({ id: ceremonyId, rarity, names });
+          pushImpact(`${rarity.toUpperCase()} PULL!`, 'good');
+          setTimeout(() => setPullCeremony((active) => (active?.id === ceremonyId ? null : active)), 2200);
+        }
+      }
+      prevHandIdsRef.current = s.hand.map((card) => card.id);
     }
 
-    if (reducedMotion || !cartRef.current) return s.addToCart(cardId);
+    prevActivityHeadRef.current = newestActivity;
+  }, [s.round, s.announcement, s.activityLog, s.hand, reducedMotion, pushImpact, buildCheckoutConfetti]);
+
+  const runAddToCart = (cardId: string, e: React.MouseEvent<HTMLButtonElement>, emoji: string, name: string, dopamine: number) => {
+    playSfx('addCart');
+    setCartPulse((v) => v + 1);
+    pushImpact(`${emoji} +${dopamine} dopamine`, 'good');
+
     const source = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const burstId = Date.now() + Math.floor(Math.random() * 1000);
+    setAddBursts((v) => [...v, { id: burstId, x: source.left + source.width / 2, y: source.top + source.height / 2, emoji, dopamine }]);
+    setTimeout(() => setAddBursts((v) => v.filter((b) => b.id !== burstId)), reducedMotion ? 200 : 760);
+
+    if (reducedMotion || !cartRef.current) return s.addToCart(cardId);
     const chip: FlyChip = {
       id: Date.now() + Math.floor(Math.random() * 1000),
       emoji,
@@ -223,6 +257,7 @@ export function GameScreen() {
 
       <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden p-4 sm:p-6">
         {s.announcement && <div className="announcement-pulse mb-4 rounded-lg border border-teal/40 bg-teal/15 p-3 text-sm font-semibold text-teal">{s.announcement}</div>}
+        {comboSaleActive ? <div className="combo-sale-alert mb-3">⚡ Combo Sale Surge: {roundSaleCount} discounted cards this round</div> : null}
         {s.activeMenu === 'shop' && <EffectStatePanel state={s} />}
         <AnimatePresence mode="sync" initial={false}>
           {s.activeMenu === 'shop' && (
@@ -269,7 +304,10 @@ export function GameScreen() {
                                 <div className="tcg-product-meta mt-1">
                                   <div className="min-h-5">
                                     {isOnSale ? (
-                                      <div className="inline-flex rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">SALE -{pricing.discountPercent}%</div>
+                                      <div className="flex flex-wrap gap-1">
+                                        <div className="inline-flex rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">SALE -{pricing.discountPercent}%</div>
+                                        {pricing.applied.length >= 2 ? <div className="combo-sale-badge">Combo x{pricing.applied.length}</div> : null}
+                                      </div>
                                     ) : <span className="inline-block h-[18px]" aria-hidden />}
                                   </div>
                                   <div className="flex min-h-7 items-baseline gap-2">
@@ -299,7 +337,7 @@ export function GameScreen() {
 
                           <div className="mt-auto pt-2">
                             {card.type === 'product' ? (
-                              <Button className="w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name)}>
+                              <Button className="w-full text-xs" disabled={inCart} onClick={(e) => runAddToCart(card.id, e, card.emoji, card.name, card.dopamine ?? 0)}>
                                 {inCart ? 'In Cart ✓' : 'Add to Cart'}
                               </Button>
                             ) : (
@@ -315,8 +353,8 @@ export function GameScreen() {
               <motion.div
                 key={cartPulse}
                 ref={cartRef}
-                animate={reducedMotion ? undefined : { scale: [1, 1.01, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 3px rgba(83,74,183,0.45)', '0 0 0 rgba(83,74,183,0)'] }}
-                transition={{ duration: 0.9, ease: [0.2, 0.9, 0.2, 1] }}
+                animate={reducedMotion ? { scale: [1, 1.02, 1] } : { scale: [1, 1.06, 1.015, 1], boxShadow: ['0 0 0 rgba(83,74,183,0)', '0 0 0 8px rgba(83,74,183,0.42)', '0 0 0 3px rgba(83,74,183,0.26)', '0 0 0 rgba(83,74,183,0)'] }}
+                transition={{ duration: reducedMotion ? 0.25 : 1.05, ease: [0.2, 0.9, 0.2, 1] }}
                 className="overflow-hidden rounded-2xl border border-white/10 bg-bg-card p-4"
               >
                 <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">My Cart ({s.cart.length}/5)</div>
@@ -385,19 +423,22 @@ export function GameScreen() {
               <div className="mb-1 text-sm font-semibold">Badges & Milestones</div>
               <div className="mb-3 text-xs text-zinc-400">Unlocked {s.achievements.unlocked.length}/{ACHIEVEMENTS.length} • Bonus dopamine earned: +{s.achievements.totalRewardDopamine}</div>
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
-                {badgeCards.map((badge) => (
-                  <div key={badge.id} className={`rounded-xl border p-3 ${badge.unlocked ? 'border-amber/50 bg-amber/10' : 'border-white/10 bg-black/20'}`}>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold">{badge.icon} {badge.title}</div>
-                      <span className={`pill ${badge.unlocked ? 'bg-teal/25 text-teal' : 'bg-white/10 text-zinc-400'}`}>{badge.unlocked ? 'Unlocked' : 'Locked'}</span>
+                {badgeCards.map((badge) => {
+                  const isHiddenLocked = Boolean(badge.hidden && !badge.unlocked);
+                  return (
+                    <div key={badge.id} className={`rounded-xl border p-3 ${badge.unlocked ? 'border-amber/50 bg-amber/10' : 'border-white/10 bg-black/20'}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-semibold">{isHiddenLocked ? '❓ ???' : `${badge.icon} ${badge.title}`}</div>
+                        <span className={`pill ${badge.unlocked ? 'bg-teal/25 text-teal' : 'bg-white/10 text-zinc-400'}`}>{badge.unlocked ? 'Unlocked' : isHiddenLocked ? 'Secret' : 'Locked'}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-zinc-300">{isHiddenLocked ? 'Hidden badge. Keep playing to reveal unlock conditions.' : badge.description}</div>
+                      <div className="mt-2 h-2 overflow-hidden rounded bg-black/40">
+                        <motion.div className={`h-full ${badge.unlocked ? 'bg-teal' : 'bg-purple'}`} animate={{ width: `${Math.max(4, isHiddenLocked ? 0 : badge.progress * 100)}%` }} transition={{ duration: reducedMotion ? 0 : 0.35 }} />
+                      </div>
+                      <div className="mt-1 text-[11px] text-zinc-400">{isHiddenLocked ? `Progress: Hidden/${badge.goal} • Reward +${badge.reward} dopamine` : `Progress: ${Math.min(badge.goal, Math.round(badge.progressRaw))}/${badge.goal} • Reward +${badge.reward} dopamine`}</div>
                     </div>
-                    <div className="mt-1 text-xs text-zinc-300">{badge.description}</div>
-                    <div className="mt-2 h-2 overflow-hidden rounded bg-black/40">
-                      <motion.div className={`h-full ${badge.unlocked ? 'bg-teal' : 'bg-purple'}`} animate={{ width: `${Math.max(4, badge.progress * 100)}%` }} transition={{ duration: reducedMotion ? 0 : 0.35 }} />
-                    </div>
-                    <div className="mt-1 text-[11px] text-zinc-400">Progress: {Math.min(badge.goal, Math.round(badge.progressRaw))}/{badge.goal} • Reward +{badge.reward} dopamine</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -417,6 +458,21 @@ export function GameScreen() {
             transition={{ duration: 1.1, ease: [0.18, 0.9, 0.3, 1] }}
           >
             {burst.text}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {addBursts.map((burst) => (
+          <motion.div
+            key={burst.id}
+            className="pointer-events-none fixed z-[61] text-sm font-black text-amber-200 drop-shadow-[0_0_12px_rgba(255,186,95,0.7)]"
+            initial={reducedMotion ? { x: burst.x - 10, y: burst.y - 16, opacity: 0.9 } : { x: burst.x - 20, y: burst.y - 10, opacity: 0, scale: 0.6, rotate: -12 }}
+            animate={reducedMotion ? { x: burst.x, y: burst.y - 28, opacity: 1 } : { x: [burst.x - 20, burst.x + 8, burst.x - 6], y: [burst.y - 10, burst.y - 56, burst.y - 92], opacity: [0, 1, 1, 0], scale: [0.6, 1.35, 1.05, 0.92], rotate: [-12, 8, -4, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.2 : 0.76, ease: [0.18, 0.9, 0.3, 1] }}
+          >
+            {burst.emoji} +{burst.dopamine}
           </motion.div>
         ))}
       </AnimatePresence>
@@ -462,6 +518,25 @@ export function GameScreen() {
             ))}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {pullCeremony ? (
+          <motion.div
+            key={pullCeremony.id}
+            className="pull-ceremony"
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 24 }}
+            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.1 : 0.34 }}
+          >
+            <div className={`pull-ceremony-card ${pullCeremony.rarity === 'legendary' ? 'is-legendary' : 'is-rare'}`}>
+              <div className="pull-ceremony-title">{pullCeremony.rarity === 'legendary' ? '🌟 LEGENDARY PULL!' : '✨ RARE PULL!'}</div>
+              <div className="pull-ceremony-name">{pullCeremony.names[0]}</div>
+              {pullCeremony.names.length > 1 ? <div className="pull-ceremony-sub">+{pullCeremony.names.length - 1} more high-rarity draw{pullCeremony.names.length - 1 === 1 ? '' : 's'}</div> : null}
+            </div>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
 
       <CheckoutModal />
@@ -555,7 +630,8 @@ function getActiveEffectStates(state: EffectPanelState): Array<{ label: string; 
   if (state.flashSaleSecondsLeft > 0) out.push({ label: `Flash Sale (${state.flashSaleSecondsLeft}s left)`, active: true });
   if (state.randomDiscountSecondsLeft > 0) {
     const saleCount = Object.keys(state.randomDiscounts ?? {}).length;
-    out.push({ label: `Round SALE (${saleCount} item${saleCount === 1 ? '' : 's'} · ${state.randomDiscountSecondsLeft}s left)`, active: true });
+    const comboSuffix = saleCount >= 2 ? ' · Combo!' : '';
+    out.push({ label: `Round SALE (${saleCount} item${saleCount === 1 ? '' : 's'} · ${state.randomDiscountSecondsLeft}s left${comboSuffix})`, active: true });
   }
   if (state.nextDiscount > 0) out.push({ label: `Price Match (${Math.round(state.nextDiscount * 100)}% off next product)`, active: false });
   if (state.shippingDiscount > 0) out.push({ label: `Checkout discount -$${state.shippingDiscount}`, active: false });
@@ -576,53 +652,53 @@ function getActiveEffectStates(state: EffectPanelState): Array<{ label: string; 
 function getCardEffectLines(card: Card): string[] {
   if (card.type === 'product') {
     return [
-      `Now: Add to cart for current price (base $${card.price ?? 0}).`,
-      `Checkout: Gain +${card.dopamine ?? 0} dopamine from this item.`,
-      `Checkout: Adds risk ${card.risk ?? 0} into regret calculation.`,
+      `Now: Add to cart at current price (base $${card.price ?? 0}).`,
+      `Checkout: +${card.dopamine ?? 0} dopamine.`,
+      `Trade-off: Risk ${card.risk ?? 0} adds to regret.`,
     ];
   }
 
   switch (card.effect) {
     case 'flash-sale':
-      return ['Now: Start Flash Sale immediately.', 'This round: All product prices are 30% off for 20 seconds.'];
+      return ['Now: Start Flash Sale.', 'This round: 30% off all products for 20s.'];
     case 'declined':
-      return ['Now: Lose 10 dopamine instantly.'];
+      return ['Now: Lose 10 dopamine.'];
     case 'refund':
-      return ['Now: Gain $40 budget immediately.'];
+      return ['Now: Gain $40 budget.'];
     case 'fomo':
-      return ['Now: Arm FOMO boost.', 'Next product added this round gets +4 dopamine, then effect clears.'];
+      return ['Now: Arm FOMO.', 'Next product added this round gets +4 dopamine.'];
     case 'gift':
-      return ['Now: Gain +8 dopamine instantly.'];
+      return ['Now: Gain +8 dopamine.'];
     case 'cashback':
       return ['Now: Arm cashback.', 'Next checkout returns 10% of charged total.'];
     case 'influencer-hype':
-      return ['Now: Apply round hype.', 'This round: Products added to cart gain +2 dopamine.'];
+      return ['Now: Apply hype.', 'This round: Products added get +2 dopamine.'];
     case 'stock-drop':
-      return ['Now: Apply tech markdown.', 'This round: Tech products are 15% cheaper.'];
+      return ['Now: Mark down Tech.', 'This round: Tech products are 15% off.'];
     case 'cart-abandon':
-      return ['Now: Arm checkout penalty.', 'Next checkout adds +5 regret.'];
+      return ['Now: Arm penalty.', 'Next checkout adds +5 regret.'];
     case 'loyalty-points':
-      return ['Now: Gain +6 dopamine instantly.', 'Next checkout gets an extra -$10 discount.'];
+      return ['Now: Gain +6 dopamine.', 'Next checkout gets an extra -$10.'];
     case 'ship15':
       return ['Now: Arm shipping discount.', 'Next checkout gets -$15 total.'];
     case 'price-match':
       return ['Now: Arm price match.', 'Next product added is 40% off.'];
     case 'quick-buy':
-      return ['Now: Arm quick-buy boost.', 'Next product added gets +5 dopamine.'];
+      return ['Now: Arm quick buy.', 'Next product added gets +5 dopamine.'];
     case 'designer':
-      return ['Now: Gain +60 dopamine instantly.'];
+      return ['Now: Gain +60 dopamine.'];
     case 'calm':
       return ['Now: Reduce current regret by 8 (minimum 0).'];
     case 'sub-trap':
       return ['Now: Arm trap.', 'Next checkout adds +8 regret.'];
     case 'future-remorse':
-      return ['Now: Queue delayed remorse.', 'Next round: +10 regret when new hand is dealt.'];
+      return ['Now: Queue delayed regret.', 'Next hand deal: +10 regret.'];
     case 'impulse-auto':
-      return ['Now: Auto-add cheapest product currently in hand to cart.'];
+      return ['Now: Auto-buy the cheapest product currently in hand.'];
     case 'doom-scroll':
-      return ['Now: Queue delayed regret.', 'In 2 rounds: +12 regret when new hand is dealt.'];
+      return ['Now: Queue delayed regret.', 'In 2 rounds: +12 regret at hand deal.'];
     case 'return-window':
-      return ['Now: Queue delayed regret.', 'In 2 rounds: +8 regret when new hand is dealt.'];
+      return ['Now: Queue delayed regret.', 'In 2 rounds: +8 regret at hand deal.'];
     default:
       return ['Effect: No explicit effect text configured.'];
   }
