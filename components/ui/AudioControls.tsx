@@ -14,10 +14,9 @@ export function AudioControls() {
   useEffect(() => {
     audioManager.setupAutoplayUnlock();
 
-    const onSettings = (event: Event) => {
-      const customEvent = event as CustomEvent<AudioSettings>;
-      setSettings(customEvent.detail ?? audioManager.getSettings());
-    };
+    const unsubscribe = audioManager.subscribe((nextSettings) => {
+      setSettings(nextSettings);
+    });
 
     const onButtonPress = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -28,11 +27,10 @@ export function AudioControls() {
       playSfx('uiClick');
     };
 
-    window.addEventListener('spendthrift-audio-settings', onSettings as EventListener);
     document.addEventListener('pointerdown', onButtonPress, { capture: true, passive: true });
 
     return () => {
-      window.removeEventListener('spendthrift-audio-settings', onSettings as EventListener);
+      unsubscribe();
       document.removeEventListener('pointerdown', onButtonPress, true);
     };
   }, []);
@@ -44,7 +42,6 @@ export function AudioControls() {
         className="pill border border-white/10 bg-white/5 text-zinc-200"
         onClick={() => {
           audioManager.setMuted(!settings.muted);
-          setSettings(audioManager.getSettings());
         }}
         aria-label={settings.muted ? 'Unmute sound effects' : 'Mute sound effects'}
       >
@@ -56,10 +53,13 @@ export function AudioControls() {
         min={0}
         max={100}
         value={Math.round(settings.volume * 100)}
+        onInput={(e) => {
+          const next = Number((e.target as HTMLInputElement).value) / 100;
+          audioManager.setVolume(next);
+        }}
         onChange={(e) => {
           const next = Number(e.target.value) / 100;
           audioManager.setVolume(next);
-          setSettings(audioManager.getSettings());
         }}
         className="h-1 w-24 accent-purple"
       />

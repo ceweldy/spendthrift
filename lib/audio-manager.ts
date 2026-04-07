@@ -20,6 +20,8 @@ type AudioSettings = {
   volume: number;
 };
 
+type AudioSettingsListener = (settings: AudioSettings) => void;
+
 type Tone = {
   f: number;
   t: number;
@@ -36,6 +38,7 @@ class AudioManager {
   private settings: AudioSettings = { muted: false, volume: 0.45 };
   private ready = false;
   private lastUiClickAt = 0;
+  private listeners = new Set<AudioSettingsListener>();
 
   constructor() {
     if (typeof window === 'undefined') return;
@@ -57,10 +60,19 @@ class AudioManager {
     }
   }
 
+  private emitSettings() {
+    const snapshot = { ...this.settings };
+    this.listeners.forEach((listener) => listener(snapshot));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('spendthrift-audio-settings', { detail: snapshot }));
+    }
+  }
+
   private saveSettings() {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
-    window.dispatchEvent(new CustomEvent('spendthrift-audio-settings', { detail: this.settings }));
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
+    }
+    this.emitSettings();
   }
 
   private ensureContext() {
@@ -102,7 +114,15 @@ class AudioManager {
   }
 
   getSettings() {
-    return this.settings;
+    return { ...this.settings };
+  }
+
+  subscribe(listener: AudioSettingsListener) {
+    this.listeners.add(listener);
+    listener(this.getSettings());
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   setMuted(muted: boolean) {
@@ -134,7 +154,7 @@ class AudioManager {
       osc.frequency.setValueAtTime(n.f, cursor);
       if (typeof n.detune === 'number') osc.detune.setValueAtTime(n.detune, cursor);
       gain.gain.setValueAtTime(0.0001, cursor);
-      gain.gain.linearRampToValueAtTime((n.gain ?? 0.22) * this.settings.volume, cursor + attack);
+      gain.gain.linearRampToValueAtTime(n.gain ?? 0.22, cursor + attack);
       gain.gain.exponentialRampToValueAtTime(0.0001, cursor + n.t + release);
       osc.connect(gain);
       gain.connect(this.master!);
